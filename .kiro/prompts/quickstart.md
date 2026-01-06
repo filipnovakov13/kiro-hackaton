@@ -13,6 +13,19 @@ This wizard will help you:
 
 You already have skeleton steering documents in `.kiro/steering/`. Let's fill them out with your project details.
 
+## Safety Clauses
+
+- Before updating any steering document, check if it already has meaningful custom content
+- If steering document has substantial existing content, ASK user before overwriting
+- DO NOT assume user preferences - always ask the required questions
+- Keep questions to 4-6 maximum as specified in instructions
+
+## Constraints
+
+- DO NOT overwrite steering documents that have substantial existing content without confirmation
+- DO NOT make technology recommendations without user confirmation
+- DO NOT enable experimental features without explicit user consent
+
 ### Gather Project Information
 **Note** (tell the user): The more detailed you can be, the better! Specific information about what you're building, who it's for, and the components you want helps create better context for your coding assistant and future development work. But don't worry - you can always keep it brief if you prefer.
 

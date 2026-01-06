@@ -29,6 +29,12 @@ Perform comprehensive review of hackathon submission based on the official Kiro 
    - Demo Video (3 points)
    - README (2 points)
 
+## Important
+
+- This is a READ-ONLY review - DO NOT modify any code or files
+- If `tree` command is unavailable, use `ls -la` and explore directories manually
+- If certain files don't exist, note their absence and continue with available materials
+
 ## Review Process
 
 ### 1. Project Discovery

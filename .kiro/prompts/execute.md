@@ -93,9 +93,29 @@ Provide summary:
 - Confirm all validations pass
 - Ready for `/commit` command
 
+## Safety Clauses
+
+- If any validation command fails 3 times consecutively, STOP and report the issue to user
+- DO NOT proceed to next task until current task validates successfully
+- DO NOT modify files not specified in the plan
+- If plan is ambiguous, ask for clarification rather than assume
+
+## Checkpoint Requirements
+
+- After each phase, summarize what was completed before proceeding
+- Before any destructive operations (delete, overwrite), confirm intent
+- If deviating from plan, document the reason BEFORE making changes
+
+## Constraints
+
+- DO NOT skip validation steps under any circumstances
+- DO NOT introduce dependencies not specified in the plan
+- DO NOT refactor code outside the current task scope
+- DO NOT continue if tests fail without attempting resolution
+
 ## Notes
 
-- If you encounter issues not addressed in the plan, document them
-- If you need to deviate from the plan, explain why
-- If tests fail, fix implementation until they pass
+- If you encounter issues not addressed in the plan, document them and ask for guidance
+- If you need to deviate from the plan, explain why before proceeding
+- If tests fail, attempt to fix implementation - if stuck after 3 attempts, report to user
 - Don't skip validation steps

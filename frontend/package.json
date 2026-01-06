@@ -1,0 +1,19 @@
+{
+  "name": "iubar-frontend",
+  "version": "1.0.0",
+  "description": "Iubar frontend with React and TypeScript",
+  "type": "module",
+  "scripts": {
+    "test": "vitest --run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest --run --coverage",
+    "test:e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.40.0",
+    "@types/node": "^20.10.0",
+    "fast-check": "^3.14.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.1.0"
+  }
+}

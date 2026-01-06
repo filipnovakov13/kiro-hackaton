@@ -70,3 +70,10 @@ Based on this implementation, what should change for next time?
 - Plan command improvements: [suggestions]
 - Execute command improvements: [suggestions]
 - Steering document additions: [suggestions]
+
+## Important
+
+- Be honest about failures - do not edit report to hide problems
+- Report actual outcomes, not desired outcomes
+- Include all divergences, even if they seem minor
+- This report is for process improvement, not performance evaluation

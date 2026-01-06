@@ -105,9 +105,27 @@ suggestion: [how to fix it]
 
 If no issues found: "Code review passed. No technical issues detected."
 
+## Scope Boundaries
+
+### In Scope
+- Files changed in current git diff
+- New files added (untracked)
+
+### Out of Scope
+- Files not in current changes
+- Suggesting refactoring of unrelated code
+- Style preferences not documented in project standards
+
+## Constraints
+
+- DO NOT modify any files during review - only document findings
+- DO NOT run destructive commands
+- DO NOT access external services
+- DO NOT implement fixes - only document them for later action
+
 ## Important
 
 - Be specific (line numbers, not vague complaints)
-- Focus on real bugs, not style
+- Focus on real bugs, not style preferences
 - Suggest fixes, don't just complain
 - Flag security issues as CRITICAL

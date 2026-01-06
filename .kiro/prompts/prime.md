@@ -3,6 +3,12 @@
 ## Objective
 Build comprehensive understanding of the codebase by analyzing structure, documentation, and key files.
 
+## Important
+
+- This is a READ-ONLY operation - DO NOT modify any files
+- If this is not a git repository, skip git-specific commands and proceed with file analysis
+- Limit exploration depth to prevent context overflow - if codebase is very large (>500 files), warn user and focus on core directories only
+
 ## Process
 
 ### 1. Analyze Project Structure

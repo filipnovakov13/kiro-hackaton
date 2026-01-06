@@ -142,6 +142,22 @@ After creating the PRD:
 3. Highlight any assumptions made due to missing information
 4. Suggest next steps (e.g., review, refinement, planning)
 
+## When to Ask for Clarification
+
+If the conversation lacks sufficient context for any of these critical areas, ASK before generating:
+- Core product purpose or problem being solved
+- Target users or audience
+- Primary technology stack
+- MVP scope boundaries
+- Key success criteria
+
+## Constraints
+
+- DO NOT invent requirements not discussed in conversation
+- DO NOT assume technology choices without evidence from discussion
+- DO NOT fabricate user stories or features not mentioned
+- Mark any assumptions clearly with "[ASSUMPTION]" prefix
+
 ## Notes
 
 - If critical information is missing, ask clarifying questions before generating

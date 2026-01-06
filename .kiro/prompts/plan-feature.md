@@ -14,6 +14,29 @@ Transform a feature request into a **comprehensive implementation plan** through
 
 **Key Philosophy**: Context is King. The plan must contain ALL information needed for implementation - patterns, mandatory reading, documentation, validation commands - so the execution agent succeeds on the first attempt.
 
+## Critical Constraints
+
+- DO NOT write any implementation code in this phase - planning only
+- DO NOT make assumptions about unclear requirements - ASK the user
+- DO NOT skip codebase analysis phases
+- Plan must be complete enough for one-pass implementation
+
+## When to Ask for Clarification
+
+Before proceeding, ask the user if:
+- Feature scope is ambiguous or could be interpreted multiple ways
+- Multiple valid architectural approaches exist with significant trade-offs
+- Security implications are unclear or potentially significant
+- Performance requirements are unspecified but likely important
+- The feature conflicts with existing patterns in the codebase
+
+## Forbidden Outcomes
+
+- Plans that require additional research during execution
+- Plans with vague task descriptions like "implement the feature"
+- Plans missing validation commands for each task
+- Plans that don't reference existing codebase patterns
+
 ## Planning Process
 
 ### Phase 1: Feature Understanding
