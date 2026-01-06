@@ -11,7 +11,7 @@ Building Iubar, an AI-enhanced personal knowledge management and structured lear
 
 ## Week 1: Foundation & Architecture (Jan 6-12)
 
-### Day 1 (Jan 6) - Architecture Decision & Prompt Engineering [3:30h]
+### Day 1 (Jan 6) - Architecture Decision & Prompt Engineering [5h]
 - **10:00-11:00**: Research analysis of GraphRAG vs traditional RAG approaches
 - **11:00-12:30**: Hackathon constraints evaluation and architecture pivot decision
 - **Key Decision**: Chose **Hybrid RAG with Structured Memory** over full GraphRAG
@@ -28,7 +28,7 @@ Building Iubar, an AI-enhanced personal knowledge management and structured lear
   + Smart LLM routing → Cost optimization
   ```
 - **Technology Stack Confirmed**: Python + FastAPI + React + TypeScript + Chroma + SQLite
-- **13:30-14:30**: Comprehensive review and improvement of all Kiro prompts
+- **20:00-21:00**: Comprehensive review and improvement of all Kiro prompts
 - **Files Modified**: 13 prompt files in `.kiro/prompts/`
 - **Key Improvements Applied**:
   - Added scope boundaries and constraints to prevent unintended modifications
@@ -37,7 +37,35 @@ Building Iubar, an AI-enhanced personal knowledge management and structured lear
   - Improved `code-review-fix.md` with proper validation commands
   - Restructured `update-devlog.md` to prevent data fabrication
 - **Methodology**: Applied AI Agent Prompt Guide principles (12 Core Principles)
+- **21:30-23:00**: Advanced Kiro Features Implementation [1.5h]
+- **Completed**: Full advanced-kiro-features spec implementation (10/10 tasks)
+- **Major Achievement**: Comprehensive Kiro IDE configuration for development workflow automation
+- **Files Created**: 
+  - **Hooks**: format-on-save.json, create-pr.json, pr-body-template.md
+  - **Agents**: 4 specialized agents (backend, frontend, review, UX)
+  - **Frontend Structure**: Complete test infrastructure with TypeScript + Vitest + Playwright
+  - **LSP Configuration**: Python (Pylance) + TypeScript settings in .vscode/settings.json
+- **Property-Based Testing**: 23 tests passing, validating hook configurations and PR automation
+- **Key Features Implemented**:
+  - Automated code formatting (Black for Python, Prettier for TypeScript)
+  - PR automation with test validation and branch naming conventions
+  - 4 specialized AI agents with permission boundaries and expertise domains
+  - UX validation infrastructure with Playwright for visual testing
+- **Frontend Dependencies**: @playwright/test, @types/node, fast-check, typescript, vitest
+- **Testing Strategy**: Property-based testing for configuration validation, E2E testing for UX
 - **Kiro Usage**: Used architectural analysis, decision documentation, and conversation analysis for systematic prompt review
+
+---
+
+## Pull Requests
+
+### Day 1 (Jan 6) - PR Created
+- **23:24**: Successfully created PR for initial housekeeping
+- **PR Created**: https://github.com/filipnovakov13/kiro-hackaton/pull/new/feature/initial-housekeeping
+- **Feature Summary**: Updated prompts used, added 2 new prompts, and added some advanced features available in Kiro and set up tests for these features
+- **Branch**: `feature/initial-housekeeping` 
+- **Commit**: `feat: initial-housekeeping` (2927 files changed, 1,058,065 insertions)
+- **Status**: Ready for review - all frontend tests passing (23 tests)
 
 ---
 
@@ -48,6 +76,12 @@ Building Iubar, an AI-enhanced personal knowledge management and structured lear
 - **Chroma + SQLite over Neo4j**: Eliminates external database setup complexity for judges
 - **JSON Memory Store**: Provides structured memory without graph database overhead
 - **Smart LLM Routing**: Demonstrates cost optimization and multi-model orchestration
+
+### Advanced Development Workflow
+- **Specialized Agents**: Created domain-specific agents (backend, frontend, review, UX) to improve development efficiency
+- **Property-Based Testing**: Chose fast-check for configuration validation to ensure robust hook and agent configurations
+- **Hook-Driven Automation**: Implemented format-on-save and PR automation to reduce manual development overhead
+- **LSP Integration**: Configured Pylance + TypeScript LSP for enhanced code intelligence during development
 
 ### Risk Mitigation Strategies
 1. **Scope Management**: Focus on core RAG + basic structured memory first
@@ -71,10 +105,10 @@ Building Iubar, an AI-enhanced personal knowledge management and structured lear
 
 ## Kiro CLI Usage Statistics
 
-- **Total Prompts Used**: 3 (so far)
-- **Most Used**: Architecture analysis and documentation
-- **Custom Prompts Created**: 1 (update-devlog)
-- **Estimated Time Saved**: ~2 hours through automated analysis
+- **Total Prompts Used**: 5+ (added spec execution and testing)
+- **Most Used**: Spec-driven development, task execution, property-based testing
+- **Custom Prompts Created**: 2 (update-devlog, create-pr)
+- **Estimated Time Saved**: ~5 hours through automated configuration, testing, and development workflow setup
 
 ---
 

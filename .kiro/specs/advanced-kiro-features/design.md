@@ -181,7 +181,7 @@ Write-Host "MCP dependencies OK"
     "file://backend/app/**/*.py",
     "file://.kiro/steering/tech.md"
   ],
-  "model": "claude-sonnet-4"
+  "model": "claude-sonnet-4.5"
 }
 ```
 
@@ -206,7 +206,7 @@ Write-Host "MCP dependencies OK"
     "file://frontend/src/**/*.{ts,tsx}",
     "file://.kiro/steering/tech.md"
   ],
-  "model": "claude-sonnet-4"
+  "model": "claude-sonnet-4.5"
 }
 ```
 
@@ -251,7 +251,7 @@ Write-Host "MCP dependencies OK"
     "file://frontend/src/**/*.tsx",
     "file://.kiro/steering/product.md"
   ],
-  "model": "claude-sonnet-4"
+  "model": "claude-haiku-4.5"
 }
 ```
 
@@ -396,3 +396,174 @@ interface MCPServerConfig {
   autoApprove?: string[];
 }
 ```
+
+
+## Correctness Properties
+
+*A property is a characteristic or behavior that should hold true across all valid executions of a system—essentially, a formal statement about what the system should do. Properties serve as the bridge between human-readable specifications and machine-verifiable correctness guarantees.*
+
+Based on the prework analysis, the following properties can be validated through configuration testing:
+
+### Property 1: Format-on-Save Hook Execution
+
+*For any* file saved in the project, if the file matches a configured pattern (Python in backend/, TypeScript in frontend/), the corresponding formatter command SHALL be executed on that file.
+
+**Validates: Requirements 1.1, 1.2**
+
+### Property 2: PR Branch Naming Convention
+
+*For any* feature name provided to the PR hook, the created branch SHALL follow the pattern `feature/{feature-name}` where feature-name is the sanitized input.
+
+**Validates: Requirements 2.2**
+
+### Property 3: PR Body Completeness
+
+*For any* pull request created by the PR hook, the PR body SHALL contain all required sections: summary, test results, and linked requirements.
+
+**Validates: Requirements 2.3**
+
+### Property 4: PR Test Enforcement
+
+*For any* PR creation attempt, the hook SHALL verify that at least one test exists and passes for each modified module before allowing PR creation.
+
+**Validates: Requirements 2.6**
+
+### Property 5: Agent Permission Boundaries
+
+*For any* specialized agent configuration, the agent's `allowedTools` SHALL restrict access to only the directories and commands specified in its requirements (backend agent to backend/, frontend agent to frontend/, review agent to read-only).
+
+**Validates: Requirements 6.1, 6.4, 7.1, 7.4, 8.1, 8.4, 9.1**
+
+### Property 6: Agent Prompt Expertise Keywords
+
+*For any* specialized agent, its prompt SHALL contain all required expertise keywords as specified in requirements (Backend: FastAPI, SQLAlchemy, Chroma, LlamaIndex; Frontend: React 18, TypeScript, Vite, accessibility; Review: security, performance, standards).
+
+**Validates: Requirements 6.3, 7.3, 8.2**
+
+### Property 7: Agent Resource Inclusion
+
+*For any* specialized agent, its resources array SHALL include the required context files (backend agent: backend/app/, frontend agent: frontend/src/, review agent: tech.md, UX agent: product.md).
+
+**Validates: Requirements 6.2, 7.2, 8.3, 9.7**
+
+## Error Handling
+
+### Hook Errors
+
+| Error Condition | Handling Strategy |
+|-----------------|-------------------|
+| Formatter not installed | Display error notification with installation command |
+| Formatter timeout (>2s) | Kill process, notify user, skip formatting |
+| Test failure during PR | Halt PR creation, display test output with failure details |
+| Git command failure | Display git error, suggest manual resolution |
+| DEVLOG update failure | Log warning, continue with PR creation |
+
+### MCP Server Errors
+
+| Error Condition | Handling Strategy |
+|-----------------|-------------------|
+| uvx not installed | Display installation instructions for uv |
+| Server connection timeout | Retry 3 times with exponential backoff |
+| Server crash | Log error, disable server, notify user |
+
+### Agent Errors
+
+| Error Condition | Handling Strategy |
+|-----------------|-------------------|
+| Tool access denied | Display permission error, suggest correct agent |
+| Resource not found | Log warning, continue without resource |
+| Shell command timeout | Kill process after 30s, display partial output |
+
+### LSP Errors
+
+| Error Condition | Handling Strategy |
+|-----------------|-------------------|
+| Virtual environment not found | Fall back to system Python, display warning |
+| TypeScript config invalid | Display parsing error, use default settings |
+| Language server crash | Auto-restart, log crash details |
+
+## Testing Strategy
+
+### Dual Testing Approach
+
+This feature requires both unit tests and property-based tests:
+
+- **Unit tests**: Verify specific configuration examples and edge cases
+- **Property tests**: Verify universal properties across all valid configurations
+
+### Unit Tests
+
+**Configuration Validation Tests:**
+```typescript
+// Test that agent configs are valid JSON
+describe('Agent Configuration', () => {
+  test('backend-agent.json is valid', () => {
+    const config = loadAgentConfig('backend-agent.json');
+    expect(config.name).toBeDefined();
+    expect(config.tools).toContain('read');
+  });
+});
+```
+
+**Hook Behavior Tests:**
+```python
+# Test hook execution
+def test_format_hook_executes_black():
+    result = simulate_file_save('backend/app/test.py')
+    assert result.formatter_called == 'black'
+```
+
+### Property-Based Tests
+
+**Testing Framework:** fast-check (TypeScript) for configuration validation
+
+**Configuration:**
+- Minimum 100 iterations per property test
+- Tag format: **Feature: advanced-kiro-features, Property {number}: {property_text}**
+
+**Property Test Examples:**
+
+```typescript
+import fc from 'fast-check';
+
+// Property 2: PR Branch Naming
+test('PR branch follows naming convention', () => {
+  fc.assert(
+    fc.property(fc.string({ minLength: 1 }), (featureName) => {
+      const branchName = createBranchName(featureName);
+      return branchName.startsWith('feature/');
+    }),
+    { numRuns: 100 }
+  );
+});
+
+// Property 5: Agent Permission Boundaries
+test('Backend agent restricted to backend directory', () => {
+  fc.assert(
+    fc.property(fc.string(), (path) => {
+      const config = loadAgentConfig('backend-agent.json');
+      const allowed = config.allowedTools.filter(t => t.startsWith('read:') || t.startsWith('write:'));
+      return allowed.every(t => t.includes('backend/'));
+    }),
+    { numRuns: 100 }
+  );
+});
+```
+
+### Test Coverage Requirements
+
+| Component | Unit Tests | Property Tests |
+|-----------|------------|----------------|
+| Hook configs | JSON validation | Pattern matching |
+| Agent configs | Schema validation | Permission boundaries |
+| MCP configs | Connection validation | N/A (integration) |
+| LSP configs | Settings validation | N/A (runtime) |
+
+### Integration Tests
+
+Integration tests will verify end-to-end behavior:
+
+1. **Format Hook Integration**: Save file → verify formatted output
+2. **PR Hook Integration**: Complete feature → verify PR created with correct content
+3. **Agent Integration**: Invoke agent → verify tool restrictions enforced
+4. **UX Agent Integration**: Run Playwright → verify screenshots captured
