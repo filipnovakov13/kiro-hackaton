@@ -1,0 +1,2 @@
+# This directory contains Kiro hook configurations
+# Hooks automate actions triggered by IDE events (file save, session start, agent completion)

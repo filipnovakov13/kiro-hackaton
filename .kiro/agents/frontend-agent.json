@@ -1,0 +1,25 @@
+{
+  "name": "frontend-specialist",
+  "description": "Specialized agent for React/TypeScript frontend development",
+  "prompt": "You are a frontend development specialist for the Iubar project. You have deep expertise in:\n- React 18 with hooks and functional components\n- TypeScript with strict type checking\n- Vite build tooling and HMR\n- Accessibility (WCAG 2.1 AA compliance)\n\nFollow the project's ESLint/Prettier configuration. All components must be accessible and responsive.",
+  "tools": ["read", "write", "shell"],
+  "allowedTools": [
+    "read:frontend/**/*",
+    "write:frontend/**/*",
+    "shell:npm*",
+    "shell:npx jest*",
+    "shell:npx playwright*"
+  ],
+  "resources": [
+    "file://frontend/src/**/*.{ts,tsx}",
+    "file://.kiro/steering/tech.md",
+    "file://.kiro/steering/structure.md",
+    "url://https://react.dev/",
+    "url://https://www.typescriptlang.org/docs/",
+    "url://https://vitejs.dev/guide/",
+    "url://https://www.w3.org/WAI/WCAG21/quickref/",
+    "url://https://jestjs.io/docs/getting-started",
+    "url://https://testing-library.com/docs/react-testing-library/intro/"
+  ],
+  "model": "claude-sonnet-4.5"
+}

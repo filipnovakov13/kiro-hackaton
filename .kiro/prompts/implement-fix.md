@@ -218,6 +218,32 @@ gh issue edit $ARGUMENTS --add-label "fixed" --remove-label "bug"
 gh issue close $ARGUMENTS --comment "Fixed and merged."
 ```
 
+## Scope Boundaries
+
+### In Scope
+- Files explicitly listed in RCA "Files to Modify" section
+- Test files for affected components
+- Documentation updates if user-facing
+
+### Out of Scope (DO NOT MODIFY)
+- Files not mentioned in RCA
+- Unrelated bugs discovered during implementation
+- "Improvements" not related to the fix
+
+## Constraints
+
+- DO NOT modify files outside the RCA-specified scope
+- DO NOT fix unrelated issues - document them for separate RCAs
+- DO NOT change public APIs unless RCA explicitly requires it
+- Follow the fix strategy from RCA exactly
+
+## When RCA is Incomplete
+
+If the RCA document is missing critical information:
+1. Document what information is missing
+2. Request RCA update with `/rca $ARGUMENTS`
+3. DO NOT proceed with assumptions
+
 ## Notes
 
 - If the RCA document is missing or incomplete, request it be created first with `/rca $ARGUMENTS`

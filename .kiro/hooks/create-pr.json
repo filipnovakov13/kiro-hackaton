@@ -1,0 +1,103 @@
+{
+  "name": "create-feature-pr",
+  "description": "Automated pull request creation with test validation",
+  "trigger": "manual",
+  "inputs": {
+    "featureName": {
+      "type": "string",
+      "description": "Name of the feature (will be used for branch naming)",
+      "required": true
+    },
+    "featureSummary": {
+      "type": "string",
+      "description": "Brief summary of the feature changes",
+      "required": true
+    },
+    "linkedRequirements": {
+      "type": "string",
+      "description": "Comma-separated list of requirement IDs this PR addresses",
+      "required": false,
+      "default": ""
+    }
+  },
+  "steps": [
+    {
+      "name": "run-backend-tests",
+      "description": "Execute pytest for backend validation",
+      "command": "cd backend && pytest --tb=short -q",
+      "continueOnError": false,
+      "timeout": 120000,
+      "outputVariable": "backendTestResult"
+    },
+    {
+      "name": "run-frontend-tests",
+      "description": "Execute Jest for frontend validation",
+      "command": "cd frontend && npm test -- --run",
+      "continueOnError": false,
+      "timeout": 120000,
+      "outputVariable": "frontendTestResult"
+    },
+    {
+      "name": "create-branch",
+      "description": "Create feature branch following naming convention",
+      "command": "git checkout -b feature/${featureName}",
+      "continueOnError": false
+    },
+    {
+      "name": "stage-changes",
+      "description": "Stage all changes for commit",
+      "command": "git add -A",
+      "continueOnError": false
+    },
+    {
+      "name": "commit-changes",
+      "description": "Commit changes with conventional commit message",
+      "command": "git commit -m \"feat: ${featureName}\"",
+      "continueOnError": false
+    },
+    {
+      "name": "push-branch",
+      "description": "Push feature branch to remote",
+      "command": "git push -u origin feature/${featureName}",
+      "continueOnError": false
+    },
+    {
+      "name": "create-pr",
+      "description": "Create pull request via GitHub CLI",
+      "command": "gh pr create --title \"feat: ${featureName}\" --body-file .kiro/hooks/pr-body-template.md",
+      "continueOnError": false
+    }
+  ],
+  "prBodyTemplate": {
+    "sections": [
+      {
+        "title": "Summary",
+        "content": "${featureSummary}"
+      },
+      {
+        "title": "Test Results",
+        "content": "- Backend: ${backendTestResult}\n- Frontend: ${frontendTestResult}"
+      },
+      {
+        "title": "Requirements",
+        "content": "${linkedRequirements}"
+      },
+      {
+        "title": "Changes",
+        "content": "See commit history for detailed changes."
+      }
+    ]
+  },
+  "onSuccess": {
+    "action": "updateDevlog",
+    "message": "PR created for feature: ${featureName}"
+  },
+  "onFailure": {
+    "action": "showTestResults",
+    "message": "PR creation failed. Check test results above for details."
+  },
+  "validation": {
+    "requirePassingTests": true,
+    "minimumTestsPerModule": 1
+  }
+}

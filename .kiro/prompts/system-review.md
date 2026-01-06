@@ -10,6 +10,11 @@ Perform a meta-level analysis of how well the implementation followed the plan a
 
 **System review is NOT code review.** You're not looking for bugs in the code - you're looking for bugs in the process.
 
+## Important
+
+- This is an ANALYSIS-ONLY operation - DO NOT modify any code
+- If plan file ($1) or execution report ($2) is missing, inform the user which file is needed and stop
+
 **Your job:**
 
 - Analyze plan adherence and divergence patterns

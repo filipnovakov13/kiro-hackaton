@@ -14,6 +14,15 @@ Investigate GitHub issue #$ARGUMENTS from this repository, identify the root cau
 - GitHub CLI installed and authenticated (`gh auth status`)
 - Valid GitHub issue ID from this repository
 
+**If GitHub CLI is not authenticated:**
+Run `gh auth login` and follow the prompts to authenticate before proceeding.
+
+## Important
+
+- This is an ANALYSIS-ONLY operation - DO NOT modify any code
+- DO NOT attempt to fix the issue during RCA - only document findings
+- If issue cannot be reproduced, document reproduction attempts and ask user for additional context
+
 ## Investigation Process
 
 ### 1. Fetch GitHub Issue Details
