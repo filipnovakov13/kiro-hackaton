@@ -100,7 +100,7 @@ This plan implements the advanced Kiro IDE features in phases: hooks first, then
     - Allow npm run dev and npx playwright commands
     - _Requirements: 9.1, 9.2, 9.3, 9.4, 9.5, 9.6, 9.7_
 
-  - [ ]* 6.5 Write property tests for agent configurations
+  - [x]* 6.5 Write property tests for agent configurations
 
     - **Property 5: Agent Permission Boundaries**
     - **Property 6: Agent Prompt Expertise Keywords**

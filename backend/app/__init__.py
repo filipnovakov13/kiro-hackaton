@@ -1,0 +1,1 @@
+# App package - placeholder for future application modules

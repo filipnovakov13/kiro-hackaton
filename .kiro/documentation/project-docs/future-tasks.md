@@ -35,40 +35,20 @@ cd frontend && npm install --save-dev fast-check vitest
 **Reference:** `.kiro/specs/advanced-kiro-features/design.md` - Correctness Properties section
 
 
-### ✅ Task: Add PR Hook Property Tests (COMPLETED)
+### ❌ Task: Add PR Hook Property Tests (REMOVED)
 
-**Status:** Completed on 2026-01-06
+**Status:** Removed on 2026-01-07
 
-Add property-based tests for validating PR automation hook configurations.
+**Rationale:** After comparative analysis, the `create-pr.md` prompt was determined to be superior to the `create-pr.json` hook for PR automation:
+- Prompts provide richer error handling with contextual suggestions
+- Prompts can ask clarifying questions mid-process and handle edge cases
+- Hooks have rigid sequential execution with no recovery options
+- The hook's `prBodyTemplate` wasn't actually used (referenced static file instead)
+- Prompts have explicit scope boundaries and forbidden actions for safety
 
-**Location:** `frontend/tests/kiro-config/`
+**Decision:** Use `@create-pr` prompt instead of hook-based automation.
 
-**Dependencies to add:**
-```bash
-cd frontend && npm install --save-dev fast-check vitest
-```
-
-**Files created:**
-- ✅ `frontend/tests/kiro-config/pr-hook.property.test.ts`
-
-**Test requirements:**
-
-**✅ Property 2: PR Branch Naming Convention**
-- ✅ *For any* feature name provided to the PR hook, the created branch SHALL follow the pattern `feature/{feature-name}` where feature-name is the sanitized input
-- ✅ Test with various feature names (spaces, special characters, unicode)
-- ✅ Verify sanitization produces valid git branch names
-- **Validates: Requirements 2.2**
-
-**✅ Property 3: PR Body Completeness**
-- ✅ *For any* pull request created by the PR hook, the PR body SHALL contain all required sections: summary, test results, and linked requirements
-- ✅ Test that all template variables are populated
-- ✅ Verify markdown structure is valid
-- **Validates: Requirements 2.3**
-
-**✅ Property 4: PR Test Enforcement**
-- ✅ *For any* PR creation attempt, the hook SHALL verify that at least one test exists and passes for each modified module before allowing PR creation
-- ✅ Test that PR creation fails when tests fail
-- ✅ Test that PR creation succeeds only when all tests pass
-- **Validates: Requirements 2.6**
-
-**Reference:** `.kiro/specs/advanced-kiro-features/design.md` - Correctness Properties section
+**Files removed:**
+- `frontend/tests/kiro-config/pr-hook.property.test.ts`
+- `.kiro/hooks/create-pr.json`
+- `.kiro/hooks/pr-body-template.md`

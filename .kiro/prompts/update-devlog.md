@@ -39,7 +39,7 @@ Analyze the current conversation and update the DEVLOG.md file with relevant dev
 
 ## Update Rules
 
-- **Daily entries**: Add to current date section, create new day if needed
+- **Daily entries**: Add to current week section, create new day if needed, or a new week if needed
 - **Technical decisions**: Add to "Technical Decisions & Rationale" section
 - **Statistics**: Update time tracking and Kiro usage counters
 - **Format consistency**: Match existing DEVLOG style and structure

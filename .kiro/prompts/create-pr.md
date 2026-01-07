@@ -51,15 +51,16 @@ Before proceeding, gather the following from the user:
 
 ### Step 1: Validate Tests
 
-Run all relevant tests before creating the PR:
+Run the unified test suite using the run-all-tests hook:
 
 ```bash
-# Backend tests
-cd backend && pytest --tb=short -q
-
-# Frontend tests  
-cd frontend && npm test -- --run
+# Run unified test suite (backend + frontend)
+cmd /c .kiro\scripts\run-all-tests.cmd
 ```
+
+This runs:
+- Backend tests (pytest): 55+ tests
+- Frontend tests (vitest): 59+ tests
 
 **CRITICAL: If any tests fail:**
 1. Display the failing test details with full output
@@ -98,7 +99,7 @@ git commit -m "feat: {feature-name}"
 
 ```bash
 git push -u origin feature/{feature-name}
-gh pr create --title "feat: {feature-name}" --body-file .kiro/hooks/pr-body-template.md
+gh pr create --title "feat: {feature-name}" --body "## Summary\n{feature-summary}\n\n## Test Results\n- Backend: ✅ Passed\n- Frontend: ✅ Passed\n\n## Requirements\n{linked-requirements}"
 ```
 
 **PR body MUST include all of the following sections:**
@@ -155,8 +156,9 @@ Before running this prompt, verify:
 
 - [ ] Git configured with remote repository (`git remote -v` shows origin)
 - [ ] GitHub CLI (`gh`) installed and authenticated (`gh auth status`)
-- [ ] Backend dependencies installed (`backend/.venv` exists)
+- [ ] Backend dependencies installed (`backend/.venv` or `.venv` exists)
 - [ ] Frontend dependencies installed (`frontend/node_modules` exists)
+- [ ] Unified test runner available (`.kiro/scripts/run-all-tests.cmd` exists)
 - [ ] No uncommitted changes that shouldn't be included
 
 ---

@@ -1,0 +1,11 @@
+{
+  "name": "run-all-tests",
+  "description": "Run all frontend and backend tests in a unified test suite",
+  "trigger": "onManual",
+  "actions": [
+    {
+      "type": "shell",
+      "command": "cmd /c .kiro\\scripts\\run-all-tests.cmd"
+    }
+  ]
+}
