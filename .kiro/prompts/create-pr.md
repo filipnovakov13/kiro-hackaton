@@ -59,8 +59,8 @@ cmd /c .kiro\scripts\run-all-tests.cmd
 ```
 
 This runs:
-- Backend tests (pytest): 55+ tests
-- Frontend tests (vitest): 59+ tests
+- Backend tests (pytest)
+- Frontend tests (vitest)
 
 **CRITICAL: If any tests fail:**
 1. Display the failing test details with full output
@@ -179,8 +179,7 @@ When encountering ambiguity, apply these rules in order:
 
 Before marking complete, verify:
 
-- [ ] All backend tests pass (pytest exit code 0)
-- [ ] All frontend tests pass (jest exit code 0)
+- [ ] All tests pass via unified test runner (run-all-tests.cmd exit code 0)
 - [ ] Feature branch created with correct naming pattern
 - [ ] All changes committed with conventional commit message
 - [ ] Branch pushed to remote successfully
@@ -197,15 +196,14 @@ Before marking complete, verify:
 **Agent Response**:
 1. "What is the feature summary for document-upload?"
 2. "Are there any requirement IDs to link? (optional)"
-3. Run: `cd backend && pytest --tb=short -q`
-4. Run: `cd frontend && npm test -- --run`
-5. If tests pass: Create branch `feature/document-upload`
-6. Commit: `git commit -m "feat: document-upload"`
-7. Push and create PR
-8. Update DEVLOG with PR link
-9. Report: "PR created successfully: [PR_URL]"
+3. Run: `cmd /c .kiro\scripts\run-all-tests.cmd`
+4. If tests pass: Create branch `feature/document-upload`
+5. Commit: `git commit -m "feat: document-upload"`
+6. Push and create PR
+7. Update DEVLOG with PR link
+8. Report: "PR created successfully: [PR_URL]"
 
 **If tests fail**:
-1. Display: "Backend tests failed: [error details]"
+1. Display: "Tests failed: [error details from unified test runner]"
 2. Ask: "Would you like to fix the failing tests before creating the PR?"
 3. **STOP** - do not proceed until user responds
