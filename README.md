@@ -11,44 +11,91 @@ Iubar is an AI-enhanced personal knowledge management and structured learning we
 
 ## Quick Start
 
-1. **Clone and setup**
-   ```bash
-   git clone https://github.com/filipnovakov13/kiro-hackaton
-   cd kiro-hackaton
-   ```
+### Prerequisites
+- Python 3.11+
+- Node.js 18+
+- Git
 
-2. **Backend setup**
-   ```bash
-   cd backend
-   python -m venv .venv
-   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-   pip install -r requirements.txt
-   ```
+### 1. Clone and Setup Project
+```bash
+git clone <repository-url>
+cd iubar
+```
 
-3. **Frontend setup**
-   ```bash
-   cd frontend
-   npm install
-   ```
+### 2. Backend Setup
+```bash
+# Navigate to backend directory
+cd backend
 
-4. **Configure environment**
-   ```bash
-   cp .env.example .env
-   # Edit .env with your API keys 
-   ```
+# Create and activate virtual environment (if not exists)
+python -m venv ../.venv
 
-5. **Run the application**
-   ```bash
-   # Backend (from backend/ directory)
-   uvicorn main:app --reload
+# Activate virtual environment
+# Windows:
+..\.venv\Scripts\activate
+# Linux/Mac:
+source ../.venv/bin/activate
 
-   # Frontend (from frontend/ directory)
-   npm run dev
-   ```
+# Install dependencies
+pip install -r requirements.txt
 
-6. **Access the interface**
-   - Web UI: http://localhost:5173
-   - API Documentation: http://localhost:8000/docs
+# Copy environment template (optional)
+cp .env.template .env
+# Edit .env if needed for custom configuration
+```
+
+### 3. Frontend Setup
+```bash
+# Navigate to frontend directory
+cd frontend
+
+# Install dependencies
+npm install
+
+# Copy environment template (optional)
+cp .env.template .env.local
+# Edit .env.local if needed for custom API URL
+```
+
+### 4. Run Development Servers
+
+**Backend Server:**
+```bash
+# From backend/ directory
+# Option A: Using startup script (recommended)
+python start_server.py
+
+# Option B: Using uvicorn directly
+python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000
+```
+
+**Frontend Server:**
+```bash
+# From frontend/ directory
+npm run dev
+```
+
+### 5. Verify Setup (Optional)
+
+Run the setup verification script to ensure everything is configured correctly:
+
+```bash
+# From project root
+python setup-verify.py
+```
+
+This script will check:
+- Python and Node.js versions
+- Virtual environment setup
+- Required file structure
+- Backend import functionality
+- Backend health endpoint (if running)
+
+### 6. Access the Application
+- **Frontend**: http://localhost:5173
+- **Backend API**: http://localhost:8000
+- **API Documentation**: http://localhost:8000/docs
+- **Health Check**: http://localhost:8000/health
 
 ## Architecture & Codebase Overview
 
@@ -169,6 +216,59 @@ iubar/
 - **Property-Based**: fast-check for configuration and workflow validation
 
 ## Troubleshooting
+
+### Setup Issues
+
+**Python Virtual Environment Issues**
+```bash
+# If virtual environment doesn't exist, create it:
+python -m venv .venv
+
+# If activation fails on Windows:
+.venv\Scripts\activate.bat
+
+# If pip install fails, upgrade pip:
+python -m pip install --upgrade pip
+```
+
+**Backend Startup Issues**
+```bash
+# Check if you're in the correct directory:
+pwd  # Should show .../backend
+
+# Verify Python can import the app:
+python -c "from main import app; print('App loads successfully')"
+
+# Check if dependencies are installed:
+pip list | grep fastapi
+```
+
+**Frontend Build Issues**
+```bash
+# Clear node modules and reinstall:
+rm -rf node_modules package-lock.json
+npm install
+
+# Check Node.js version (requires 18+):
+node --version
+
+# Verify TypeScript compilation:
+npx tsc --noEmit
+```
+
+**Port Conflicts**
+```bash
+# Backend (change port):
+python -m uvicorn main:app --reload --port 8001
+
+# Frontend (change port):
+npm run dev -- --port 3000
+```
+
+**CORS Issues**
+- Ensure backend CORS is configured for your frontend port
+- Check `backend/app/config.py` for allowed origins
+- Default allows: `http://localhost:3000` and `http://localhost:5173`
 
 ### Common Issues
 

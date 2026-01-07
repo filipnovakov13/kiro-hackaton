@@ -8,7 +8,7 @@
     "moduleResolution": "bundler",
     "target": "ES2022",
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "types": ["node", "vitest/globals"],
+    "types": ["node", "vitest/globals", "vite/client"],
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"]
