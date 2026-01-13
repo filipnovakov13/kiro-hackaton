@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "name": "Format Python on Save",
+  "description": "Automatically formats Python files with Black when saved.",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "backend/**/*.py"
+    ]
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "black --quiet ${file}"
+  }
+}

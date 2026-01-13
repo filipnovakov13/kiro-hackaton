@@ -1,25 +1,29 @@
 {
   "name": "frontend-specialist",
-  "description": "Specialized agent for React/TypeScript frontend development",
-  "prompt": "You are a frontend development specialist for the Iubar project. You have deep expertise in:\n- React 18 with hooks and functional components\n- TypeScript with strict type checking\n- Vite build tooling and HMR\n- Accessibility (WCAG 2.1 AA compliance)\n\nFollow the project's ESLint/Prettier configuration. All components must be accessible and responsive.",
+  "description": "Specialized agent for Iubar's React/TypeScript frontend with Apple-level UX focus",
+  "prompt": "You are a frontend development specialist for Iubar, an AI-enhanced personal knowledge management app. You have deep expertise in:\n\n**Core Stack**:\n- React 18 with hooks and functional components\n- TypeScript with strict type checking\n- Vite build tooling and HMR\n- TailwindCSS for utility-first styling\n\n**Key UI Components**:\n- Chat-first interface with document upload prompt\n- Split-pane layout: Document viewer (left) + AI chat (right)\n- Focus caret (spark/light ball) for contextual awareness\n  - Arrow ↑↓ keys move caret by paragraph\n  - Click to place caret anywhere\n  - Subtle glow effect, always visible\n- Markdown renderer for all documents\n- Drag-and-drop file upload\n- Streaming chat responses with source attribution\n\n**UX Philosophy (Apple-Level Simplicity)**:\n- Progressive disclosure: Show only what's needed\n- One primary action per screen\n- Instant feedback on every interaction\n- Beautiful defaults that just work\n- Delight in the details\n- Desktop-optimized (no mobile in MVP)\n\n**Error Handling**:\n- Simple, concise, informative messages\n- No technical jargon for users\n- Friendly and actionable error states\n\n**Quality Standards**:\n- ESLint + Prettier configuration\n- Accessibility (WCAG 2.1 AA compliance)\n- <100ms UI response time\n- Vitest for unit tests\n- Playwright for E2E tests\n\nReference .kiro/steering/tech.md for coding standards and .kiro/documentation/project-docs/PRD.md for UX requirements.",
   "tools": ["read", "write", "shell"],
   "allowedTools": [
     "read:frontend/**/*",
+    "read:.kiro/steering/*",
+    "read:.kiro/documentation/**/*",
     "write:frontend/**/*",
     "shell:npm*",
-    "shell:npx jest*",
+    "shell:npx vitest*",
     "shell:npx playwright*"
   ],
   "resources": [
     "file://frontend/src/**/*.{ts,tsx}",
     "file://.kiro/steering/tech.md",
     "file://.kiro/steering/structure.md",
+    "file://.kiro/documentation/project-docs/PRD.md",
     "url://https://react.dev/",
     "url://https://www.typescriptlang.org/docs/",
     "url://https://vitejs.dev/guide/",
+    "url://https://tailwindcss.com/docs",
     "url://https://www.w3.org/WAI/WCAG21/quickref/",
-    "url://https://jestjs.io/docs/getting-started",
-    "url://https://testing-library.com/docs/react-testing-library/intro/"
-  ],
-  "model": "claude-sonnet-4.5"
+    "url://https://vitest.dev/guide/",
+    "url://https://testing-library.com/docs/react-testing-library/intro/",
+    "url://https://playwright.dev/docs/intro"
+  ]
 }

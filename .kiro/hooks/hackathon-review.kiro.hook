@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "Hackathon Demo Review",
+  "description": "Reviews code for hackathon demo readiness, judge appeal, and innovation showcase.",
+  "version": "1",
+  "when": {
+    "type": "manual"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Follow .kiro/prompts/code-review-hackathon.md for a hackathon-focused review.\n\nCheck:\n- Demo readiness (does it work end-to-end?)\n- Judge appeal (is innovation visible?)\n- Documentation quality (README, DEVLOG)\n- Performance under demo conditions\n- Error handling (graceful failures)"
+  }
+}

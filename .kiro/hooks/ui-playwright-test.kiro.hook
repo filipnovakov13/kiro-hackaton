@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "name": "UX Validation on Component Change",
+  "description": "Spawns ux-validator subagent to validate UX principles when React components are modified.",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "frontend/src/**/*.tsx"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A frontend component was modified: ${file}\n\nSpawn a subagent using the ux-validator agent configuration (.kiro/agents/ux-agent.json) to validate this change.\n\nDelegate to the ux-validator subagent:\n- File changed: ${file}\n- Task: Validate UX principles, run tests, report issues\n\nWait for subagent results and report back."
+  }
+}
