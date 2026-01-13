@@ -73,7 +73,7 @@ If you see warnings about scripts not being on PATH during installation, don't w
 
 ```
 backend/
-├── app/                 # Application modules (placeholder)
+├── app/                # Application modules (placeholder)
 │   ├── api/            # FastAPI routes and endpoints
 │   ├── core/           # Core business logic
 │   ├── models/         # SQLAlchemy models
@@ -83,7 +83,7 @@ backend/
 ├── main.py             # FastAPI application entry point
 ├── requirements.txt    # Python dependencies
 ├── start_server.py     # Startup script (handles PATH issues)
-└── README.md          # This file
+└── README.md           # This file
 ```
 
 ### Adding New Dependencies

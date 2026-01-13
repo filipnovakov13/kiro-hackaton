@@ -9,6 +9,61 @@ Building Iubar, an AI-enhanced personal knowledge management and structured lear
 
 ---
 
+## Week 2: Product Definition & Core Development (Jan 13-19)
+
+### Day 8 (Jan 13) - Product Requirements Document [~2h]
+
+**PRD Creation Session**:
+- **Comprehensive PRD Created**: `.kiro/documentation/projectPRD.md` (Version 1.0)
+- **Iterative refinement process** with continuous questioning and decision-making
+
+**Key Decisions Made**:
+
+| Category | Decision | Rationale |
+|----------|----------|-----------|
+| **LLM** | DeepSeek V3.2-Exp (single model) | 95% cheaper than GPT-5, automatic caching, frontier performance |
+| **Embeddings** | Voyage 3.5 Lite ($0.02/M) | 80.3% nDCG, quality-first for semantic search |
+| **Document Processing** | Docling + gitingest | Open-source, converts to Markdown, preserves structure |
+| **UI Flow** | Chat-first → Split-pane with focus caret | Zero friction entry, ChapterPal-style document exploration |
+| **Focus Caret** | Spark/light ball, arrow keys + click | Minimal, elegant, implicit context for AI |
+| **AI Personality** | Adaptive Socratic, sparse praise | Adjusts to user level, anti-sycophancy rules |
+| **User Profile** | Persistent light profile | Foundation for future knowledge graph |
+| **Onboarding** | 2 questions (purpose + background), skippable | Low friction, optional personalization |
+| **Error Handling** | Simple, concise, informative | No technical jargon for users |
+| **Session** | No timeout, auto-save, restore on refresh | Users don't lose work |
+| **Platform** | Desktop-only | Focus resources on core experience |
+
+**Target Users Defined**:
+1. **Continuous Learner** - Self-improvement focused, wants efficient learning
+2. **Project Builder** - Transforms ideas into reality with AI as thinking partner
+3. **Curious Procrastinator** - Many interests, killed by friction (key insight: reduce friction to near-zero)
+
+**UX Philosophy Established**:
+- Apple-level simplicity
+- Progressive disclosure
+- One primary action per screen
+- Instant feedback on every interaction
+- Delight in the details
+
+**Implementation Phases Defined** (10-day timeline):
+- Phase 1 (Days 1-3): Foundation - Document ingestion, basic UI
+- Phase 2 (Days 4-6): RAG Core - Q&A with documents, chat interface
+- Phase 3 (Days 7-8): Intelligence Layer - Adaptive AI, user profile
+- Phase 4 (Days 9-10): Polish & Demo Prep
+
+**Future Tasks Documented** (in `project-docs/future-tasks.md`):
+- 🎨 Visual Identity Design - dedicated deep-dive session
+- 📄 Demo Documents Selection - 3 domains (technical, business, creative)
+- 🔄 API Resilience Strategy - handling unresponsive APIs
+
+**Files Created/Modified**:
+- `.kiro/documentation/PRD.md` - Complete PRD (Version 1.0)
+- `.kiro/documentation/project-docs/future-tasks.md` - Added 3 new future tasks
+
+**Kiro Usage**: PRD creation prompt, iterative refinement, decision documentation
+
+---
+
 ## Week 1: Foundation & Architecture (Jan 6-12)
 
 ### Day 2 (Jan 7) - Backend Foundation & Project Setup [3h 20m]
@@ -149,7 +204,16 @@ Building Iubar, an AI-enhanced personal knowledge management and structured lear
 
 ## Pull Requests
 
-### Day 1 (Jan 6) - PR Created
+### Day 2 (Jan 8) - Project Setup
+- **00:34**: Successfully created PR for project setup
+- **PR Created**: https://github.com/filipnovakov13/kiro-hackaton/pull/new/feature/project-setup
+- **Feature Summary**: Minimal, extensible scaffolding for FastAPI backend and React frontend with comprehensive test suite (114 tests)
+- **Branch**: `feature/project-setup`
+- **Commit**: `feat: project-setup` (63 files changed, 8023 insertions, 590 deletions)
+- **Status**: Ready for review - all tests passing (55 backend + 59 frontend)
+- **Requirements Addressed**: 1.1-1.5, 2.1-2.5, 3.1-3.6, 4.1-4.6, 5.1-5.5
+
+### Day 1 (Jan 6) - Initial Housekeeping
 - **23:24**: Successfully created PR for initial housekeeping
 - **PR Created**: https://github.com/filipnovakov13/kiro-hackaton/pull/new/feature/initial-housekeeping
 - **Feature Summary**: Updated prompts used, added 2 new prompts, and added some advanced features available in Kiro and set up tests for these features
@@ -166,6 +230,23 @@ Building Iubar, an AI-enhanced personal knowledge management and structured lear
 - **Chroma + SQLite over Neo4j**: Eliminates external database setup complexity for judges
 - **JSON Memory Store**: Provides structured memory without graph database overhead
 - **Smart LLM Routing**: Demonstrates cost optimization and multi-model orchestration
+
+### AI/ML Stack (PRD Decisions - Jan 13)
+- **DeepSeek V3.2-Exp as sole LLM**: Single model simplifies architecture, 95% cheaper than GPT-5 with frontier performance, automatic context caching reduces costs further
+- **Voyage 3.5 Lite for embeddings**: Quality-first approach (80.3% nDCG), 512 dimensions for storage efficiency, $0.02/M tokens is acceptable for quality gains
+- **Docling for document processing**: Open-source, converts PDF/DOCX/PPTX/HTML to clean Markdown, preserves structure perfectly for AI consumption
+- **gitingest for GitHub repos**: Lightweight tomparatverts repos to Markdown without cloning, preserves structure
+
+### UX/UI Decisions (PRD Decisions - Jan 13)
+- **Chat-first → Split-pane flow**: Zero friction entry point, then reveals document viewer with focus caret for deep exploration
+- **Focupts have exark)**: Minimal visual indicator (light ball) that follows scroll, movable via arrow keys or click, provides implicit context to AI
+- **Desktop-only for MVP**: Focus resources on core experience rather than responsive design
+- **No session timeout**: Auto-save on every interaction, restore on refresh - users never lose work
+
+### AI Personality Design (PRD Decisions - Jan 13)
+- **Adaptive Socratic**: Adjusts to user's expertise level while guiding through qutions
+- **Anti-sycophancy rules**: Sparse praise only for genuine insights, no empty validation patterns
+- **Persistent light profile**: 2-question optional onboarding, AI infers expertise from interacdation for future knowledge graph
 
 ### Advanced Development Workflow
 - **Specialized Agents**: Created domain-specific agents (backend, frontend, review, UX) to improve development efficiency
