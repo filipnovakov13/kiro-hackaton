@@ -1,6 +1,17 @@
 # Iubar - AI-Enhanced Personal Knowledge Management
 
-Iubar is an AI-enhanced personal knowledge management and structured learning web app that combines the best of PKM (Personal Knowledge Management) with AI tutoring capabilities. Built with a Hybrid RAG architecture using vector search and structured memory for intelligent, long-term user interactions.
+Iubar is an AI-enhanced personal knowledge management and structured learning web app that makes thinking, learning, and creating feel effortless and enjoyable. Built with a Hybrid RAG architecture using vector search and structured memory for intelligent, context-aware interactions.
+
+**Core Value Proposition**:
+- **Contextual Intelligence**: AI that truly understands your documents and provides structured guidance
+- **Frictionless Experience**: Apple-level simplicity where AI handles the administrative burden
+- **Cost-Efficient Scale**: Lean architecture with smart AI optimizations
+
+## Target Users
+
+- **Continuous Learners**: Self-improvement focused, wants efficient learning with tangible progress
+- **Project Builders**: Transform ideas into reality with AI as a thinking partner
+- **Curious Procrastinators**: Many interests, killed by friction—reduce friction to near-zero and they engage deeply
 
 ## Prerequisites
 
@@ -104,25 +115,27 @@ This script will check:
 **Hybrid RAG with Structured Memory**:
 ```
 ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│   Documents     │──▶│   Vector Store   │───▶│  Smart Routing  │
-│   (PDF, Text)   │    │    (Chroma)      │    │   LLM Layer     │
+│   Documents     │──▶│   Vector Store   │───▶│   DeepSeek      │
+│  (via Docling)  │    │    (Chroma)      │    │   V3.2-Exp      │
 └─────────────────┘    └──────────────────┘    └─────────────────┘
                                 ▲                        │
 ┌─────────────────┐     ┌──────────────────┐             ▼
 │ Structured      │───▶│    SQLite DB     │    ┌─────────────────┐
-│ Memory (JSON)   │     │  (Relationships) │    │   AI Response   │
+│ Memory (JSON)   │     │  (User Profile)  │    │   AI Response   │
 └─────────────────┘     └──────────────────┘    └─────────────────┘
 ```
 
 ### Technology Stack
 - **Backend**: Python 3.11+ with FastAPI (async support, auto-generated docs)
-- **Frontend**: React 18+ with TypeScript and Vite (modern, fast development)
+- **Frontend**: React 18+ with TypeScript, Vite, and TailwindCSS
 - **AI/ML**: 
-  - Vector Store: Chroma (embedded, no external dependencies)
-  - RAG Framework: LlamaIndex (superior document processing)
-  - LLM Integration: 
+  - **LLM**: DeepSeek V3.2-Exp (95% cheaper than GPT-5, frontier performance)
+  - **Embeddings**: Voyage 3.5 Lite (80.3% nDCG, quality-first)
+  - **Vector Store**: Chroma (embedded, no external dependencies)
+  - **Document Processing**: Docling (PDF/DOCX/HTML → Markdown)
+  - **GitHub Ingestion**: gitingest (repos → Markdown)
 - **Database**: SQLite (judge-friendly, no setup required)
-- **Memory**: JSON-based structured memory store
+- **Memory**: JSON-based structured memory store + persistent user profiles
 - **Development**: Kiro IDE for agentic development
 
 ### Directory Structure
@@ -130,14 +143,14 @@ This script will check:
 iubar/
 ├── backend/
 │   ├── app/
-│   │   ├── api/              # FastAPI routes and endpoints
-│   │   ├── core/             # Core business logic
-│   │   ├── models/           # SQLAlchemy models
-│   │   ├── services/         # AI and RAG services
-│   │   └── utils/            # Helper functions
-│   ├── tests/                # Backend tests
-│   ├── requirements.txt      # Python dependencies
-│   └── main.py               # FastAPI application entry point
+│   │   ├── api/             # FastAPI routes and endpoints
+│   │   ├── core/            # Core business logic
+│   │   ├── models/          # SQLAlchemy models
+│   │   ├── services/        # AI and RAG services
+│   │   └── utils/           # Helper functions
+│   ├── tests/               # Backend tests
+│   ├── requirements.txt     # Python dependencies
+│   └── main.py              # FastAPI application entry point
 ├── frontend/
 │   ├── src/
 │   │   ├── components/      # React components
@@ -161,10 +174,10 @@ iubar/
 
 ### Key Components
 - **RAG Engine** (`backend/app/services/rag_service.py`): Core AI retrieval and generation logic
-- **Document Processing** (`backend/app/services/document_service.py`): PDF/text chunking and embedding
-- **Smart LLM Router** (`backend/app/services/llm_router.py`): Cost-optimized AI model selection
+- **Document Processing** (`backend/app/services/document_service.py`): Docling-powered document → Markdown conversion
 - **Chat Interface** (`frontend/src/components/ChatInterface.tsx`): Main user interaction component
-- **Knowledge Graph** (`frontend/src/components/KnowledgeGraph.tsx`): Visualization of document relationships
+- **Document Viewer** (`frontend/src/components/DocumentViewer.tsx`): Split-pane Markdown viewer with focus caret
+- **Focus Caret**: Spark/light indicator for contextual AI awareness (arrow keys + click navigation)
 
 ## Deep Dive
 
@@ -184,17 +197,17 @@ iubar/
 
 ### Performance Optimizations
 - **Embedded Vector Store**: Chroma eliminates external database dependencies
-- **Smart Caching**: JSON-based memory store for user preferences and session history
+- **Smart Caching**: DeepSeek context caching (90% cheaper on repeated queries)
 - **Async Processing**: FastAPI with async/await for concurrent request handling
-- **Cost Optimization**: Intelligent LLM routing
+- **Quality Embeddings**: Voyage 3.5 Lite for precise semantic retrieval (fewer chunks needed)
 
 ### User Journey
-1. **Onboarding**: Upload initial documents, set learning goals and interests
-2. **Knowledge Building**: Add documents, notes, and ideas to the system
-3. **AI Interaction**: Ask questions, get tutoring, explore connections
-4. **Project Development**: Transform ideas into structured project plans
-5. **Progress Tracking**: Monitor learning advancement and knowledge growth
-6. **Continuous Learning**: Iterative improvement through AI-guided discovery
+1. **Zero-Friction Start**: Drop a document, paste a URL, or link a GitHub repo
+2. **Instant Processing**: Docling/gitingest converts to Markdown, Voyage embeds
+3. **Chat-First Exploration**: AI asks clarifying questions (Socratic style)
+4. **Deep Dive**: Split-pane view with focus caret for contextual questions
+5. **Adaptive Learning**: AI adjusts to your expertise level and learning style
+6. **Persistent Context**: Profile and session auto-save, restore on refresh
 
 ## Development Workflow
 
@@ -311,23 +324,25 @@ npm run dev -- --port 3000
 
 ## Development Status
 
-**Current Phase**: Foundation & Architecture (Week 1)
+**Current Phase**: PRD Complete, Implementation Starting (Week 2)
 - ✅ Hybrid RAG architecture design completed
+- ✅ PRD finalized with all core decisions
 - ✅ Advanced Kiro IDE features implemented (hooks, agents, testing)
 - ✅ Frontend testing infrastructure with TypeScript + Vitest + Playwright
 - ✅ Property-based testing for configuration validation (23 tests passing)
-- 🚧 Backend API development in progress
-- 🚧 Frontend React components in progress
-- ⏳ RAG engine implementation planned
-- ⏳ Document processing pipeline planned
+- 🚧 Document processing pipeline (Docling + gitingest)
+- 🚧 DeepSeek V3.2-Exp integration
+- 🚧 Voyage 3.5 Lite embeddings
+- ⏳ Split-pane UI with focus caret
+- ⏳ User profile system
 
-**Time Investment**: ~5 hours (Architecture decisions, Kiro setup, testing infrastructure)
+**Time Investment**: ~8 hours (Architecture, PRD, Kiro setup, testing infrastructure)
 
 **Next Milestones**:
-1. FastAPI + React project structure setup
-2. Basic Chroma vector store implementation
-3. Document upload and chunking pipeline
-4. Core Q&A functionality with AI tutoring
+1. Docling document processing pipeline
+2. Voyage embeddings + Chroma vector store
+3. DeepSeek chat integration with RAG
+4. Split-pane UI with focus caret
 
 ## Contributing
 
