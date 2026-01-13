@@ -17,27 +17,62 @@ Read plan file: `$ARGUMENTS`
 - Understand all tasks and their dependencies
 - Note the validation commands to run
 - Review the testing strategy
+- **Identify which tasks are backend vs frontend** for subagent delegation
 
-### 2. Execute Tasks in Order
+### 2. Task Classification
 
-For EACH task in "Step by Step Tasks":
+Before executing, classify each task:
 
-#### a. Navigate to the task
-- Identify the file and action required
-- Read existing related files if modifying
+| Task Type | Indicators | Subagent |
+|-----------|------------|----------|
+| **Backend** | `backend/`, Python files, FastAPI, API endpoints, database, RAG | `backend-specialist` |
+| **Frontend** | `frontend/`, React, TypeScript, components, UI, styling | `frontend-specialist` |
+| **Mixed/Integration** | Both backend and frontend, API contracts | Main agent coordinates |
 
-#### b. Implement the task
-- Follow the detailed specifications exactly
-- Maintain consistency with existing code patterns
-- Include proper type hints and documentation
-- Add structured logging where appropriate
+### 3. Execute Tasks with Subagents
 
-#### c. Verify as you go
-- After each file change, check syntax
-- Ensure imports are correct
-- Verify types are properly defined
+#### For Independent Backend/Frontend Tasks (Parallel Execution)
 
-### 3. Implement Testing Strategy
+When backend and frontend tasks have NO dependencies on each other:
+
+**Spawn subagents in parallel:**
+- Use `backend-specialist` subagent (from `.kiro/agents/backend-agent.json`) for backend tasks
+- Use `frontend-specialist` subagent (from `.kiro/agents/frontend-agent.json`) for frontend tasks
+
+Example delegation:
+```
+Run subagents to implement in parallel:
+1. Backend subagent (backend-specialist): Implement the API endpoint in backend/app/api/
+2. Frontend subagent (frontend-specialist): Implement the React component in frontend/src/
+```
+
+#### For Dependent Tasks (Sequential Execution)
+
+When tasks have dependencies (e.g., frontend needs backend API first):
+1. Execute backend task first (via backend-specialist subagent)
+2. Wait for completion
+3. Execute frontend task (via frontend-specialist subagent)
+
+#### For Integration Tasks
+
+Handle directly in main agent:
+- API contract definitions
+- Shared types/interfaces
+- Integration testing
+- Cross-cutting concerns
+
+### 4. Subagent Task Format
+
+When delegating to a subagent, provide:
+
+```
+Task: [Clear description of what to implement]
+Files: [Specific files to create/modify]
+Requirements: [Relevant requirements from plan]
+Validation: [How to verify the task is complete]
+```
+
+### 5. Implement Testing Strategy
 
 After completing implementation tasks:
 
@@ -46,24 +81,26 @@ After completing implementation tasks:
 - Follow the testing approach outlined
 - Ensure tests cover edge cases
 
-### 4. Run Validation Commands
-
-Execute ALL validation commands from the plan in order:
-
+**Run unified test suite:**
 ```bash
-# Run each command exactly as specified in plan
+cmd /c .kiro\scripts\run-all-tests.cmd
 ```
+
+### 6. Run Validation Commands
+
+Execute ALL validation commands from the plan in order.
 
 If any command fails:
 - Fix the issue
 - Re-run the command
 - Continue only when it passes
 
-### 5. Final Verification
+### 7. Final Verification
 
 Before completing:
 
 - ✅ All tasks from plan completed
+- ✅ All subagent tasks returned successfully
 - ✅ All tests created and passing
 - ✅ All validation commands pass
 - ✅ Code follows project conventions
@@ -77,6 +114,7 @@ Provide summary:
 - List of all tasks completed
 - Files created (with paths)
 - Files modified (with paths)
+- **Subagent delegation summary** (which subagent handled which tasks)
 
 ### Tests Added
 - Test files created
@@ -91,7 +129,7 @@ Provide summary:
 ### Ready for Commit
 - Confirm all changes are complete
 - Confirm all validations pass
-- Ready for `/commit` command
+- Ready for `@create-pr` prompt
 
 ## Safety Clauses
 
@@ -99,12 +137,14 @@ Provide summary:
 - DO NOT proceed to next task until current task validates successfully
 - DO NOT modify files not specified in the plan
 - If plan is ambiguous, ask for clarification rather than assume
+- **Subagents cannot access specs** - provide all necessary context in the delegation
 
 ## Checkpoint Requirements
 
 - After each phase, summarize what was completed before proceeding
 - Before any destructive operations (delete, overwrite), confirm intent
 - If deviating from plan, document the reason BEFORE making changes
+- **After subagent completion**, verify results before proceeding
 
 ## Constraints
 
@@ -118,4 +158,5 @@ Provide summary:
 - If you encounter issues not addressed in the plan, document them and ask for guidance
 - If you need to deviate from the plan, explain why before proceeding
 - If tests fail, attempt to fix implementation - if stuck after 3 attempts, report to user
-- Don't skip validation steps
+- **Subagents have their own context** - results are returned to main agent automatically
+- **Steering files work in subagents** - they will have access to tech.md, product.md, etc.

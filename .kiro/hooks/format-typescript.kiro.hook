@@ -1,0 +1,17 @@
+{
+  "enabled": true,
+  "name": "Format TypeScript on Save",
+  "description": "Automatically formats TypeScript/TSX files with Prettier when saved.",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "frontend/**/*.ts",
+      "frontend/**/*.tsx"
+    ]
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "npx prettier --write ${file}"
+  }
+}

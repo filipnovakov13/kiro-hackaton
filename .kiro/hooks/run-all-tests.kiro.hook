@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "Run All Tests",
+  "description": "Runs all frontend and backend tests in a unified test suite.",
+  "version": "1",
+  "when": {
+    "type": "manual"
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "cmd /c .kiro\\scripts\\run-all-tests.cmd"
+  }
+}

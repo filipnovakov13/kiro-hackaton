@@ -1,43 +1,88 @@
 # Product Overview
 
 ## Product Purpose
-Iubar is an AI-enhanced personal knowledge management and structured learning web app that combines the best of PKM (Personal Knowledge Management) with AI tutoring capabilities. It helps users organize their knowledge, learn new skills systematically, and act on their ideas and projects through intelligent AI assistance and structured memory.
+Iubar is an AI-enhanced personal knowledge management and structured learning web app. It makes thinking, learning, and creating feel effortless through a hybrid RAG architecture combining vector search with structured memory for intelligent, context-aware interactions.
+
+## Core Value Proposition
+1. **Contextual Intelligence**: AI that truly understands your documents and provides structured guidance
+2. **Frictionless Experience**: Apple-level simplicity where AI handles administrative burden
+3. **Cost-Efficient Scale**: Lean architecture with smart AI optimizations
 
 ## Target Users
-- **Primary**: Individuals focused on continuous learning and knowledge organization
-- **Secondary**: People working on personal projects who need structured guidance
-- **Needs**: 
-  - Organize and connect disparate knowledge
-  - Learn new skills with AI guidance
-  - Transform ideas into actionable projects
-  - Maintain long-term learning context and progress
+- **Primary (Continuous Learner)**: Self-improvement focused, moderate-high technical comfort
+- **Secondary (Project Builder)**: Personal projects needing structured AI guidance
+- **Tertiary (Curious Procrastinator)**: Many interests, needs zero-friction to engage
 
-## Key Features
-- **Hybrid RAG Architecture**: Vector search + structured memory for intelligent knowledge retrieval
-- **AI Tutoring**: Personalized learning guidance based on user's knowledge and goals
-- **Smart LLM Routing**: Cost-optimized AI responses (Mistral → GPT-4o → Claude based on complexity)
-- **Persistent Memory**: JSON-based user preferences and SQLite relationship tracking
-- **Document Processing**: Upload and intelligently chunk various document types
-- **Learning Progress Tracking**: Monitor skill development and project advancement
-- **Knowledge Graph Visualization**: See connections between concepts and ideas
+## UX Philosophy (Apple-Level Simplicity)
+- Progressive disclosure: Show only what's needed, when it's needed
+- One primary action per screen
+- Instant feedback on every interaction (<100ms)
+- Beautiful defaults that just work
+- Delight in the details
+- Desktop-optimized (no mobile in MVP)
 
-## Business Objectives
-- Create an intuitive, powerful personal learning and knowledge management system
-- Demonstrate innovative hybrid RAG architecture for hackathon judges
-- Build a foundation for future commercial PKM/learning platform
-- Showcase effective AI integration and cost optimization strategies
+## Key UI Components
+- **Chat-first interface** with document upload prompt
+- **Split-pane layout**: Document viewer (left) + AI chat (right)
+- **Focus caret (spark)**: Glowing indicator for contextual awareness
+  - Arrow ↑↓ keys move caret by paragraph
+  - Click to place caret anywhere
+  - AI receives context around caret position
+- **Markdown renderer** for all documents
+- **Drag-and-drop** file upload
+- **Streaming chat responses** with source attribution
+
+## AI Personality: Adaptive Socratic
+- Adapts to user's expertise level and learning style
+- Guides through questions rather than just providing answers
+- **Anti-sycophancy**: Sparse praise, no empty validation, direct engagement
+- Honest feedback without sugar-coating
+
+## User Profile System
+- Persistent light profile (foundation for future knowledge graph)
+- Optional 2-question onboarding (purpose + background), skippable
+- Implicit learning from vocabulary and questions
+- Cross-session memory persistence
+
+## Error Handling
+- Simple, concise, and informative
+- No technical jargon for users
+- Friendly and actionable error states
+
+## Session Behavior
+- No timeout
+- Auto-save on every interaction
+- Restore on refresh
 
 ## User Journey
-1. **Onboarding**: Upload initial documents, set learning goals and interests
-2. **Knowledge Building**: Add documents, notes, and ideas to the system
-3. **AI Interaction**: Ask questions, get tutoring, explore connections
-4. **Project Development**: Transform ideas into structured project plans
-5. **Progress Tracking**: Monitor learning advancement and knowledge growth
-6. **Continuous Learning**: Iterative improvement through AI-guided discovery
+1. **Welcome**: Chat-first with upload prompt (30-second onboarding)
+2. **Document Processing**: Drag-drop → progress indicator → Markdown view
+3. **Exploration**: Split-pane with focus caret for contextual AI chat
+4. **Deep Learning**: Socratic AI adapts to user level, remembers context
 
 ## Success Criteria
-- **Functionality**: Core RAG + structured memory working end-to-end
-- **User Experience**: Intuitive document upload and AI chat interface
-- **Innovation**: Demonstrates hybrid architecture benefits over pure vector RAG
-- **Performance**: Sub-2 second response times for most queries
-- **Hackathon Metrics**: High scores on functionality, innovation, and documentation
+- **Functionality**: Core RAG works flawlessly end-to-end
+- **UX Excellence**: Apple-level simplicity—intuitive, beautiful, delightful
+- **Innovation**: Demonstrates hybrid architecture + cost optimization
+- **Performance**: <2s response times, <100ms UI feedback
+
+## MVP Scope
+
+**In Scope**:
+- Chat-first interface with document upload
+- Document upload (PDF, TXT, MD) via Docling
+- URL and GitHub repo ingestion
+- Document viewer with focus caret
+- AI chat with RAG-powered responses
+- Source attribution
+- Suggested questions
+- Basic session persistence
+- Cost tracking display
+
+**Out of Scope (Post-MVP)**:
+- Full dashboard with knowledge base management
+- Multi-model routing
+- Knowledge graph visualization
+- Learning progress tracking
+- User authentication/multi-user
+- Mobile/tablet support

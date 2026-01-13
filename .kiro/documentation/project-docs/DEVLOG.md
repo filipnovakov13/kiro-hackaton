@@ -2,7 +2,7 @@
 
 **Project**: Iubar - AI-Enhanced Personal Knowledge Management and Structured Learning Web App  
 **Duration**: January 6-23, 2026  
-**Time Spent**: ~42-52 hours   
+**Time Spent**: ~44-54 hours   
 
 ## Overview
 Building Iubar, an AI-enhanced personal knowledge management and structured learning web app that combines PKM with AI tutoring capabilities. Uses a Hybrid RAG architecture with vector search and structured memory for long-term, evolving user interactions.
@@ -11,10 +11,56 @@ Building Iubar, an AI-enhanced personal knowledge management and structured lear
 
 ## Week 2: Product Definition & Core Development (Jan 13-19)
 
-### Day 8 (Jan 13) - Product Requirements Document [~2h]
+### Day 8 (Jan 13) - Product Requirements Document & Kiro Configuration [~4h]
+
+**Kiro Configuration & Workflow Automation Session** [~2h]:
+- **Agent Definitions Updated**: All 4 agents refined with PRD-aligned prompts
+  - `backend-agent.json`: Added Docling, gitingest, Voyage 3.5 Lite, DeepSeek, cost optimization
+  - `frontend-agent.json`: Added TailwindCSS, focus caret, split-pane layout, Apple UX philosophy
+  - `review-agent.json`: Added RAG quality checks, cost optimization review
+  - `ux-agent.json`: Combined hook prompt into agent, Playwright integration
+- **Execute Prompt Enhanced**: Added subagent delegation for parallel task execution
+  - Backend tasks → `backend-specialist` subagent
+  - Frontend tasks → `frontend-specialist` subagent
+- **Steering Files Reorganized**: Split content between `tech.md` (technology only) and `product.md` (UX/product)
+
+**Hook System Exploration & Learnings**:
+- **5 Hooks Created**: Explored various trigger types and use cases
+- **Key Discovery**: `promptSubmit` trigger fires on ALL messages, cannot filter by specific prompts
+- **Hook Format**: Must use `.kiro.hook` extension (not `.json`)
+- **Working Hook**: `ui-playwright-test.kiro.hook` - spawns `ux-validator` subagent on `.tsx` file edits
+
+**Hook Trigger Types Documented**:
+| Trigger | Description |
+|---------|-------------|
+| `manual` | User clicks hook button or uses `/` slash command |
+| `fileEdited` | When a file matching pattern is saved |
+| `fileCreated` | When a new file is created |
+| `fileDeleted` | When a file is deleted |
+| `promptSubmit` | Fires before agent acts on ANY prompt (no filtering) |
+| `agentStop` | Fires when agent execution completes |
+
+**Technical Decisions**:
+| Decision | Rationale |
+|----------|-----------|
+| Subagent integration in execute.md | Enables parallel task execution for backend/frontend work |
+| Hook prompt → Agent prompt migration | Centralizes instructions, hook just triggers subagent spawn |
+| tech.md vs product.md separation | Clear separation of concerns - technology vs UX/product |
+
+**Files Modified**:
+- `.kiro/agents/`: All 4 agent definitions updated
+- `.kiro/prompts/execute.md`: Subagent integration added
+- `.kiro/steering/tech.md`, `.kiro/steering/product.md`: Content reorganization
+- `.kiro/hooks/ui-playwright-test.kiro.hook`: Subagent-spawning hook
+
+**Kiro Usage**: Agent configuration, 5 hooks created, prompt refinement, subagent integration
+
+---
+
+**PRD Creation Session** [~2h]
 
 **PRD Creation Session**:
-- **Comprehensive PRD Created**: `.kiro/documentation/projectPRD.md` (Version 1.0)
+- **Comprehensive PRD Created**: `.kiro/documentation/project-docs/PRD.md` (Version 1.0)
 - **Iterative refinement process** with continuous questioning and decision-making
 
 **Key Decisions Made**:
@@ -57,7 +103,7 @@ Building Iubar, an AI-enhanced personal knowledge management and structured lear
 - 🔄 API Resilience Strategy - handling unresponsive APIs
 
 **Files Created/Modified**:
-- `.kiro/documentation/PRD.md` - Complete PRD (Version 1.0)
+- `.kiro/documentation/project-docs/PRD.md` - Complete PRD (Version 1.0)
 - `.kiro/documentation/project-docs/future-tasks.md` - Added 3 new future tasks
 
 **Kiro Usage**: PRD creation prompt, iterative refinement, decision documentation
@@ -125,8 +171,6 @@ Building Iubar, an AI-enhanced personal knowledge management and structured lear
     - `api.test.ts` (11 tests) - API client functionality
     - `frontend-backend-integration.test.ts` (7 tests) - cross-origin communication
     - `full-setup-integration.test.ts` (10 tests) - full stack integration
-    - `format-hook.property.test.ts` (8 tests) - format hook validation
-    - `agent-config.property.test.ts` (23 tests) - agent configuration validation
 - **Advanced Kiro Features - Task 6.5 Completed**:
   - Property-based tests for 4 specialized agent configurations
   - Validates Properties 5, 6, 7 (permission boundaries, expertise keywords, resource inclusion)
@@ -235,18 +279,18 @@ Building Iubar, an AI-enhanced personal knowledge management and structured lear
 - **DeepSeek V3.2-Exp as sole LLM**: Single model simplifies architecture, 95% cheaper than GPT-5 with frontier performance, automatic context caching reduces costs further
 - **Voyage 3.5 Lite for embeddings**: Quality-first approach (80.3% nDCG), 512 dimensions for storage efficiency, $0.02/M tokens is acceptable for quality gains
 - **Docling for document processing**: Open-source, converts PDF/DOCX/PPTX/HTML to clean Markdown, preserves structure perfectly for AI consumption
-- **gitingest for GitHub repos**: Lightweight tomparatverts repos to Markdown without cloning, preserves structure
+- **gitingest for GitHub repos**: Lightweight tool converts repos to Markdown without cloning, preserves structure
 
 ### UX/UI Decisions (PRD Decisions - Jan 13)
 - **Chat-first → Split-pane flow**: Zero friction entry point, then reveals document viewer with focus caret for deep exploration
-- **Focupts have exark)**: Minimal visual indicator (light ball) that follows scroll, movable via arrow keys or click, provides implicit context to AI
+- **Focus caret (spark)**: Minimal visual indicator (light ball) that follows scroll, movable via arrow keys or click, provides implicit context to AI
 - **Desktop-only for MVP**: Focus resources on core experience rather than responsive design
 - **No session timeout**: Auto-save on every interaction, restore on refresh - users never lose work
 
 ### AI Personality Design (PRD Decisions - Jan 13)
-- **Adaptive Socratic**: Adjusts to user's expertise level while guiding through qutions
+- **Adaptive Socratic**: Adjusts to user's expertise level while guiding through questions
 - **Anti-sycophancy rules**: Sparse praise only for genuine insights, no empty validation patterns
-- **Persistent light profile**: 2-question optional onboarding, AI infers expertise from interacdation for future knowledge graph
+- **Persistent light profile**: 2-question optional onboarding, AI infers expertise from interaction for future knowledge graph
 
 ### Advanced Development Workflow
 - **Specialized Agents**: Created domain-specific agents (backend, frontend, review, UX) to improve development efficiency
@@ -281,16 +325,27 @@ Building Iubar, an AI-enhanced personal knowledge management and structured lear
 
 ## Kiro Usage Statistics
 
-- **Total Prompts Used**: 10+ (spec execution, testing, LSP validation, code review, file structure creation)
-- **Most Used**: Spec-driven development, task execution, property-based testing, LSP validation, code-review
+- **Total Prompts Used**: 15+ (spec execution, testing, LSP validation, code review, file structure creation, agent configuration)
+- **Most Used**: Spec-driven development, task execution, property-based testing, LSP validation, code-review, update-devlog
 - **Custom Prompts Created**: 2 (update-devlog, create-pr)
-- **Estimated Time Saved**: ~7.3 hours through automated configuration, testing, development workflow setup, and backend scaffolding
+- **Hooks Created**: 5 (explored various triggers, 1 working: ui-playwright-test.kiro.hook)
+- **Agents Configured**: 4 (backend-specialist, frontend-specialist, review-agent, ux-validator)
+- **Subagent Integration**: execute.md enhanced with parallel task delegation
+- **Estimated Time Saved**: ~9 hours through automated configuration, testing, development workflow setup, backend scaffolding, and agent/hook automation
 
 ---
 
 ## Next Steps
 
-### Week 1 Goals:
-- Working vector RAG pipeline
-- Basic Q&A functionality
-- Simple frontend for document upload and chat
+### Immediate (Week 2):
+- [ ] Phase 1: Document ingestion pipeline (Docling + gitingest)
+- [ ] Phase 1: Basic UI shell with welcome screen
+- [ ] Phase 2: Chroma vector store + Voyage embeddings
+- [ ] Phase 2: DeepSeek V3.2-Exp integration
+- [ ] Phase 2: RAG query endpoint
+- [ ] Phase 2: Split-pane UI with focus caret
+
+### Deferred to Dedicated Sessions:
+- [ ] 🎨 Visual Identity Design (Day 8-9)
+- [ ] 📄 Demo Documents Selection (Day 8-9)
+- [ ] 🔄 API Resilience Strategy (Day 7-8)
