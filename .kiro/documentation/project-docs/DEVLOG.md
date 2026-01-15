@@ -11,6 +11,42 @@ Building Iubar, an AI-enhanced personal knowledge management and structured lear
 
 ## Week 2: Product Definition & Core Development (Jan 13-19)
 
+### Day 10 (Jan 15) - Python 3.12 Migration [~30m]
+
+**Python Version Downgrade**:
+- **Issue Discovered**: ChromaDB 1.4.1 incompatible with Python 3.14.2
+- **Root Cause**: ChromaDB uses Pydantic V1, which stopped supporting Python 3.14+
+- **Error**: `pydantic.v1.errors.ConfigError: unable to infer type for attribute "chroma_server_nofile"`
+- **Solution**: Migrated to Python 3.12.8 (latest stable with ChromaDB support)
+
+**Migration Process**:
+- Downloaded and installed Python 3.12.8
+- Deleted old `.venv` directory
+- Created new virtual environment with Python 3.12
+- Reinstalled all dependencies successfully
+- All 114 tests passing (54 backend + 59 frontend)
+
+**Documentation Created**:
+- `python-3.12-migration-guide.md` - Comprehensive 8-phase migration guide
+- `python-3.12-migration-checklist.md` - Quick command reference
+- `MIGRATION-SUMMARY.md` - Problem analysis and solution rationale
+
+**Files Updated**:
+- `README.md` - Updated Python requirement to 3.12+
+- `.kiro/specs/foundation-phase/tasks.md` - Updated Python version, marked Task 1 complete
+- `backend/tests/test_setup.py` - Updated dependency count assertion (15 → 25)
+- `.gitignore` - Created root gitignore to exclude .venv and dependencies
+
+**Technical Achievements**:
+- ✅ ChromaDB now imports without errors
+- ✅ VoyageAI and Docling working correctly
+- ✅ FastAPI server starts successfully
+- ✅ Ready to continue with Task 2.1 (Database Layer)
+
+**Kiro Usage**: Research (ChromaDB compatibility), documentation generation, test fixing
+
+---
+
 ### Day 9 (Jan 14) - Foundation Phase Specification [2h]
 
 **Foundation Phase Spec Creation Session**:
