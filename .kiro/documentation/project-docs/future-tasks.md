@@ -263,3 +263,398 @@ Intelligent routing between multiple LLMs based on query complexity:
 ---
 
 *Last Updated: January 13, 2026*
+
+
+---
+
+## Production Hardening Tasks (Added January 14, 2026)
+
+These tasks were identified during Phase 1 Foundation design review. They address architectural improvements needed before production scale deployment.
+
+### Priority Legend
+- **P0**: Must fix before production deployment (blockers)
+- **P1**: Should fix before scaling (>50 users)
+- **P2**: Plan for production scale (>500 users)
+
+---
+
+## P0 - Production Blockers
+
+### P0-1: Replace In-Memory Task Queue with Celery + Redis
+**Effort**: 3-5 days | **Impact**: Data loss prevention, horizontal scaling
+
+**Problem**: Current `TaskManager` uses in-memory dictionary. Server restart loses all task status. Cannot scale horizontally.
+
+**Solution**:
+```python
+# Replace TaskManager with Celery tasks
+from celery import Celery
+
+celery_app = Celery('iubar', broker='redis://localhost:6379/0')
+
+@celery_app.task(bind=True)
+def process_document_task(self, task_id: str, file_path: str, file_type: str):
+    self.update_state(state='CONVERTING', meta={'progress': 'Converting...'})
+    # ... processing logic
+```
+
+**Files to modify**:
+- `backend/app/services/task_manager.py` → Replace with Celery integration
+- `backend/main.py` → Add Celery worker startup
+- `docker-compose.yml` → Add Redis service
+- `requirements.txt` → Add `celery`, `redis`
+
+**References**:
+- [Celery + FastAPI Guide](https://testdriven.io/courses/fastapi-celery/intro/)
+- [Slack's Job Queue Architecture](https://slack.engineering/scaling-slacks-job-queue/)
+
+---
+
+### P0-2: Move Heavy Processing from BackgroundTasks to Celery Workers
+**Effort**: 2-3 days | **Impact**: API performance, worker isolation
+
+**Problem**: FastAPI's `BackgroundTasks` runs in the same event loop. Docling processing (5-10 min) blocks API responsiveness.
+
+**Solution**: Use Celery workers in separate processes:
+```python
+# In api/documents.py
+from app.tasks import process_document_task
+
+@router.post("/upload")
+async def upload_document(file: UploadFile):
+    task_id = str(uuid.uuid4())
+    # ... save file ...
+    
+    # Queue to Celery instead of BackgroundTasks
+    process_document_task.delay(task_id, file_path, file_type)
+    
+    return {"task_id": task_id, "status": "pending"}
+```
+
+---
+
+### P0-3: Add Circuit Breaker for Embedding Service
+**Effort**: 1 day | **Impact**: Prevent cascading failures
+
+**Problem**: No circuit breaker pattern. If Voyage AI is down, every request waits through all retries.
+
+**Solution**:
+```python
+from circuitbreaker import circuit
+
+class EmbeddingService:
+    @circuit(failure_threshold=5, recovery_timeout=60)
+    async def _embed_batch(self, texts: List[str], input_type: str):
+        # ... existing logic ...
+```
+
+**Package**: `circuitbreaker` or `pybreaker`
+
+---
+
+### P0-4: Implement Docling Fallback Strategy (PyMuPDF)
+**Effort**: 2-3 days | **Impact**: Reliability, 50x speed improvement for fallback
+
+**Problem**: Docling can hang indefinitely, crash on certain PDFs, and is 50-100x slower than alternatives.
+
+**Solution**: Multi-strategy processing pipeline:
+```python
+class DocumentProcessor:
+    def __init__(self):
+        self._strategies = [
+            DoclingStrategy(timeout=120),  # Try sophisticated extraction first
+            PyMuPDFStrategy(),              # Fast fallback (8s vs 8min)
+            PlainTextStrategy()             # Last resort
+        ]
+    
+    async def process_file(self, file_path: str, file_type: str):
+        for strategy in self._strategies:
+            try:
+                return await asyncio.wait_for(
+                    strategy.process(file_path),
+                    timeout=strategy.timeout
+                )
+            except (asyncio.TimeoutError, ProcessingError):
+                continue
+        raise ProcessingError("All processing strategies failed")
+```
+
+**Packages**: `pymupdf` (PyMuPDF)
+
+---
+
+### P0-5: Add Authentication/Authorization Framework
+**Effort**: 3-4 days | **Impact**: Security compliance
+
+**Problem**: No user authentication. Anyone can list/delete all documents.
+
+**Solution**:
+```python
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from jose import jwt
+
+security = HTTPBearer()
+
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    token = credentials.credentials
+    payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+    return payload["user_id"]
+
+@router.get("/documents")
+async def list_documents(user_id: str = Depends(get_current_user)):
+    return get_documents_for_user(user_id)
+```
+
+---
+
+## P1 - Pre-Scale Improvements
+
+### P1-1: Implement Structured Logging + Distributed Tracing
+**Effort**: 2-3 days | **Impact**: Debugging, performance optimization
+
+**Problem**: No correlation IDs, can't trace requests across services.
+
+**Solution**:
+```python
+import structlog
+from opentelemetry import trace
+
+structlog.configure(
+    processors=[
+        structlog.processors.add_log_level,
+        structlog.processors.TimeStamper(fmt="iso"),
+        structlog.processors.JSONRenderer()
+    ]
+)
+
+@app.middleware("http")
+async def add_correlation_id(request: Request, call_next):
+    correlation_id = request.headers.get("X-Correlation-ID", str(uuid.uuid4()))
+    structlog.contextvars.bind_contextvars(correlation_id=correlation_id)
+    response = await call_next(request)
+    response.headers["X-Correlation-ID"] = correlation_id
+    return response
+```
+
+**Packages**: `structlog`, `opentelemetry-api`, `opentelemetry-sdk`
+
+---
+
+### P1-2: Add Prometheus Metrics + Alerting
+**Effort**: 2 days | **Impact**: Proactive issue detection
+
+**Metrics to track**:
+- `document_processing_duration_seconds` (histogram)
+- `embedding_api_calls_total` (counter)
+- `embedding_api_errors_total` (counter)
+- `vector_store_query_duration_seconds` (histogram)
+- `active_processing_tasks` (gauge)
+
+```python
+from prometheus_client import Counter, Histogram, generate_latest
+
+EMBEDDING_CALLS = Counter('embedding_api_calls_total', 'Total embedding API calls')
+PROCESSING_TIME = Histogram('document_processing_seconds', 'Document processing time')
+
+@app.get("/metrics")
+async def metrics():
+    return Response(generate_latest(), media_type="text/plain")
+```
+
+---
+
+### P1-3: Add Rate Limiting to API Endpoints
+**Effort**: 4 hours | **Impact**: Abuse prevention
+
+**Problem**: No rate limiting. Malicious actor could exhaust disk space or overwhelm embedding service.
+
+**Solution**:
+```python
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+
+limiter = Limiter(key_func=get_remote_address)
+
+@router.post("/upload")
+@limiter.limit("10/minute")  # 10 uploads per minute per IP
+async def upload_document(request: Request, file: UploadFile):
+    # ...
+```
+
+**Package**: `slowapi`
+
+---
+
+### P1-4: Implement File Cleanup Strategy
+**Effort**: 1 day | **Impact**: Prevent disk exhaustion
+
+**Problem**: Orphaned files and temp files persist indefinitely.
+
+**Solution**:
+```python
+# Scheduled cleanup task (run daily)
+async def cleanup_orphaned_files():
+    upload_dir = settings.upload_path
+    db_files = await get_all_document_filenames()
+    
+    for filename in os.listdir(upload_dir):
+        if filename not in db_files:
+            file_path = os.path.join(upload_dir, filename)
+            file_age = time.time() - os.path.getmtime(file_path)
+            if file_age > 86400:  # 24 hours
+                os.remove(file_path)
+                logger.info(f"Cleaned up orphaned file: {filename}")
+```
+
+---
+
+### P1-5: Add SSRF Protection for URL Ingestion
+**Effort**: 4 hours | **Impact**: Security
+
+**Problem**: URL ingestion allows access to internal networks.
+
+**Solution**:
+```python
+import ipaddress
+from urllib.parse import urlparse
+
+BLOCKED_IP_RANGES = [
+    ipaddress.ip_network('127.0.0.0/8'),     # Localhost
+    ipaddress.ip_network('10.0.0.0/8'),      # Private
+    ipaddress.ip_network('172.16.0.0/12'),   # Private
+    ipaddress.ip_network('192.168.0.0/16'),  # Private
+    ipaddress.ip_network('169.254.0.0/16'),  # Link-local
+]
+
+async def validate_url_safe(url: str) -> bool:
+    parsed = urlparse(url)
+    try:
+        ip = ipaddress.ip_address(parsed.hostname)
+        for blocked in BLOCKED_IP_RANGES:
+            if ip in blocked:
+                raise ValidationError("URL points to internal network")
+    except ValueError:
+        pass  # Hostname, not IP - resolve and check
+    return True
+```
+
+---
+
+## P2 - Production Scale (>500 users)
+
+### P2-1: Migrate SQLite → PostgreSQL
+**Trigger**: >20 concurrent users OR "database locked" errors
+
+**Effort**: 1 week
+
+**Changes**:
+- Update `DATABASE_URL` to PostgreSQL connection string
+- Add `asyncpg` driver
+- Consider `pgvector` extension for future vector storage consolidation
+- Add connection pooling with `asyncpg`
+
+---
+
+### P2-2: Migrate ChromaDB → Qdrant Cluster
+**Trigger**: >50K documents OR >50ms query latency
+
+**Effort**: 3-5 days
+
+**Benefits**:
+- 3-4x faster queries
+- Better filtering capabilities
+- Horizontal scaling with sharding
+- Built-in quantization (INT8/binary)
+
+**Changes**:
+- Implement `QdrantVectorStore(VectorStoreInterface)`
+- Deploy Qdrant cluster (3+ nodes)
+- Migrate existing embeddings
+
+---
+
+### P2-3: Migrate Local Storage → S3/MinIO
+**Trigger**: Multi-server deployment OR >100GB storage
+
+**Effort**: 2-3 days
+
+**Changes**:
+- Replace file operations with `boto3` S3 client
+- Add presigned URLs for direct uploads
+- Implement lifecycle policies for cleanup
+
+---
+
+### P2-4: Add Load Testing Suite
+**Effort**: 2 days
+
+**Tools**: Locust or k6
+
+**Scenarios**:
+- Concurrent document uploads (10, 50, 100 users)
+- Embedding API rate limit behavior
+- ChromaDB query performance at scale
+- Memory usage under load
+
+```python
+# locustfile.py
+from locust import HttpUser, task, between
+
+class IubarUser(HttpUser):
+    wait_time = between(1, 3)
+    
+    @task(3)
+    def upload_document(self):
+        with open("test.pdf", "rb") as f:
+            self.client.post("/api/documents/upload", files={"file": f})
+    
+    @task(1)
+    def list_documents(self):
+        self.client.get("/api/documents")
+```
+
+---
+
+## Architecture Evolution Roadmap
+
+### Phase 1: MVP (Current)
+```
+FastAPI → SQLite + ChromaDB + Local Files
+         ↓
+    BackgroundTasks (in-process)
+```
+
+### Phase 1.5: MVP Hardening (2-3 weeks)
+```
+FastAPI → Redis → Celery Workers
+    ↓                    ↓
+SQLite (WAL)      ChromaDB + Local Files
+```
+
+### Phase 2: Horizontal Scale (4-6 weeks)
+```
+Load Balancer → FastAPI (N instances)
+                    ↓
+              Redis Cluster
+                    ↓
+              Celery Workers (N)
+                    ↓
+    ┌───────────────┼───────────────┐
+    ↓               ↓               ↓
+PostgreSQL    Qdrant Cluster    S3 Storage
+```
+
+---
+
+## References
+
+- [Slack Job Queue Architecture](https://slack.engineering/scaling-slacks-job-queue/)
+- [FastAPI + Celery Best Practices](https://testdriven.io/courses/fastapi-celery/intro/)
+- [SQLite in Production](https://blog.driftingruby.com/using-sqlite-in-production/)
+- [Qdrant vs ChromaDB Comparison](https://airbyte.com/data-engineering-resources/chroma-db-vs-qdrant)
+- [RAG Chunking Strategies](https://www.firecrawl.dev/blog/best-chunking-strategies-rag-2025)
+- [Docling Alternatives](https://unstract.com/blog/docling-alternative/)
+
+---
+
+*Updated: January 14, 2026*

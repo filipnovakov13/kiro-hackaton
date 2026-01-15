@@ -15,17 +15,14 @@ Iubar is an AI-enhanced personal knowledge management and structured learning we
 
 ## Prerequisites
 
-- Python 3.11+
+- **Python 3.12+** (Required: ChromaDB compatibility - Python 3.14+ not supported)
 - Node.js 18+ (for frontend)
 - Git
-- Kiro CLI installed and authenticated
+
+> **Note**: Python 3.12 is required due to ChromaDB 1.4.1 using Pydantic V1, which does not support Python 3.14+. See [migration guide](.kiro/documentation/python-3.12-migration-guide.md) if upgrading from Python 3.14.
 
 ## Quick Start
 
-### Prerequisites
-- Python 3.11+
-- Node.js 18+
-- Git
 
 ### 1. Clone and Setup Project
 ```bash

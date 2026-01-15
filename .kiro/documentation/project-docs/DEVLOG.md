@@ -11,6 +11,82 @@ Building Iubar, an AI-enhanced personal knowledge management and structured lear
 
 ## Week 2: Product Definition & Core Development (Jan 13-19)
 
+### Day 9 (Jan 14) - Foundation Phase Specification [2h]
+
+**Foundation Phase Spec Creation Session**:
+- **Comprehensive Spec Created**: `.kiro/specs/foundation-phase/` with 3 documents
+  - `requirements.md` - 14 detailed requirements with EARS patterns
+  - `design.md` - Complete technical design with architecture decisions
+  - `tasks.md` - 19 task groups with implementation checklist
+
+**Requirements Document (14 Requirements)**:
+| # | Requirement | Description |
+|---|-------------|-------------|
+| 1 | Document Upload | PDF, DOCX, TXT, MD with 10MB limit |
+| 2 | URL Ingestion | Docling HTML parser for web content |
+| 3 | Document Processing | Docling pipeline with asyncio.to_thread() |
+| 4 | Chunking | 512-1024 tokens, 15% overlap, tiktoken |
+| 5 | Embeddings | Voyage AI voyage-3.5-lite (512 dims) |
+| 6 | Vector Storage | ChromaDB with abstraction layer |
+| 7 | Status Tracking | Polling-based progress updates |
+| 8 | Document CRUD | List, get, delete operations |
+| 9 | Database Schema | SQLite with documents + chunks tables |
+| 10 | Frontend Upload | React drag-drop interface |
+| 11 | Configuration | pydantic-settings with validation |
+| 12 | Error Handling | User-friendly messages |
+| 13 | Health Endpoints | /health and /api/status |
+| 14 | CORS | Development origins configured |
+
+**Design Document - Key Architectural Decisions**:
+| Decision | Choice | Rationale |
+|----------|--------|-----------|
+| Document Processing | Docling + `asyncio.to_thread()` | MIT license, local execution, non-blocking |
+| Vector Store | ChromaDB + abstraction layer | Zero infrastructure, migration path to Qdrant |
+| Embeddings | Voyage AI `voyage-3.5-lite` | 512 dims, $0.02/M tokens, dedicated ThreadPoolExecutor |
+| Chunking | 512-1024 tokens, 15% overlap | Research-backed optimal for RAG |
+| Database | SQLite with WAL mode + pragmas | Simple, async, optimized for concurrency |
+
+**Production Hardening Fixes Applied** (via Perplexity Research + Kiro critique session):
+- ✅ `asyncio.to_thread()` for Docling CPU-bound operations
+- ✅ Dedicated `ThreadPoolExecutor` for embedding service (4 workers)
+- ✅ Embedding cache with SHA-256 content hashing
+- ✅ SQLite WAL mode + busy_timeout + proper pragmas
+- ✅ Absolute paths for ChromaDB from config
+- ✅ Round-trip integrity correctness property added
+
+**Correctness Properties Defined** (10 properties for property-based testing):
+1. Chunk Token Bounds - All chunks 512-1024 tokens (except final)
+2. Token Count Accuracy - Reported count matches tiktoken
+3. Chunk Index Uniqueness - Sequential indices, no duplicates
+4. Add-Query Consistency - Added vectors retrievable by exact match
+5. Delete Completeness - Deleted documents return empty results
+6. Embedding Dimension Consistency - All embeddings 512-dimensional
+7. Embedding Cache Consistency - Same input returns cached result
+8. Round-Trip Integrity - TXT/MD files preserve content through processing
+9. Status Progression - Valid state transitions only
+10. Timestamp Ordering - created_at <= updated_at
+
+**Research & Critique Process**:
+- Used **Perplexity Research Mode** for deep-dive on Docling, ChromaDB, Voyage AI
+- Created **separate Kiro chat session** to critique initial design
+- Identified production hardening gaps (async patterns, caching, database pragmas)
+- Documented future improvements in `future-tasks.md` (Celery, circuit breaker, auth, etc.)
+
+**Files Created/Modified**:
+- `.kiro/specs/foundation-phase/requirements.md` - 14 requirements
+- `.kiro/specs/foundation-phase/design.md` - Technical design with fixes
+- `.kiro/specs/foundation-phase/tasks.md` - 19 task groups
+- `.kiro/documentation/project-docs/future-tasks.md` - Production hardening tasks appended
+- `.kiro/documentation/project-docs/foundation-research.md` - Research summary
+
+**Kiro Usage (Today)**:
+- Spec workflow execution (requirements → design → tasks)
+- Prework tool for correctness properties analysis
+- Separate critique session for design review
+- Iterative refinement with user feedback (3 chat sessions)
+
+---
+
 ### Day 8 (Jan 13) - Product Requirements Document & Kiro Configuration [~4h]
 
 **Kiro Configuration & Workflow Automation Session** [~2h]:
@@ -248,6 +324,20 @@ Building Iubar, an AI-enhanced personal knowledge management and structured lear
 
 ## Pull Requests
 
+### Day 8 (Jan 13) - Workflow Automation
+- **PR Created**: https://github.com/filipnovakov13/kiro-hackaton/pull/new/feature/workflow-automation
+- **Feature Summary**: Kiro IDE configuration with PRD-aligned agents, hooks, subagent integration in execute prompt, and steering file reorganization
+- **Branch**: `feature/workflow-automation`
+- **Commit**: `feat: workflow-automation` (19 files changed, 402 insertions, 913 deletions)
+- **Status**: Ready for review - all tests passing (55 backend + 28 frontend)
+
+### Day 8 (Jan 13) - Product Requirements Document
+- **PR Created**: https://github.com/filipnovakov13/kiro-hackaton/pull/new/feature/prd
+- **Feature Summary**: Comprehensive PRD (Version 1.0) with technology decisions, UX philosophy, AI personality design, and implementation phases
+- **Branch**: `feature/prd`
+- **Key Decisions**: DeepSeek V3.2-Exp, Voyage 3.5 Lite, Docling + gitingest, chat-first → split-pane UI, focus caret (spark), adaptive Socratic AI
+- **Status**: Ready for review
+
 ### Day 2 (Jan 8) - Project Setup
 - **00:34**: Successfully created PR for project setup
 - **PR Created**: https://github.com/filipnovakov13/kiro-hackaton/pull/new/feature/project-setup
@@ -325,24 +415,25 @@ Building Iubar, an AI-enhanced personal knowledge management and structured lear
 
 ## Kiro Usage Statistics
 
-- **Total Prompts Used**: 15+ (spec execution, testing, LSP validation, code review, file structure creation, agent configuration)
+- **Total Prompts Used**: 20+ (spec execution, testing, LSP validation, code review, file structure creation, agent configuration, spec workflow)
 - **Most Used**: Spec-driven development, task execution, property-based testing, LSP validation, code-review, update-devlog
 - **Custom Prompts Created**: 2 (update-devlog, create-pr)
 - **Hooks Created**: 5 (explored various triggers, 1 working: ui-playwright-test.kiro.hook)
 - **Agents Configured**: 4 (backend-specialist, frontend-specialist, review-agent, ux-validator)
 - **Subagent Integration**: execute.md enhanced with parallel task delegation
-- **Estimated Time Saved**: ~9 hours through automated configuration, testing, development workflow setup, backend scaffolding, and agent/hook automation
+- **Spec Workflows Completed**: 1 (foundation-phase: requirements → design → tasks)
+- **External Tools Used**: Perplexity Research Mode for technology deep-dives
+- **Critique Sessions**: 1 separate Kiro chat for design review
+- **Estimated Time Saved**: ~11 hours through automated configuration, testing, development workflow setup, backend scaffolding, agent/hook automation, and spec-driven development
 
 ---
 
 ## Next Steps
 
 ### Immediate (Week 2):
-- [ ] Phase 1: Document ingestion pipeline (Docling + gitingest)
-- [ ] Phase 1: Basic UI shell with welcome screen
-- [ ] Phase 2: Chroma vector store + Voyage embeddings
-- [ ] Phase 2: DeepSeek V3.2-Exp integration
-- [ ] Phase 2: RAG query endpoint
+- [x] Phase 1 Spec: Foundation phase specification complete
+- [ ] Phase 1 Implementation: Execute tasks from `.kiro/specs/foundation-phase/tasks.md`
+- [ ] Phase 2: RAG Core - Q&A with documents, chat interface
 - [ ] Phase 2: Split-pane UI with focus caret
 
 ### Deferred to Dedicated Sessions:
