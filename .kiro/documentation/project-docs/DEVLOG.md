@@ -1,17 +1,177 @@
 # Development Log - Iubar
 
-**Project**: Iubar - AI-Enhanced Personal Knowledge Management and Structured Learning Web App  
-**Duration**: January 6-23, 2026  
-**Time Spent**: ~44-54 hours   
+**Project**: Iubar - AI-Enhanced Personal Knowledge Management  
+**Duration**: January 6-17, 2026  
+**Total Time**: ~34 hours   
 
 ## Overview
 Building Iubar, an AI-enhanced personal knowledge management and structured learning web app that combines PKM with AI tutoring capabilities. Uses a Hybrid RAG architecture with vector search and structured memory for long-term, evolving user interactions.
+---
+
+## Week 3: Foundation Phase Implementation (Jan 15-17)
+
+### Day 8 (Jan 17) - Property-Based Testing Suite [~4h]
+
+**Optional Tasks Completion Session**:
+- **All Optional Tasks Completed**: Finished all property-based testing tasks from foundation-phase spec
+- **Tasks Completed**:
+  - ✅ Task 3.2 - ChunkService property tests (3 properties + edge cases)
+  - ✅ Task 4.3 - VectorStore property tests (2 properties + unit tests)
+  - ✅ Task 5.2 - EmbeddingService property tests with mocking (2 properties + unit tests)
+  - ✅ Task 7.2 - DocumentProcessor property tests (round-trip integrity)
+  - ✅ Task 8.2 - TaskManager property tests (3 properties + unit tests)
+  - ✅ Task 11.2 - Full pipeline integration test (end-to-end validation)
+
+**Testing Framework Updates**:
+- Fixed ChunkService property test with proper Hypothesis settings
+- All property-based tests use proper strategies and avoid common pitfalls
+- Tests follow best practices: tempfile for temporary resources, mocking for external APIs, proper cleanup
+- Unified test runner (`run-all-tests.cmd`) works correctly
+
+**Test Results**:
+- Backend: 81 passing tests
+- Frontend: 28 passing tests
+- Total: 109 tests passing
+
+**Test Coverage Achieved**:
+- Property-based tests validate universal correctness properties
+- Integration tests verify end-to-end functionality
+- All tests properly documented with requirement traceability
+
+**Technical Achievements**:
+- ✅ Complete property-based testing suite for all core services
+- ✅ Round-trip integrity validation for document processing
+- ✅ Mocked external API calls (Voyage AI) for reliable testing
+- ✅ Full pipeline integration test covering upload → process → embed → store
+
+**Files Created/Modified**:
+- `backend/tests/test_chunk_service_properties.py` - 3 properties + edge cases
+- `backend/tests/test_vector_store_properties.py` - 2 properties + unit tests
+- `backend/tests/test_embedding_service_properties.py` - 2 properties with mocking
+- `backend/tests/test_document_processor_properties.py` - Round-trip integrity
+- `backend/tests/test_task_manager_properties.py` - 3 properties + unit tests
+- `backend/tests/test_full_pipeline_integration.py` - End-to-end integration
+- `.kiro/specs/foundation-phase/tasks.md` - All optional tasks marked complete
+
+**Kiro Usage**: Task execution, property-based test generation, Hypothesis framework usage
+
+---
+
+### Day 7 (Jan 16) - UX Validation & Test Fixes [~3h]
+
+**UX Validation Hook Setup**:
+- Fixed UX validation hook (`ui-playwright-test.kiro.hook`) to run validation directly
+- Updated hook to execute LSP diagnostics, design system checks, and test commands
+- Rewrote `ux-agent.json` to be a reference document with structured validation instructions
+- Documented validation process: LSP checks → design system compliance → unit tests → E2E tests
+
+**Shell Command Workaround**:
+- Identified bug in Kiro's `executePwsh` tool (generates PowerShell syntax in CMD shell)
+- Created `shell-commands.md` with workaround: use `cmd /c cd /d path & command` pattern
+- Documented proper command templates for frontend/backend tests and builds
+
+**Test Fixes**:
+- Fixed 5 failing tests in `api.test.ts` and `frontend-backend-integration.test.ts`
+- Updated `handleResponse` function in `api.ts` to properly handle error responses
+- Added proper `json()` methods to mock responses in tests
+- All 28 frontend tests now passing
+
+**LSP Validation**:
+- Ran diagnostics on all modified files - no errors found
+- Maintained type safety throughout all changes
+
+**Technical Achievements**:
+- ✅ UX validation workflow established
+- ✅ Shell command workaround documented
+- ✅ All frontend tests passing (28/28)
+- ✅ Type safety maintained across all changes
+
+**Files Created/Modified**:
+- `.kiro/hooks/ui-playwright-test.kiro.hook` - Fixed validation hook
+- `.kiro/agents/ux-agent.json` - Rewrote as reference document
+- `.kiro/steering/shell-commands.md` - Shell command workaround guide
+- `frontend/src/services/api.ts` - Fixed error handling
+- `frontend/tests/api.test.ts` - Fixed mock responses
+- `frontend/tests/frontend-backend-integration.test.ts` - Fixed mock responses
+
+**Kiro Usage**: Hook configuration, agent configuration, LSP validation, test debugging
+
+---
+
+### Day 6 (Jan 15) - Foundation Phase E2E Testing [~2h]
+
+**E2E Test Setup & Execution**:
+- Created comprehensive Playwright test suite (`upload-flow.spec.ts`) covering:
+  - Upload zone display
+  - URL input validation
+  - Document list rendering
+  - File upload flow
+  - Document deletion
+- Installed Playwright browsers (Chromium)
+- Fixed ES module `__dirname` issue by adding proper imports
+
+**Critical Bug Fixes**:
+- **Import Path Issues**: Fixed `backend.app.*` imports to `app.*` in:
+  - `documents.py`
+  - `database.py`
+  - `document.py`
+- **Database Initialization**: Added missing `init_db()` call in `main.py` startup event
+  - Database tables were not being created, causing "no such table" errors
+- **Frontend Refresh Logic**: Updated `App.tsx` to refresh document list after upload starts
+  - Added 500ms delay to allow document to appear in database
+- **Test Fixes**: Fixed Playwright test to use `.first()` when multiple documents exist
+  - Handled case where previous test runs left documents in database
+
+**Server Management**:
+- Killed stuck Python processes blocking port 8000
+- Restarted backend and frontend servers multiple times
+- Verified both servers running correctly on ports 8000 and 5173
+
+**Test Results**:
+- Final: 7/7 Playwright tests passed ✅
+  - ✅ Upload zone displays on page load
+  - ✅ URL input field visible
+  - ✅ Document list section shows
+  - ✅ File upload works end-to-end
+  - ✅ File size validation (client-side)
+  - ✅ URL format validation
+  - ✅ Document deletion works
+
+**Task Completion**:
+- Marked Task 18.1 (Wire up App.tsx) as completed
+- Marked Task 19 (Final Checkpoint) as completed
+- Foundation Phase spec is now 100% complete (all required tasks)
+
+**Upload Flow Verified**:
+1. User uploads file → saved to disk
+2. Document record created in SQLite (status: pending)
+3. Background task processes: convert → chunk → embed → store
+4. Frontend polls and displays document in list
+5. User can delete document (cascades to chunks and vectors)
+
+**Technical Achievements**:
+- ✅ End-to-end upload flow working
+- ✅ Database initialization fixed
+- ✅ Import paths corrected
+- ✅ Frontend-backend integration verified
+- ✅ All Playwright E2E tests passing
+
+**Files Created/Modified**:
+- `frontend/tests/upload-flow.spec.ts` - Comprehensive E2E test suite
+- `backend/main.py` - Added database initialization
+- `backend/app/api/documents.py` - Fixed imports
+- `backend/app/core/database.py` - Fixed imports
+- `backend/app/models/document.py` - Fixed imports
+- `frontend/src/App.tsx` - Added refresh trigger on upload
+- `.kiro/specs/foundation-phase/tasks.md` - Marked tasks 18.1 and 19 complete
+
+**Kiro Usage**: E2E test creation, debugging, server management, task status updates
 
 ---
 
 ## Week 2: Product Definition & Core Development (Jan 13-19)
 
-### Day 10 (Jan 15) - Python 3.12 Migration [~30m]
+### Day 15 (Jan 15) - Python 3.12 Migration [~30m]
 
 **Python Version Downgrade**:
 - **Issue Discovered**: ChromaDB 1.4.1 incompatible with Python 3.14.2
@@ -24,12 +184,10 @@ Building Iubar, an AI-enhanced personal knowledge management and structured lear
 - Deleted old `.venv` directory
 - Created new virtual environment with Python 3.12
 - Reinstalled all dependencies successfully
-- All 114 tests passing (54 backend + 59 frontend)
+- All 114 tests passing (55 backend + 59 frontend)
 
 **Documentation Created**:
 - `python-3.12-migration-guide.md` - Comprehensive 8-phase migration guide
-- `python-3.12-migration-checklist.md` - Quick command reference
-- `MIGRATION-SUMMARY.md` - Problem analysis and solution rationale
 
 **Files Updated**:
 - `README.md` - Updated Python requirement to 3.12+
@@ -47,7 +205,7 @@ Building Iubar, an AI-enhanced personal knowledge management and structured lear
 
 ---
 
-### Day 9 (Jan 14) - Foundation Phase Specification [2h]
+### Day 4 (Jan 14) - Foundation Phase Specification [2h]
 
 **Foundation Phase Spec Creation Session**:
 - **Comprehensive Spec Created**: `.kiro/specs/foundation-phase/` with 3 documents
@@ -123,7 +281,7 @@ Building Iubar, an AI-enhanced personal knowledge management and structured lear
 
 ---
 
-### Day 8 (Jan 13) - Product Requirements Document & Kiro Configuration [~4h]
+### Day 3 (Jan 13) - Product Requirements Document & Kiro Configuration [~4h]
 
 **Kiro Configuration & Workflow Automation Session** [~2h]:
 - **Agent Definitions Updated**: All 4 agents refined with PRD-aligned prompts
@@ -437,42 +595,44 @@ Building Iubar, an AI-enhanced personal knowledge management and structured lear
 
 ---
 
-## Time Breakdown by Category (Planned)
+## Time Breakdown by Category
 
 | Category | Hours | Percentage |
 |----------|-------|------------|
-| Backend Development | TBD | TBD |
-| AI Integration & Memory | TBD | TBD |
-| Frontend Development | TBD | TBD |
-| Testing & Documentation | TBD | TBD |
-| **Total** | **TBD** | **100%** |
+| Backend Development | 12h | 35% |
+| Testing & Debugging | 13h | 38% |
+| Frontend Development | 6h | 18% |
+| Configuration & Tooling | 3h | 9% |
+| **Total** | **34h** | **100%** |
 
 ---
 
 ## Kiro Usage Statistics
 
-- **Total Prompts Used**: 20+ (spec execution, testing, LSP validation, code review, file structure creation, agent configuration, spec workflow)
-- **Most Used**: Spec-driven development, task execution, property-based testing, LSP validation, code-review, update-devlog
+- **Total Prompts Used**: 35+
+- **Most Used**: `@execute`, `@code-review`, LSP validation, task status updates, property-based testing
 - **Custom Prompts Created**: 2 (update-devlog, create-pr)
 - **Hooks Created**: 5 (explored various triggers, 1 working: ui-playwright-test.kiro.hook)
 - **Agents Configured**: 4 (backend-specialist, frontend-specialist, review-agent, ux-validator)
 - **Subagent Integration**: execute.md enhanced with parallel task delegation
-- **Spec Workflows Completed**: 1 (foundation-phase: requirements → design → tasks)
+- **Spec Workflows Completed**: 1 (foundation-phase: requirements → design → tasks → execution)
 - **External Tools Used**: Perplexity Research Mode for technology deep-dives
 - **Critique Sessions**: 1 separate Kiro chat for design review
-- **Estimated Time Saved**: ~11 hours through automated configuration, testing, development workflow setup, backend scaffolding, agent/hook automation, and spec-driven development
+- **Property-Based Tests Created**: 6 test files with 15+ properties
+- **E2E Tests Created**: 1 comprehensive Playwright suite (7 tests)
+- **Estimated Time Saved**: ~15 hours through automated configuration, testing, spec-driven development, and task execution
 
 ---
 
 ## Next Steps
 
-### Immediate (Week 2):
+### Immediate (Week 3):
 - [x] Phase 1 Spec: Foundation phase specification complete
-- [ ] Phase 1 Implementation: Execute tasks from `.kiro/specs/foundation-phase/tasks.md`
+- [x] Phase 1 Implementation: All tasks from `.kiro/specs/foundation-phase/tasks.md` complete
 - [ ] Phase 2: RAG Core - Q&A with documents, chat interface
 - [ ] Phase 2: Split-pane UI with focus caret
 
 ### Deferred to Dedicated Sessions:
-- [ ] 🎨 Visual Identity Design (Day 8-9)
+- [x] 🎨 Visual Identity Design (Day 8-9)
 - [ ] 📄 Demo Documents Selection (Day 8-9)
 - [ ] 🔄 API Resilience Strategy (Day 7-8)

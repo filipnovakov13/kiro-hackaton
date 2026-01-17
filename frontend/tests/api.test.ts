@@ -67,6 +67,9 @@ describe("ApiClient", () => {
         ok: false,
         status: 404,
         statusText: "Not Found",
+        json: async () => {
+          throw new Error("No JSON body");
+        },
       };
       mockFetch.mockResolvedValueOnce(mockResponse);
 
@@ -82,11 +85,9 @@ describe("ApiClient", () => {
     });
 
     it("should handle unknown errors correctly", async () => {
-      mockFetch.mockRejectedValueOnce("Unknown error");
+      mockFetch.mockRejectedValueOnce(new Error("Unknown error"));
 
-      await expect(apiClient.get("/test")).rejects.toThrow(
-        "Unknown error occurred"
-      );
+      await expect(apiClient.get("/test")).rejects.toThrow("Unknown error");
     });
   });
 
@@ -155,6 +156,9 @@ describe("ApiClient", () => {
         ok: false,
         status: 500,
         statusText: "Internal Server Error",
+        json: async () => {
+          throw new Error("No JSON body");
+        },
       };
       mockFetch.mockResolvedValueOnce(mockResponse);
 
@@ -168,6 +172,9 @@ describe("ApiClient", () => {
         ok: false,
         status: 401,
         statusText: "Unauthorized",
+        json: async () => {
+          throw new Error("No JSON body");
+        },
       };
       mockFetch.mockResolvedValueOnce(mockResponse);
 

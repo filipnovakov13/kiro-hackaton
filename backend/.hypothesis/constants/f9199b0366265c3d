@@ -1,0 +1,4 @@
+# file: C:\Users\user\Desktop\Projects\kiro-hackaton\backend\app\services\embedding_service.py
+# hypothesis_version: 6.150.2
+
+[128, 512, 'document', 'embedding_', 'query', 'voyage-3.5-lite']
