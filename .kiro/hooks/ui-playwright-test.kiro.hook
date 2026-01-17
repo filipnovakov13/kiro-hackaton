@@ -1,8 +1,8 @@
 {
   "enabled": true,
   "name": "UX Validation on Component Change",
-  "description": "Spawns ux-validator subagent to validate UX principles when React components are modified.",
-  "version": "1",
+  "description": "Validates UX principles, design system compliance, and runs tests when React components are modified.",
+  "version": "1.1.0",
   "when": {
     "type": "fileEdited",
     "patterns": [
@@ -11,6 +11,6 @@
   },
   "then": {
     "type": "askAgent",
-    "prompt": "A frontend component was modified: ${file}\n\nSpawn a subagent using the ux-validator agent configuration (.kiro/agents/ux-agent.json) to validate this change.\n\nDelegate to the ux-validator subagent:\n- File changed: ${file}\n- Task: Validate UX principles, run tests, report issues\n\nWait for subagent results and report back."
+    "prompt": "A frontend component was modified: ${file}\n\nPerform UX validation directly (do NOT delegate to subagent - execute these steps yourself):\n\n1. Run LSP diagnostics on the modified file using getDiagnostics\n2. Read the component file and frontend/src/design-system/colors.ts\n3. Check design system compliance: Verify all colors come from design tokens (no hardcoded hex values)\n4. Run unit tests using executePwsh: command='npm test', cwd='frontend'\n5. Run Playwright E2E tests using executePwsh: command='npx playwright test tests/ux-validation.spec.ts', cwd='frontend'\n6. Report results with actual test output\n\nUX Principles to validate:\n- Progressive disclosure (only show what's needed)\n- Single primary action per screen\n- Instant feedback (<100ms transitions)\n- Accessibility (keyboard nav, focus indicators, ARIA labels)\n\nOutput format:\n## LSP Status\n## Design System Compliance\n## Unit Test Results (actual output)\n## E2E Test Results (actual output)\n## Verdict: PASS/FAIL"
   }
 }

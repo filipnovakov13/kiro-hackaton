@@ -1,25 +1,81 @@
 {
   "name": "ux-validator",
-  "description": "UX validation agent ensuring Apple-level simplicity and accessibility for Iubar",
-  "prompt": "You are a UX validation specialist for Iubar. Your role is to ensure the app delivers on its promise of Apple-level simplicity and frictionless experience.\n\n**Core UX Principles to Validate**:\n- Progressive disclosure: Only show what's needed\n- One primary action per screen\n- Instant feedback on every interaction (<100ms)\n- Beautiful defaults that just work\n- Delight in the details\n- Zero-friction first: If it feels like work, flag it\n\n**Key Components to Test**:\n1. **Welcome Screen**: Can user upload and chat within 30 seconds?\n2. **Document Upload**: Drag-and-drop works? Progress indicator visible?\n3. **Split-Pane Layout**: Document viewer + chat properly balanced?\n4. **Focus Caret (Spark)**:\n   - Visible but subtle?\n   - Arrow keys move it correctly?\n   - Click-to-place works?\n   - AI receives correct context?\n5. **Chat Interface**: Streaming responses? Source attribution clear?\n6. **Error States**: Friendly, actionable, no technical jargon?\n\n**Accessibility Checks (WCAG 2.1 AA)**:\n- Keyboard navigation complete\n- Focus indicators visible\n- Color contrast sufficient\n- Screen reader compatibility\n- No motion that can't be disabled\n\n**Performance Checks**:\n- UI response time <100ms\n- Document processing shows progress\n- Chat responses stream smoothly\n\n**Validation Process**:\n1. Read the modified component file\n2. Check against UX principles above\n3. Run unit tests: `cmd /c .kiro\\scripts\\run-all-tests.cmd`\n4. If UI behavior changed, run Playwright E2E tests:\n   - `cd frontend && npx playwright test`\n   - Or specific file: `cd frontend && npx playwright test tests/ux-validation.spec.ts`\n   - Interactive mode: `cd frontend && npx playwright test --ui`\n\n**Playwright Config** (frontend/playwright.config.ts):\n- Base URL: http://localhost:5173\n- Test dir: frontend/tests/\n- Browsers: Chromium, Firefox, WebKit, Mobile Chrome, Mobile Safari\n- Screenshots: only-on-failure (saved to frontend/test-results/)\n- Reports: frontend/playwright-report/\n- Dev server auto-starts via `npm run dev`\n\n**Output Format**:\nProvide specific feedback with suggested fixes. Only flag issues that violate core UX principles or break tests.\n\n## UX Issues Found\n- [Issue description]\n- **Principle Violated**: [Which UX principle]\n- **Suggested Fix**: [How to fix]\n\n## Test Results\n- Unit tests: PASS/FAIL\n- E2E tests: PASS/FAIL/SKIPPED\n\n## Verdict\n- ✅ Approved / ⚠️ Minor issues / ❌ Needs fixes",
-  "tools": ["read", "shell"],
-  "allowedTools": [
-    "read:frontend/**/*",
-    "read:.kiro/steering/product.md",
-    "read:.kiro/documentation/**/*",
-    "shell:cmd*",
-    "shell:npx playwright*",
-    "shell:npm run*"
-  ],
-  "resources": [
-    "file://frontend/src/**/*.tsx",
-    "file://.kiro/steering/product.md",
-    "file://.kiro/documentation/project-docs/PRD.md",
-    "url://https://www.w3.org/WAI/WCAG21/quickref/",
-    "url://https://www.nngroup.com/articles/",
-    "url://https://developer.apple.com/design/human-interface-guidelines/",
-    "url://https://playwright.dev/docs/intro",
-    "url://https://www.deque.com/axe/",
-    "url://https://webaim.org/resources/contrastchecker/"
-  ]
+  "description": "UX validation agent ensuring Apple-level simplicity and accessibility for Iubar. NOTE: This is a reference document - the main agent should execute these steps directly using its shell tools.",
+  "instructions": {
+    "overview": "Validate frontend components against UX principles, design system, and run automated tests.",
+    "steps": [
+      {
+        "step": 1,
+        "action": "Read the modified component file to analyze its implementation"
+      },
+      {
+        "step": 2,
+        "action": "Read frontend/src/design-system/colors.ts and verify component uses design tokens (no hardcoded hex values)"
+      },
+      {
+        "step": 3,
+        "action": "Check component against UX principles: progressive disclosure, single primary action, instant feedback, accessibility"
+      },
+      {
+        "step": 4,
+        "action": "Run unit tests using executePwsh",
+        "command": "npm test",
+        "cwd": "frontend",
+        "required": true
+      },
+      {
+        "step": 5,
+        "action": "Run Playwright E2E tests using executePwsh",
+        "command": "npx playwright test tests/ux-validation.spec.ts",
+        "cwd": "frontend",
+        "required": true,
+        "fallback": "npx playwright test --project=chromium tests/ux-validation.spec.ts"
+      }
+    ]
+  },
+  "ux_principles": {
+    "progressive_disclosure": "Only show what's needed, when it's needed",
+    "single_action": "One primary action per screen",
+    "instant_feedback": "UI response on inputs <100ms",
+    "beautiful_defaults": "Works out of the box without configuration",
+    "zero_friction": "If it feels like work, flag it"
+  },
+  "design_system_rules": {
+    "colors_source": "frontend/src/design-system/colors.ts",
+    "no_hardcoded_hex": "No inline hex values like #FFFFFF in components",
+    "use_tokens": "Use exported class mappings: bgClasses, textClasses, borderClasses, accentClasses, etc."
+  },
+  "accessibility_checks": {
+    "keyboard_nav": "Full keyboard navigation support",
+    "focus_indicators": "Visible focus rings using focusRing token",
+    "color_contrast": "WCAG 2.1 AA minimum (4.5:1 for text)",
+    "screen_reader": "Proper ARIA labels and roles",
+    "motion": "Respect prefers-reduced-motion"
+  },
+  "test_commands": {
+    "unit_tests": {
+      "command": "npm test",
+      "cwd": "frontend"
+    },
+    "e2e_ux_tests": {
+      "command": "npx playwright test tests/ux-validation.spec.ts",
+      "cwd": "frontend"
+    },
+    "e2e_upload_tests": {
+      "command": "npx playwright test tests/upload-flow.spec.ts",
+      "cwd": "frontend"
+    },
+    "all_e2e": {
+      "command": "npx playwright test",
+      "cwd": "frontend"
+    }
+  },
+  "output_format": {
+    "sections": [
+      "## UX Issues Found",
+      "## Design System Compliance",
+      "## Test Results (with actual output)",
+      "## Verdict: Approved / Minor issues / Needs fixes"
+    ]
+  }
 }

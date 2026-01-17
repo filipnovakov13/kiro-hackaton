@@ -7,72 +7,127 @@ iubar/
 │   ├── app/
 │   │   ├── api/              # FastAPI routes and endpoints
 │   │   ├── core/             # Core business logic
-│   │   ├── models/           # SQLAlchemy models
-│   │   ├── services/         # AI and RAG services
+│   │   ├── models/           # SQLAlchemy/Pydantic models
+│   │   ├── services/         # AI, RAG, and document processing services
 │   │   └── utils/            # Helper functions
-│   ├── tests/                # Backend tests
+│   ├── tests/                # Backend tests (pytest)
 │   ├── requirements.txt      # Python dependencies
-│   └── main.py               # FastAPI application entry point
+│   ├── main.py               # FastAPI application entry point
+│   └── start_server.py       # Server startup script
 ├── frontend/
 │   ├── src/
-│   │   ├── components/      # React components
-│   │   ├── pages/           # Page-level components
-│   │   ├── hooks/           # Custom React hooks
-│   │   ├── services/        # API client functions
-│   │   ├── types/           # TypeScript type definitions
-│   │   └── utils/           # Frontend utilities
-│   ├── public/              # Static assets
-│   ├── package.json         # Node.js dependencies
-│   └── vite.config.ts       # Vite configuration
+│   │   ├── components/       # React components (atomic design)
+│   │   ├── pages/            # Page-level components
+│   │   ├── hooks/            # Custom React hooks
+│   │   ├── services/         # API client functions
+│   │   ├── types/            # TypeScript type definitions
+│   │   └── utils/            # Frontend utilities
+│   ├── tests/                # Frontend tests (Vitest + Playwright)
+│   ├── public/               # Static assets
+│   ├── screenshots/          # E2E test screenshots
+│   ├── package.json          # Node.js dependencies
+│   ├── vite.config.ts        # Vite configuration
+│   ├── vitest.config.ts      # Vitest test configuration
+│   └── playwright.config.ts  # Playwright E2E configuration
 ├── .kiro/
-│   ├── steering/            # Project guidelines and context
-│   ├── prompts/             # Custom Kiro commands
-│   └── documentation/       # Project documentation
-├── data/                    # Local data storage (SQLite, uploads)
-├── docs/                    # Additional documentation
-└── README.md                # Project overview and setup
+│   ├── steering/             # Project guidelines and context
+│   ├── prompts/              # Custom Kiro commands
+│   ├── specs/                # Feature specifications
+│   ├── hooks/                # Agent hooks
+│   ├── scripts/              # Utility scripts (test runners, etc.)
+│   ├── settings/             # Kiro settings (MCP config)
+│   └── documentation/        # Project documentation
+│       └── project-docs/     # PRD, future tasks, etc.
+├── data/                     # Local data storage
+│   ├── uploads/              # User uploaded documents
+│   ├── chroma/               # Vector embeddings (Chroma DB)
+│   └── iubar.db              # SQLite database
+├── examples/                 # Example files and devlog
+├── .agents/                  # Agent-generated artifacts
+│   └── code-reviews/         # Code review documents
+└── README.md                 # Project overview and setup
+```
+
+## Architecture Overview
+
+**Hybrid RAG with Structured Memory**:
+```
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   Documents     │──▶│   Vector Store   │───▶│   DeepSeek      │
+│  (via Docling)  │    │    (Chroma)      │    │   V3.2-Exp      │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+                                ▲                        │
+┌─────────────────┐     ┌──────────────────┐             ▼
+│ Structured      │───▶│    SQLite DB     │    ┌─────────────────┐
+│ Memory (JSON)   │     │  (Relationships) │    │   AI Response   │
+└─────────────────┘     └──────────────────┘    └─────────────────┘
+```
+
+**Document Processing Pipeline**:
+```
+PDF/DOCX/URL/GitHub → Docling/gitingest → Markdown → Chunker → Voyage Embeddings → Chroma
 ```
 
 ## File Naming Conventions
-- **General**: every variable/function/class/file/module should be descriptively named so it is maximally readable
+- **General**: Descriptive names for maximum readability
 - **Python**: snake_case for files, modules, functions, variables
 - **TypeScript**: camelCase for variables/functions
 - **Components**: PascalCase (e.g., `DocumentUpload.tsx`, `ChatInterface.tsx`)
-- **Services**: Descriptive names (e.g., `rag_service.py`, `llm_router.py`)
-- **Tests**: `test_*.py` for Python, `*.test.tsx` for TypeScript
+- **Services**: Descriptive names (e.g., `rag_service.py`, `document_processor.py`)
+- **Tests**: `test_*.py` for Python, `*.test.ts(x)` for TypeScript, `*.spec.ts` for Playwright
 
 ## Module Organization
-- **Backend Services**: Separate modules for RAG, LLM routing, memory management
-- **API Routes**: Grouped by functionality (documents, chat, memory, health)
-- **Frontend Components**: Atomic design principles (atoms, molecules, organisms)
-- **Shared Types**: Common TypeScript interfaces between frontend and backend
-- **Utilities**: Pure functions, no side effects, easily testable
+
+### Backend Services
+- **Document Processing**: Docling integration, gitingest for GitHub repos
+- **RAG Service**: Vector search, context retrieval, response generation
+- **LLM Service**: DeepSeek V3.2-Exp integration with caching
+- **Embedding Service**: Voyage 3.5 Lite embeddings
+- **Memory Service**: User profile and session management
+
+### API Routes
+- `/api/documents` - Document upload, processing, retrieval
+- `/api/chat` - AI chat with RAG-powered responses
+- `/api/memory` - User profile and session management
+- `/api/health` - Health checks and status
+
+### Frontend Components
+- **Atomic Design**: atoms → molecules → organisms → templates → pages
+- **Core Components**: DocumentViewer, ChatInterface, FocusCaret, UploadZone
+- **Layout**: Split-pane (document left, chat right)
 
 ## Configuration Files
-- **Backend**: `.env` for environment variables, `config.py` for app settings
+- **Backend**: `.env` for secrets, `config.py` for app settings
 - **Frontend**: `vite.config.ts`, `tsconfig.json`, `.env.local`
-- **Development**: `pyproject.toml` for Python tooling, `eslint.config.js`
+- **Testing**: `vitest.config.ts`, `playwright.config.ts`
 - **Kiro**: `.kiro/settings/mcp.json` for MCP server configuration
 
 ## Documentation Structure
-- **README.md**: Project overview, setup instructions, architecture
-- **DEVLOG.md**: Development timeline, decisions, challenges, time tracking
-- **API Documentation**: Auto-generated via FastAPI/Swagger
-- **Component Docs**: Storybook for React components (if time permits)
+- **README.md**: Project overview, setup instructions
+- **PRD.md**: Product requirements document (`.kiro/documentation/project-docs/`)
+- **DEVLOG.md**: Development timeline, decisions, time tracking (`examples/`)
+- **API Docs**: Auto-generated via FastAPI/Swagger at `/docs`
 
-## Asset Organization
-- **Static Assets**: `frontend/public/` for images, icons, fonts
-- **Generated Assets**: Build outputs in `frontend/dist/`
-- **User Uploads**: `data/uploads/` with organized subdirectories
-- **Vector Embeddings**: `data/chroma/` for Chroma database files
+## Data Storage
+- **SQLite**: `data/iubar.db` - User profiles, document metadata, sessions
+- **Chroma**: `data/chroma/` - Vector embeddings for RAG
+- **Uploads**: `data/uploads/` - Original uploaded documents
+- **Memory**: JSON-based structured memory store
 
 ## Build Artifacts
-- **Backend**: No compilation needed (Python interpreted)
-- **Frontend**: `frontend/dist/` contains built React application
-- **Database**: `data/iubar.db` SQLite database file
+- **Backend**: Python interpreted (no compilation)
+- **Frontend**: `frontend/dist/` - Built React application
 - **Logs**: `logs/` directory for application logs
 
 ## Environment-Specific Files
 - **Development**: `.env.development`, local SQLite, embedded Chroma
 - **Testing**: `.env.test`, separate test database, mocked LLM responses
-- **Hackathon Demo**: `.env.demo`, optimized for judge evaluation
+- **Demo**: `.env.demo`, optimized for hackathon judge evaluation
+
+## Supported Input Types (MVP)
+| Type | Example | Processing |
+|------|---------|------------|
+| **PDF** | Research papers, books | Docling → Markdown → Chunks |
+| **URL** | Blog posts, articles | Web scrape → Markdown → Chunks |
+| **Text/MD** | Notes, documentation | Direct → Chunks |
+| **GitHub** | Repositories | gitingest/repo2txt → Markdown → Chunks |

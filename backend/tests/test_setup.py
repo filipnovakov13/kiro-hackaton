@@ -90,9 +90,10 @@ class TestBackendStructure:
             if line.strip() and not line.strip().startswith("#")
         ]
 
-        # Should have essential deps but not be excessive (less than 15 packages)
+        # Should have essential deps but not be excessive (less than 25 packages)
+        # Updated for foundation phase: includes ChromaDB, Docling, VoyageAI, etc.
         assert (
-            len(lines) < 15
+            len(lines) < 25
         ), f"requirements.txt should be minimal, found {len(lines)} dependencies"
 
     def test_config_module_importable(self):

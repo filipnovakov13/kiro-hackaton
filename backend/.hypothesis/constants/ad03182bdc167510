@@ -1,0 +1,4 @@
+# file: C:\Users\user\Desktop\Projects\kiro-hackaton\backend\app\services\document_processor.py
+# hypothesis_version: 6.150.2
+
+[401, 403, 404, '# ', '.html', 'docx', 'en', 'encrypted', 'html', 'md', 'metadata', 'password', 'pdf', 'title', 'txt', 'utf-8', 'w']

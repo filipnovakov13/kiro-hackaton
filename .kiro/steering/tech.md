@@ -63,6 +63,7 @@ PDF/DOCX/URL/GitHub → Docling/gitingest → Markdown → Chunker → Voyage Em
 - **IDE**: Kiro IDE with Python, TypeScript
 
 ## Code Standards
+- **Keywords** DO NOT use restricted keywords for any naming
 - **Python**: PEP 8, Black formatting, type hints with mypy
 - **TypeScript**: ESLint + Prettier, strict TypeScript configuration
 - **API Design**: RESTful endpoints, OpenAPI/Swagger documentation
