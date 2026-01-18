@@ -2,13 +2,50 @@
 
 **Project**: Iubar - AI-Enhanced Personal Knowledge Management  
 **Duration**: January 6-18, 2026  
-**Total Time**: ~38 hours   
+**Total Time**: ~39 hours   
 
 ## Overview
 Building Iubar, an AI-enhanced personal knowledge management and structured learning web app that combines PKM with AI tutoring capabilities. Uses a Hybrid RAG architecture with vector search and structured memory for long-term, evolving user interactions.
 ---
 
 ## Week 3: Foundation + RAG Core Implementation (Jan 15-18)
+
+
+### Day 10 (Jan 18) - Postman API Testing Setup [~1h]
+
+**Postman Power Integration**:
+- **Kiro Power Installed**: Postman power for automated API testing
+- **API Key Configuration**: Set up POSTMAN_API_KEY as system environment variable
+- **Collection Created**: "Iubar API" collection with 9 comprehensive endpoints
+  - Root endpoint, health check, system status
+  - Document operations: list, upload, delete
+  - URL ingestion
+  - Task status tracking (success and error cases)
+- **Environment Setup**: "Iubar Local" environment with base_url=http://127.0.0.1:8000
+- **Test Scripts**: Each endpoint includes automated test assertions for status codes and response validation
+
+**Test Results**:
+- Initial run: 12/18 tests passing (66.67%)
+- **Bug Fixed**: "Get Task Status" test expected `task_id` but API returns `document_id`
+  - Updated test assertion to check for `document_id`, `status`, and `progress` properties
+- Final run: 18/18 tests passing (100% ✅)
+
+**Technical Achievements**:
+- ✅ Complete API test coverage for all backend endpoints
+- ✅ Automated test validation with proper assertions
+- ✅ Environment variable management for different contexts
+- ✅ All tests passing against local development server
+
+**Files Created/Modified**:
+- `.postman.json` - Stores workspace/collection/environment IDs
+- `.kiro/hooks/api-postman-testing.kiro.hook` - Auto-test trigger on code changes
+- `.kiro/documentation/postman-setup-guide.md` - Setup instructions
+- `.kiro/documentation/postman-collection-summary.md` - Collection details
+- Postman collection updated with fixed test assertions
+
+**Kiro Usage**: Kiro Powers (Postman), API testing, test debugging, collection management
+
+---
 
 
 ### Day 9 (Jan 18) - RAG Core Phase Specification [~4h]
