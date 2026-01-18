@@ -1,0 +1,4 @@
+# file: C:\Users\user\Desktop\Projects\kiro-hackaton\backend\app\services\deepseek_client.py
+# hypothesis_version: 6.150.2
+
+[0.1, 0.3, 0.7, 2000, '401', '429', '5', 'Unauthorized', 'cached_tokens', 'completion_tokens', 'content', 'deepseek-chat', 'done', 'prompt_tokens', 'rate_limit', 'timeout', 'token', 'type', 'usage']

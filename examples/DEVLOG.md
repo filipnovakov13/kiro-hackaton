@@ -154,3 +154,59 @@ Building an AI-powered code review assistant that integrates with GitHub to prov
 - **Adaptive Review Depth**: Adjusts analysis complexity based on PR size
 - **Context-Aware Suggestions**: Uses repository history for better recommendations
 - **Multi-Model Consensus**: Combines different AI perspectives for robust feedback
+
+
+---
+
+## January 18, 2026 - Test Infrastructure Debugging Session [2.5h]
+
+### Problem
+Unified test runner script (`run-all-tests.cmd`) hung indefinitely after all 250 backend tests passed successfully. Required manual process kill via Task Manager before frontend tests could run, breaking reproducibility.
+
+### Investigation Process
+1. **Initial Hypothesis**: Background asyncio tasks from services (SessionManager, RateLimiter, ResponseCache, RAGService) keeping event loop alive
+   - Tried: pytest hooks with asyncio cleanup
+   - Result: Failed - event loop already closed by pytest-asyncio
+
+2. **Second Attempt**: Created conftest.py with pytest_sessionfinish hook
+   - Tried: Various fixture approaches and event loop cleanup
+   - Result: Failed - "RuntimeError: There is no current event loop in thread 'MainThread'"
+
+3. **User Validation**: Commented out suspected asyncio.create_task() calls
+   - Result: Still hung - ruled out asyncio tasks as root cause
+
+4. **Root Cause Discovery**: Thread enumeration revealed:
+   - Thread-1: `_connection_worker_thread` (daemon=False, alive=True) - **NON-DAEMON thread**
+   - Source: uvicorn's database connection pool in `test_server_integration.py`
+   - Issue: Server started in threading.Thread, but created non-daemon worker threads
+
+### Solution
+**Two-part fix:**
+1. **conftest.py**: Added `pytest_sessionfinish` hook with `os._exit(exitstatus)` to forcefully terminate when non-daemon threads detected
+2. **test_server_integration.py**: Changed from `threading.Thread` to `subprocess.Popen` for uvicorn server with proper cleanup
+
+### Results
+- All 250 backend tests + 28 frontend tests pass
+- Script completes cleanly without hanging
+- No manual intervention required
+- Proper subprocess isolation prevents thread leaks
+
+### Documentation
+Updated `testing-strategy.md` with new section on "Server Integration Testing" documenting:
+- Problem symptoms and root cause
+- Correct subprocess approach vs incorrect threading approach
+- Complete code examples
+- Guidelines for when to use subprocess vs threading vs asyncio
+
+### Time Breakdown
+- Investigation & failed attempts: 1.5h
+- Root cause identification: 0.5h
+- Solution implementation & testing: 0.3h
+- Documentation: 0.2h
+- **Total: 2.5h**
+
+### Key Learnings
+- Server integration tests should use subprocess, not threading
+- Non-daemon threads from libraries (like database connection pools) can prevent process exit
+- Thread enumeration is crucial for debugging hanging processes
+- Proper test infrastructure documentation prevents future issues

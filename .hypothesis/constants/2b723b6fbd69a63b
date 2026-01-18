@@ -1,0 +1,4 @@
+# file: C:\Users\user\Desktop\Projects\kiro-hackaton\backend\app\services\document_summary.py
+# hypothesis_version: 6.150.2
+
+[500, 2000, 'content', 'role', 'token', 'type', 'user']

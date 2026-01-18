@@ -1,0 +1,4 @@
+# file: C:\Users\user\Desktop\Projects\kiro-hackaton\backend\app\services\rag_service.py
+# hypothesis_version: 6.150.2
+
+[0.15, 0.7, 1.0, 1000, 8000, 'RetrievedChunk', 'document_id', 'end_char', 'start_char', 'token_count']

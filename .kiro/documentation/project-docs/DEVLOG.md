@@ -2,7 +2,7 @@
 
 **Project**: Iubar - AI-Enhanced Personal Knowledge Management  
 **Duration**: January 6-18, 2026  
-**Total Time**: ~39 hours   
+**Total Time**: ~47 hours   
 
 ## Overview
 Building Iubar, an AI-enhanced personal knowledge management and structured learning web app that combines PKM with AI tutoring capabilities. Uses a Hybrid RAG architecture with vector search and structured memory for long-term, evolving user interactions.
@@ -10,6 +10,157 @@ Building Iubar, an AI-enhanced personal knowledge management and structured lear
 
 ## Week 3: Foundation + RAG Core Implementation (Jan 15-18)
 
+
+### Day 10 (Jan 18) - RAG Core Phase Implementation - Layers 1-3 [~8h]
+
+**RAG Core Phase Implementation Session**:
+- **Layers Completed**: Foundation (Layer 1), Core Services (Layer 2), AI Services (Layer 3)
+- **Total Tasks Completed**: 15 tasks (1.1-1.4, 2.1-2.5, 3.1-3.5)
+- **Test Results**: 250+ backend tests passing (all layers fully tested)
+
+**Layer 1: Database Schema & Models (Foundation) [~1.5h]**:
+- ✅ Task 1.1-1.3: Created SQLite migrations for 3 new tables
+  - `chat_sessions` - Session management with document linking
+  - `chat_messages` - Message history with role validation
+  - `document_summaries` - Document summaries with BLOB embeddings
+- ✅ Task 1.4: Created Pydantic schemas in `backend/app/models/schemas.py`
+  - ChatSession, ChatMessage models with validation
+  - Request/response schemas for API endpoints
+- **Critical Fix**: Renamed `metadata` columns to `session_metadata` and `message_metadata` (reserved keyword issue)
+- **Test Results**: 11 schema validation tests passing
+
+**Layer 2: Core Services (Service Layer - Part 1) [~2h]**:
+- ✅ Task 2.1: InputValidator service (25 tests passing)
+  - Message validation (6000 char limit)
+  - Prompt injection pattern detection
+  - Control character sanitization
+  - UUID format validation
+  - Property-based tests: input safety, length bounds, UUID regex
+- ✅ Task 2.2: SessionManager service (16 tests passing)
+  - CRUD operations for sessions
+  - Spending limit enforcement ($5.00 default)
+  - Periodic cleanup background task
+  - Property-based tests: expired session cleanup, spending limits
+- ✅ Task 2.3: ResponseCache service (21 tests passing)
+  - LRU cache with OrderedDict (500 entries max)
+  - SHA256 cache key computation
+  - TTL expiration (24 hours)
+  - Document invalidation support
+  - Property-based tests: cache size bounds, expiration, key consistency
+- ✅ Task 2.4: RateLimiter service (19 tests passing)
+  - Query limits (100/hour)
+  - Concurrent stream limits (5 max)
+  - Periodic cleanup background task
+  - Property-based tests: query count enforcement, concurrent streams
+  - **Bug Fix**: Edge case at 60-minute boundary (fixed with proper time window calculation)
+- ✅ Task 2.5: CircuitBreaker service (16 tests passing)
+  - State machine (CLOSED → OPEN → HALF_OPEN)
+  - Failure threshold tracking
+  - Recovery timeout handling
+  - Property-based tests: state transitions, threshold enforcement
+  - **Fix**: Added `deadline=None` for async property tests
+
+**Layer 3: AI Integration Services (Service Layer - Part 2) [~3h]**:
+- ✅ Task 3.1: DeepSeekClient service (13 tests passing)
+  - AsyncOpenAI client with retry logic
+  - Exponential backoff for 5xx errors
+  - Rate limit handling (429 with 60s wait)
+  - Circuit breaker integration
+  - Timeout handling (30s configurable)
+  - Error sanitization (no 401 details exposed)
+  - Property-based tests: retry behavior, timeout enforcement
+- ✅ Task 3.2: DocumentSummaryService (12 tests passing)
+  - Summary generation using DeepSeek (500 char max)
+  - BLOB encoding for embeddings
+  - Fallback for missing summaries
+  - Property-based tests: summary length bounds, embedding dimensions
+  - **Critical Fix**: Async generator mocking pattern (factory function with `*args, **kwargs`)
+- ✅ Task 3.3: RAGService Part 1 - Retrieval (14 tests passing)
+  - Multi-document search with summary matching
+  - Context retrieval with similarity threshold (0.7)
+  - Focus boost application (0.15)
+  - Token budget enforcement (8000 tokens max)
+  - Property-based tests: similarity filtering, token limits, chunk sorting
+- ✅ Task 3.4: RAGService Part 2 - Generation (26 tests passing)
+  - Streaming response generation
+  - Prompt construction with context
+  - Cost calculation (input/output/cached tokens)
+  - Cache integration
+  - SSE error event handling
+  - Property-based tests: streaming errors, cost accuracy
+- ✅ Task 3.5: StructuredLogger (9 tests passing)
+  - JSON-formatted logging
+  - Keyword argument enforcement (no f-strings)
+  - Timestamp and level tracking
+  - **Refactoring**: Updated ALL services to use structured logging
+
+**Testing Strategy Established**:
+- **Async Generator Mocking Pattern (CRITICAL)**:
+  ```python
+  async def mock_stream():
+      yield data
+  def create_stream(*args, **kwargs):
+      return mock_stream()
+  mock.method = MagicMock(side_effect=create_stream)  # NOT AsyncMock!
+  ```
+- **Property-Based Testing**: Create fresh mocks inside test function (not fixtures)
+- **Hypothesis Settings**: `deadline=None` for async tests, suppress health checks
+- **Running Tests**: Always from workspace root: `python -m pytest backend/tests/test_file.py -v`
+
+**Test Infrastructure Debugging [~2.5h]**:
+- **Problem**: Unified test runner hung after all 250 backend tests passed
+- **Root Cause**: `test_server_integration.py` used `threading.Thread` for uvicorn, creating non-daemon `_connection_worker_thread` from database pool
+- **Solution**: Changed to `subprocess.Popen` for server with proper cleanup
+- **Documentation**: Updated `testing-strategy.md` with "Server Integration Testing" section
+
+**Technical Achievements**:
+- ✅ 15 tasks completed across 3 layers
+- ✅ 250+ backend tests passing (unit + property-based + integration)
+- ✅ Comprehensive testing strategy documented
+- ✅ All services use structured logging
+- ✅ Async generator mocking pattern established
+- ✅ Test infrastructure debugged and documented
+
+**Key Technical Patterns Established**:
+| Pattern | Implementation | Rationale |
+|---------|----------------|-----------|
+| Async Generator Mocking | Factory function with `MagicMock(side_effect=...)` | Prevents generator exhaustion |
+| Property-Based Testing | Fresh mocks inside test, suppress health checks | Avoids fixture reuse issues |
+| Structured Logging | Keyword arguments only, no f-strings | Enables log parsing and analysis |
+| Server Integration Tests | `subprocess.Popen` not `threading.Thread` | Prevents non-daemon thread leaks |
+| Circuit Breaker | State machine with failure/success thresholds | API resilience and cost protection |
+
+**Dependencies Added**:
+- `openai>=1.0.0` - DeepSeek API client
+- `numpy>=1.24.0` - Embedding serialization
+
+**Files Created/Modified**:
+- `backend/app/models/chat.py` - Chat session/message models
+- `backend/app/models/schemas.py` - Pydantic schemas (extended)
+- `backend/app/services/input_validator.py` - Input validation service
+- `backend/app/services/session_manager.py` - Session management service
+- `backend/app/services/response_cache.py` - LRU cache service
+- `backend/app/services/rate_limiter.py` - Rate limiting service
+- `backend/app/services/circuit_breaker.py` - Circuit breaker service
+- `backend/app/services/deepseek_client.py` - DeepSeek API client
+- `backend/app/services/document_summary.py` - Document summarization service
+- `backend/app/services/rag_service.py` - RAG orchestration service
+- `backend/app/core/logging_config.py` - Structured logger
+- `backend/test_migration.py` - Database migration test
+- 15 test files with 250+ tests
+- `.kiro/steering/testing-strategy.md` - Comprehensive testing patterns
+- `backend/conftest.py` - Removed (subprocess approach eliminates need)
+- `backend/tests/test_server_integration.py` - Fixed to use subprocess
+
+**Kiro Usage**: Spec task execution, property-based test generation, async pattern debugging, test infrastructure debugging, documentation generation
+
+**Next Steps**:
+- Layer 4: API Endpoints (8 tasks)
+- Layer 5-6: Frontend Components (9 tasks)
+- Layer 7: Frontend Services & Hooks (6 tasks)
+- Layer 8: Integration Testing (5 tasks)
+
+---
 
 ### Day 10 (Jan 18) - Postman API Testing Setup [~1h]
 
@@ -361,7 +512,7 @@ Building Iubar, an AI-enhanced personal knowledge management and structured lear
 
 ## Week 2: Product Definition & Core Development (Jan 13-19)
 
-### Day 15 (Jan 15) - Python 3.12 Migration [~30m]
+### Day 5 (Jan 15) - Python 3.12 Migration [~30m]
 
 **Python Version Downgrade**:
 - **Issue Discovered**: ChromaDB 1.4.1 incompatible with Python 3.14.2
@@ -708,6 +859,22 @@ Building Iubar, an AI-enhanced personal knowledge management and structured lear
 
 ## Pull Requests
 
+### Day 9 (Jan 17) - Foundation Phase
+- **PR Created**: https://github.com/filipnovakov13/kiro-hackaton/pull/new/feature/foundation-phase
+- **Feature Summary**: Complete Phase 1 implementation - document ingestion pipeline with Docling, Voyage embeddings, ChromaDB vector storage, and comprehensive property-based testing
+- **Branch**: `feature/foundation-phase`
+- **Key Features**:
+  - Document upload (PDF, DOCX, TXT, MD) with 10MB limit
+  - URL ingestion with Docling HTML parser
+  - Chunking (512-1024 tokens, 15% overlap)
+  - Voyage AI embeddings (voyage-3.5-lite, 512 dims)
+  - ChromaDB vector storage with abstraction layer
+  - Background task processing with status tracking
+  - Property-based testing suite (10 correctness properties)
+  - Full pipeline integration tests
+- **Test Results**: 109 tests passing (81 backend + 28 frontend)
+- **Status**: Ready for review - all required tasks complete, all tests passing
+
 ### Day 8 (Jan 13) - Workflow Automation
 - **PR Created**: https://github.com/filipnovakov13/kiro-hackaton/pull/new/feature/workflow-automation
 - **Feature Summary**: Kiro IDE configuration with PRD-aligned agents, hooks, subagent integration in execute prompt, and steering file reorganization
@@ -789,12 +956,11 @@ Building Iubar, an AI-enhanced personal knowledge management and structured lear
 
 | Category | Hours | Percentage |
 |----------|-------|------------|
-| Backend Development | 12h | 30% |
-| Testing & Debugging | 13h | 33% |
-| Frontend Development | 6h | 15% |
-| Specification & Design | 6h | 15% |
-| Configuration & Tooling | 3h | 7% |
-| **Total** | **40h** | **100%** |
+| Backend Development | 18.5h | 55% |
+| Testing & Debugging | 15.5h | 25% |
+| Specification & Design | 6h | 10% |
+| Frontend Development | 4h | 10% |
+| **Total** | **47h** | **100%** |
 
 ---
 

@@ -4,7 +4,6 @@ Supports PDF, DOCX, TXT, MD, HTML, and URL content.
 """
 
 import asyncio
-import logging
 import os
 import tempfile
 from dataclasses import dataclass
@@ -14,7 +13,9 @@ from typing import Optional
 import httpx
 from docling.document_converter import DocumentConverter
 
-logger = logging.getLogger(__name__)
+from app.core.logging_config import StructuredLogger
+
+logger = StructuredLogger(__name__)
 
 
 class ProcessingError(Exception):
@@ -102,7 +103,12 @@ class DocumentProcessor:
         except ProcessingError:
             raise
         except Exception as e:
-            logger.error(f"Document processing failed: {e}", exc_info=True)
+            logger.error(
+                "Document processing failed",
+                error_type=type(e).__name__,
+                error_message=str(e),
+                file_path=file_path,
+            )
             if "password" in str(e).lower() or "encrypted" in str(e).lower():
                 raise ProcessingError(
                     "Could not read this file. "
@@ -170,12 +176,19 @@ class DocumentProcessor:
         except ProcessingError:
             raise
         except Exception as e:
-            logger.error(f"URL processing failed: {e}", exc_info=True)
+            logger.error(
+                "URL processing failed",
+                error_type=type(e).__name__,
+                error_message=str(e),
+                url=url,
+            )
             raise ProcessingError("Could not process this URL.") from e
         finally:
             # Keep temp file on failure for debugging
             if temp_path and os.path.exists(temp_path):
-                logger.warning(f"Keeping failed temp file: {temp_path}")
+                logger.warning(
+                    "Keeping failed temp file for debugging", temp_path=temp_path
+                )
 
     def _extract_title_from_markdown(self, markdown: str) -> Optional[str]:
         """Extract title from first H1 heading."""

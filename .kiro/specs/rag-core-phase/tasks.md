@@ -9,44 +9,44 @@ This task list implements the RAG Core functionality for Iubar, enabling context
 ## 1. Database Schema & Models (Foundation Layer)
 
 ### 1.1 Create chat_sessions table migration
-- [ ] Create SQLite migration script for `chat_sessions` table
-- [ ] Add columns: id, document_id, created_at, updated_at, metadata
-- [ ] Add foreign key constraint to documents table
-- [ ] Add indexes on document_id and updated_at
-- [ ] Test migration runs successfully
+- [x] Create SQLite migration script for `chat_sessions` table
+- [x] Add columns: id, document_id, created_at, updated_at, metadata
+- [x] Add foreign key constraint to documents table
+- [x] Add indexes on document_id and updated_at
+- [x] Test migration runs successfully
 
 ### 1.2 Create chat_messages table migration
-- [ ] Create SQLite migration script for `chat_messages` table
-- [ ] Add columns: id, session_id, role, content, created_at, metadata
-- [ ] Add foreign key constraint with CASCADE delete
-- [ ] Add indexes on session_id and created_at
-- [ ] Test migration runs successfully
+- [x] Create SQLite migration script for `chat_messages` table
+- [x] Add columns: id, session_id, role, content, created_at, metadata
+- [x] Add foreign key constraint with CASCADE delete
+- [x] Add indexes on session_id and created_at
+- [x] Test migration runs successfully
 
 ### 1.3 Create document_summaries table migration
-- [ ] Create SQLite migration script for `document_summaries` table
-- [ ] Add columns: document_id, summary_text, summary_embedding (BLOB), created_at
-- [ ] Add foreign key constraint with CASCADE delete
-- [ ] Test migration runs successfully
+- [x] Create SQLite migration script for `document_summaries` table
+- [x] Add columns: document_id, summary_text, summary_embedding (BLOB), created_at
+- [x] Add foreign key constraint with CASCADE delete
+- [x] Test migration runs successfully
 
 ### 1.4 Create Pydantic models for chat
-- [ ] Create `ChatSession` model in `backend/app/models/chat.py`
-- [ ] Create `ChatMessage` model with role validation
-- [ ] Create request/response schemas in `backend/app/models/schemas.py`
-- [ ] Add validation for message length (6000 chars max)
-- [ ] Test model validation
+- [x] Create `ChatSession` model in `backend/app/models/chat.py`
+- [x] Create `ChatMessage` model with role validation
+- [x] Create request/response schemas in `backend/app/models/schemas.py`
+- [x] Add validation for message length (6000 chars max)
+- [x] Test model validation
 
 ---
 
 ## 2. Core Services (Service Layer - Part 1)
 
 ### 2.1 Implement InputValidator service
-- [ ] Create `backend/app/services/input_validator.py`
-- [ ] Implement message validation with 6000 char limit
-- [ ] Implement prompt injection pattern detection
-- [ ] Implement control character sanitization
-- [ ] Implement focus context validation
-- [ ] Implement UUID format validation
-- [ ] Write unit tests for all validation methods
+- [x] Create `backend/app/services/input_validator.py`
+- [x] Implement message validation with 6000 char limit
+- [x] Implement prompt injection pattern detection
+- [x] Implement control character sanitization
+- [x] Implement focus context validation
+- [x] Implement UUID format validation
+- [x] Write unit tests for all validation methods
 
 **Property-Based Test**: Validates: Requirements 13.1 (Input validation)
 - Property: All validated inputs are safe (no control chars, no injection patterns)
@@ -54,15 +54,15 @@ This task list implements the RAG Core functionality for Iubar, enabling context
 - Property: All UUIDs match regex pattern
 
 ### 2.2 Implement SessionManager service
-- [ ] Create `backend/app/services/session_manager.py`
-- [ ] Implement create_session method
-- [ ] Implement get_session method with message count
-- [ ] Implement update_session_metadata method
-- [ ] Implement delete_session method
-- [ ] Implement get_session_stats method
-- [ ] Implement check_spending_limit method ($0.50 default)
-- [ ] Implement periodic cleanup background task
-- [ ] Write unit tests for all methods
+- [x] Create `backend/app/services/session_manager.py`
+- [x] Implement create_session method
+- [x] Implement get_session method with message count
+- [x] Implement update_session_metadata method
+- [x] Implement delete_session method
+- [x] Implement get_session_stats method
+- [x] Implement check_spending_limit method ($5.00 default)
+- [x] Implement periodic cleanup background task
+- [x] Write unit tests for all methods
 
 **Property-Based Test**: Validates: Requirements 1.1-1.7 (Session management)
 - Property: Expired sessions are deleted by cleanup task
@@ -70,16 +70,16 @@ This task list implements the RAG Core functionality for Iubar, enabling context
 - Property: Spending limit enforcement works correctly
 
 ### 2.3 Implement ResponseCache service
-- [ ] Create `backend/app/services/response_cache.py`
-- [ ] Implement LRU cache with OrderedDict
-- [ ] Implement compute_key method with SHA256 hashing
-- [ ] Implement get method with TTL expiration
-- [ ] Implement set method with LRU eviction
-- [ ] Implement clear method
-- [ ] Implement invalidate_document method
-- [ ] Implement get_stats method
-- [ ] Add async logging for cache hits
-- [ ] Write unit tests for cache operations
+- [x] Create `backend/app/services/response_cache.py`
+- [x] Implement LRU cache with OrderedDict
+- [x] Implement compute_key method with SHA256 hashing
+- [x] Implement get method with TTL expiration
+- [x] Implement set method with LRU eviction
+- [x] Implement clear method
+- [x] Implement invalidate_document method
+- [x] Implement get_stats method
+- [x] Add async logging for cache hits
+- [x] Write unit tests for cache operations
 
 **Property-Based Test**: Validates: Requirements 7.1-7.9 (Response caching)
 - Property: Cache size never exceeds max_size
@@ -87,13 +87,13 @@ This task list implements the RAG Core functionality for Iubar, enabling context
 - Property: Same query produces same cache key
 
 ### 2.4 Implement RateLimiter service
-- [ ] Create `backend/app/services/rate_limiter.py`
-- [ ] Implement check_query_limit method (100/hour)
-- [ ] Implement check_stream_limit method (5 concurrent)
-- [ ] Implement acquire_stream method
-- [ ] Implement release_stream method
-- [ ] Implement periodic cleanup background task
-- [ ] Write unit tests for rate limiting
+- [x] Create `backend/app/services/rate_limiter.py`
+- [x] Implement check_query_limit method (100/hour)
+- [x] Implement check_stream_limit method (5 concurrent)
+- [x] Implement acquire_stream method
+- [x] Implement release_stream method
+- [x] Implement periodic cleanup background task
+- [x] Write unit tests for rate limiting
 
 
 **Property-Based Test**: Validates: Requirements 14.7-14.8 (Rate limiting)
@@ -102,13 +102,13 @@ This task list implements the RAG Core functionality for Iubar, enabling context
 - Property: Old query timestamps are cleaned up
 
 ### 2.5 Implement CircuitBreaker service
-- [ ] Create `backend/app/services/circuit_breaker.py`
-- [ ] Implement CircuitState enum (CLOSED, OPEN, HALF_OPEN)
-- [ ] Implement call method with state checking
-- [ ] Implement _on_success method
-- [ ] Implement _on_failure method
-- [ ] Implement get_state method
-- [ ] Write unit tests for circuit breaker states
+- [x] Create `backend/app/services/circuit_breaker.py`
+- [x] Implement CircuitState enum (CLOSED, OPEN, HALF_OPEN)
+- [x] Implement call method with state checking
+- [x] Implement _on_success method
+- [x] Implement _on_failure method
+- [x] Implement get_state method
+- [x] Write unit tests for circuit breaker states
 
 
 **Property-Based Test**: Validates: Design (Circuit breaker pattern)
@@ -121,16 +121,16 @@ This task list implements the RAG Core functionality for Iubar, enabling context
 ## 3. AI Integration Services (Service Layer - Part 2)
 
 ### 3.1 Implement DeepSeekClient service
-- [ ] Create `backend/app/services/deepseek_client.py`
-- [ ] Initialize AsyncOpenAI client with config
-- [ ] Implement stream_chat method with retry logic
-- [ ] Implement _stream_chat_internal method
-- [ ] Add timeout handling (30s configurable)
-- [ ] Add exponential backoff for 5xx errors
-- [ ] Add rate limit handling (429) with 60s wait
-- [ ] Integrate circuit breaker
-- [ ] Add error sanitization (no 401 details exposed)
-- [ ] Write unit tests with mocked API
+- [x] Create `backend/app/services/deepseek_client.py`
+- [x] Initialize AsyncOpenAI client with config
+- [x] Implement stream_chat method with retry logic
+- [x] Implement _stream_chat_internal method
+- [x] Add timeout handling (30s configurable)
+- [x] Add exponential backoff for 5xx errors
+- [x] Add rate limit handling (429) with 60s wait
+- [x] Integrate circuit breaker
+- [x] Add error sanitization (no 401 details exposed)
+- [x] Write unit tests with mocked API
 
 
 **Property-Based Test**: Validates: Requirements 5.1-5.10 (DeepSeek integration)
@@ -139,13 +139,13 @@ This task list implements the RAG Core functionality for Iubar, enabling context
 - Property: User-friendly errors are returned (no internal details)
 
 ### 3.2 Implement DocumentSummaryService
-- [ ] Create `backend/app/services/document_summary.py`
-- [ ] Implement generate_summary method using DeepSeek
-- [ ] Implement get_summary method
-- [ ] Implement get_all_summaries method
-- [ ] Implement _store_summary method with BLOB encoding
-- [ ] Add fallback for missing summaries
-- [ ] Write unit tests for summary generation
+- [x] Create `backend/app/services/document_summary.py`
+- [x] Implement generate_summary method using DeepSeek
+- [x] Implement get_summary method
+- [x] Implement get_all_summaries method
+- [x] Implement _store_summary method with BLOB encoding
+- [x] Add fallback for missing summaries
+- [x] Write unit tests for summary generation
 
 
 **Property-Based Test**: Validates: Requirements 3.9-3.11 (Document summaries)
@@ -154,14 +154,14 @@ This task list implements the RAG Core functionality for Iubar, enabling context
 - Property: Summaries are stored and retrieved correctly
 
 ### 3.3 Implement RAGService - Part 1 (Retrieval)
-- [ ] Create `backend/app/services/rag_service.py`
-- [ ] Implement retrieve_context method
-- [ ] Implement _select_relevant_documents with fallback
-- [ ] Implement _apply_focus_boost method
-- [ ] Implement _enforce_token_budget method (8000 tokens max)
-- [ ] Implement _cosine_similarity helper
-- [ ] Add async logging with task tracking
-- [ ] Write unit tests for retrieval logic
+- [x] Create `backend/app/services/rag_service.py`
+- [x] Implement retrieve_context method
+- [x] Implement _select_relevant_documents with fallback
+- [x] Implement _apply_focus_boost method
+- [x] Implement _enforce_token_budget method (8000 tokens max)
+- [x] Implement _cosine_similarity helper
+- [x] Add async logging with task tracking
+- [x] Write unit tests for retrieval logic
 
 
 **Property-Based Test**: Validates: Requirements 3.1-3.8 (Context retrieval)
@@ -171,15 +171,15 @@ This task list implements the RAG Core functionality for Iubar, enabling context
 - Property: Focus boost is applied correctly
 
 ### 3.4 Implement RAGService - Part 2 (Generation)
-- [ ] Implement generate_response method with streaming
-- [ ] Implement _construct_prompt method
-- [ ] Implement _get_system_prompt method
-- [ ] Implement _calculate_cost method
-- [ ] Add streaming error handling (try/except with SSE error events)
-- [ ] Add timeout error handling
-- [ ] Add cache integration
-- [ ] Add async logging for errors
-- [ ] Write unit tests for generation logic
+- [x] Implement generate_response method with streaming
+- [x] Implement _construct_prompt method
+- [x] Implement _get_system_prompt method
+- [x] Implement _calculate_cost method
+- [x] Add streaming error handling (try/except with SSE error events)
+- [x] Add timeout error handling
+- [x] Add cache integration
+- [x] Add async logging for errors
+- [x] Write unit tests for generation logic
 
 
 **Property-Based Test**: Validates: Requirements 5.1-5.10, 6.1-6.10 (LLM integration & streaming)
@@ -188,11 +188,11 @@ This task list implements the RAG Core functionality for Iubar, enabling context
 - Property: Cost calculation is accurate
 
 ### 3.5 Implement StructuredLogger
-- [ ] Create `backend/app/core/logging_config.py`
-- [ ] Implement StructuredLogger class with JSON formatting
-- [ ] Implement info, warning, error methods
-- [ ] Add timestamp and level to all log entries
-- [ ] Write unit tests for logging
+- [x] Create `backend/app/core/logging_config.py`
+- [x] Implement StructuredLogger class with JSON formatting
+- [x] Implement info, warning, error methods
+- [x] Add timestamp and level to all log entries
+- [x] Write unit tests for logging
 
 
 ---

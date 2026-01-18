@@ -16,6 +16,9 @@ from app.core.exceptions import IubarError, NotFoundError, ValidationError
 from app.api.documents import router as documents_router
 from app.core.database import init_db
 
+# Import models to register them with SQLAlchemy
+from app.models import ChatSession, ChatMessage, DocumentSummary, Document, Chunk
+
 logger = logging.getLogger(__name__)
 
 # Create FastAPI application instance

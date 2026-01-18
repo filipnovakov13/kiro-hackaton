@@ -1,6 +1,6 @@
 # Update Development Log
 
-Analyze the current conversation and update the DEVLOG.md file with relevant development activities.
+Analyze the current conversation and update the .kiro\documentation\project-docs\DEVLOG.md file with relevant development activities.
 
 ## Critical Constraints
 

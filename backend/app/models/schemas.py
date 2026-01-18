@@ -162,3 +162,125 @@ class SystemStatusResponse(BaseModel):
     voyage_api: ComponentStatus
     deepseek_api: ComponentStatus
     storage: ComponentStatus
+
+
+# ============================================================================
+# Chat Schemas
+# ============================================================================
+
+
+class MessageRole(str, Enum):
+    """Chat message role values."""
+
+    USER = "user"
+    ASSISTANT = "assistant"
+
+
+class FocusContext(BaseModel):
+    """Focus caret context for contextual queries."""
+
+    document_id: str = Field(..., description="Document UUID")
+    start_char: int = Field(..., ge=0, description="Start character position")
+    end_char: int = Field(..., ge=0, description="End character position")
+    surrounding_text: str = Field(
+        ..., max_length=500, description="Context around focused position"
+    )
+
+    @field_validator("end_char")
+    @classmethod
+    def validate_char_range(cls, v: int, info) -> int:
+        """Validate that end_char > start_char."""
+        if "start_char" in info.data and v <= info.data["start_char"]:
+            raise ValueError("end_char must be greater than start_char")
+        return v
+
+
+class CreateSessionRequest(BaseModel):
+    """Request to create a new chat session."""
+
+    document_id: Optional[str] = Field(
+        None, description="Optional document UUID to associate with session"
+    )
+
+
+class CreateSessionResponse(BaseModel):
+    """Response for session creation."""
+
+    session_id: str
+    document_id: Optional[str]
+    created_at: str
+    message_count: int = 0
+
+
+class SessionSummary(BaseModel):
+    """Summary of a chat session."""
+
+    session_id: str
+    document_id: Optional[str]
+    created_at: str
+    updated_at: str
+    message_count: int
+
+
+class SessionListResponse(BaseModel):
+    """Response for listing sessions."""
+
+    sessions: List[SessionSummary]
+
+
+class ChatMessageSchema(BaseModel):
+    """Chat message schema."""
+
+    id: str
+    role: MessageRole
+    content: str
+    created_at: str
+    source_chunks: Optional[List[dict]] = None
+    focus_context: Optional[FocusContext] = None
+    token_count: Optional[int] = None
+
+
+class SessionDetailResponse(BaseModel):
+    """Detailed session with message history."""
+
+    session_id: str
+    document_id: Optional[str]
+    created_at: str
+    updated_at: str
+    message_count: int
+    messages: List[ChatMessageSchema]
+
+
+class SessionStatsResponse(BaseModel):
+    """Session statistics."""
+
+    message_count: int
+    total_tokens: int
+    estimated_cost_usd: float
+    cache_hit_rate: float
+    avg_response_time_ms: float
+
+
+class SendMessageRequest(BaseModel):
+    """Request to send a message in a session."""
+
+    message: str = Field(..., min_length=1, max_length=6000, description="User message")
+    focus_context: Optional[FocusContext] = Field(
+        None, description="Optional focus caret context"
+    )
+
+
+class MessageListResponse(BaseModel):
+    """Response for listing messages."""
+
+    messages: List[ChatMessageSchema]
+    total: int
+    limit: int
+    offset: int
+
+
+class CacheClearResponse(BaseModel):
+    """Response for cache clear operation."""
+
+    cleared_entries: int
+    message: str

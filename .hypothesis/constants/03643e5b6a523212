@@ -1,0 +1,4 @@
+# file: C:\Users\user\Desktop\Projects\kiro-hackaton\backend\app\services\circuit_breaker.py
+# hypothesis_version: 6.150.2
+
+['closed', 'failure_count', 'half_open', 'last_failure_time', 'open', 'state', 'success_count']
