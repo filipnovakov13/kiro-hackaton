@@ -1,4 +1,6 @@
 # Product Overview
+**For a detailed visual identity of the app read .kiro\documentation\project-docs\visual-identity.md**
+**For a detailed product design document read .kiro\documentation\project-docs\PRD.md**
 
 ## Product Purpose
 Iubar is an AI-enhanced personal knowledge management and structured learning web app. It makes thinking, learning, and creating feel effortless through a hybrid RAG architecture combining vector search with structured memory for intelligent, context-aware interactions.

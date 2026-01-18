@@ -1,14 +1,167 @@
 # Development Log - Iubar
 
 **Project**: Iubar - AI-Enhanced Personal Knowledge Management  
-**Duration**: January 6-17, 2026  
-**Total Time**: ~34 hours   
+**Duration**: January 6-18, 2026  
+**Total Time**: ~38 hours   
 
 ## Overview
 Building Iubar, an AI-enhanced personal knowledge management and structured learning web app that combines PKM with AI tutoring capabilities. Uses a Hybrid RAG architecture with vector search and structured memory for long-term, evolving user interactions.
 ---
 
-## Week 3: Foundation Phase Implementation (Jan 15-17)
+## Week 3: Foundation + RAG Core Implementation (Jan 15-18)
+
+
+### Day 9 (Jan 18) - RAG Core Phase Specification [~4h]
+
+**RAG Core Phase Spec Creation Session**:
+- **Comprehensive Spec Created**: `.kiro/specs/rag-core-phase/` with 3 complete documents
+  - `requirements.md` - 15 detailed requirements with acceptance criteria
+  - `design.md` - Complete technical design with 10 service implementations
+  - `tasks.md` - 60+ atomized tasks organized into 9 major sections with 8 dependency layers
+
+**Requirements Document (15 Requirements)**:
+| # | Requirement | Description |
+|---|-------------|-------------|
+| 1 | Chat Sessions | CRUD operations with SQLite persistence |
+| 2 | Message Management | Store user/assistant messages with metadata |
+| 3 | Semantic Search | Multi-document search with 0.7 similarity threshold |
+| 4 | Context Retrieval | Top-5 chunks with focus boost (0.15) |
+| 5 | DeepSeek Integration | LLM with streaming, caching, all API parameters |
+| 6 | Streaming Responses | SSE with error handling and backpressure |
+| 7 | Response Caching | 500-entry LRU cache with invalidation |
+| 8 | Focus Caret | Arrow keys + click, 0.15 boost for focused chunks |
+| 9 | Split-Pane UI | Collapsible document viewer + chat interface |
+| 10 | Source Attribution | Individual clickable links to source chunks |
+| 11 | Cost Tracking | Display tokens used and estimated cost per session |
+| 12 | Suggested Questions | Generate 3 questions from document summaries |
+| 13 | Input Validation | 6000 char limit, prompt injection defense |
+| 14 | Rate Limiting | 100 queries/hour, 5 concurrent streams |
+| 15 | Session Management | TTL, cleanup, spending limits ($0.50 default) |
+
+**User Feedback Incorporated**:
+- Document summarization for multi-document search (Req 3.1)
+- Similarity threshold 0.7 based on RAG best practices research
+- Removed forced chunk inclusion (original Req 4.3)
+- System prompt emphasizes "AI learning instructor" with anti-sycophancy rules
+- All DeepSeek API parameters documented with descriptions
+- Cache size reduced from 1000 to 500 entries
+- Light-based thinking indicator (pulsing glow, golden accent #D4A574)
+- Collapsible document pane with expand button
+- Asynchronous logging without blocking main flow
+- Document summary for suggested questions
+- Message length limit: 6000 characters (not 10000)
+
+**Design Document - Critical Components Added**:
+
+**User Provided Two Detailed Critiques** identifying critical issues, major design issues, and missing features. All were addressed:
+
+**Critical Components (Blocking Issues Resolved)**:
+1. ✅ Streaming error handling with SSE error events in RAGService.generate_response
+2. ✅ InputValidator class (6000 char limit, prompt injection defense, sanitization)
+3. ✅ Timeout handling (30s configurable for DeepSeek API)
+4. ✅ SessionManager with TTL, cleanup, spending limits ($0.50 default)
+5. ✅ Fallback logic for missing document summaries in _select_relevant_documents
+6. ✅ RateLimiter (100 queries/hour, 5 concurrent streams)
+7. ✅ Cache invalidation method in ResponseCache
+8. ✅ Spending limits enforcement in SessionManager.check_spending_limit
+
+**Important Components Added**:
+9.  ✅ CircuitBreaker pattern for DeepSeek API resilience (CLOSED/OPEN/HALF_OPEN states)
+10. ✅ StructuredLogger with JSON formatting
+11. ✅ Async logging with proper task tracking (no fire-and-forget)
+12. ✅ Configuration centralization (all magic numbers → env vars)
+
+**10 Complete Service Implementations**:
+- RAGService (orchestration with retrieval + generation)
+- ResponseCache (LRU with invalidation)
+- DeepSeekClient (with circuit breaker, timeout, retry)
+- SessionManager (CRUD, TTL, spending limits)
+- InputValidator (security, sanitization)
+- DocumentSummaryService (with fallback)
+- RateLimiter (queries + concurrent streams)
+- CircuitBreaker (state machine for API resilience)
+- StructuredLogger (JSON formatting)
+- Async logging utilities
+
+**Key Design Decisions**:
+| Decision | Choice | Rationale |
+|----------|--------|-----------|
+| Context Window Budget | 8000 tokens | Leaves room for system prompt + conversation history |
+| Message Limit | 6000 characters (~1500 tokens) | Prevents context overflow, leaves ~6500 for retrieval |
+| Similarity Threshold | 0.7 (configurable) | Research-backed for strict semantic matching |
+| Focus Boost | 0.15 | Balances focused vs. global context |
+| Cache Size | 500 entries | Fast O(1) lookup with minimal memory |
+| System Prompt Caching | Every request | DeepSeek automatic caching reduces costs 90% |
+| Rate Limiting | 100 queries/hour, 5 concurrent | Prevents abuse, protects API costs |
+| Spending Limit | $5.00 per session | Configurable cost control |
+
+**Updated Sections**:
+- Configuration: All new environment variables documented (20+ new vars)
+- Testing Strategy: Expanded to cover all new components
+- Security Considerations: 8 comprehensive security layers
+- Performance Targets: Specific metrics for each operation
+
+**Tasks Document (60+ Atomized Tasks)**:
+- **9 Major Sections**: Database → Core Services → AI Integration → API → Frontend → Integration → Config
+- **8 Dependency Layers**: Clear prerequisites and execution order
+- **Dependency Graph**: Visual representation of task relationships
+- **Property-Based Tests**: Marked with requirement validation annotations
+- **Task Organization**:
+  - Layer 1: Database schema (4 tasks)
+  - Layer 2: Core services (5 tasks - validation, sessions, cache, rate limiting, circuit breaker)
+  - Layer 3: AI integration (5 tasks - DeepSeek, summaries, RAG service)
+  - Layer 4: API endpoints (8 tasks)
+  - Layer 5-6: Frontend components (9 tasks - chat, document viewer, focus caret)
+  - Layer 7: Frontend services & hooks (6 tasks)
+  - Layer 8: Integration testing (5 tasks)
+  - Layer 9: Configuration & documentation (3 tasks)
+
+**Critical Issue Resolved**:
+- **Context Overflow Bug**: User identified contradiction - 10000 char message limit would overflow 8000 token context window
+- **Resolution**: Changed MAX_MESSAGE_LENGTH to 6000 characters in both InputValidator class and environment variables configuration
+- **Impact**: Ensures ~1500 tokens for message, ~6500 tokens for context retrieval
+
+**Acceptable Trade-offs (User Approved)**:
+- In-memory cache without persistence (MVP scope)
+- No memory encryption for API keys (desktop app)
+- No fallback LLM provider (post-MVP per PRD)
+- No OpenTelemetry (structured logging sufficient)
+- RAGService as orchestrator (appropriate responsibility)
+
+**Research & Iteration Process**:
+- User provided detailed feedback on requirements (12 specific changes)
+- User provided two comprehensive design critiques (20+ issues identified)
+- Iterative refinement with 5 user review cycles
+- Research on RAG best practices (similarity thresholds, chunking strategies)
+- All DeepSeek API parameters researched and documented
+
+**Files Created/Modified**:
+- `.kiro/specs/rag-core-phase/requirements.md` - 15 requirements (complete)
+- `.kiro/specs/rag-core-phase/design.md` - Technical design with all components (complete)
+- `.kiro/specs/rag-core-phase/tasks.md` - 60+ atomized tasks (complete)
+
+**Technical Achievements**:
+- ✅ Production-ready design with proper error handling
+- ✅ Security layers: input validation, rate limiting, spending limits
+- ✅ Resilience patterns: circuit breaker, timeout handling, fallback logic
+- ✅ Cost optimization: caching, token budgets, spending limits
+- ✅ All critical issues from critiques resolved
+- ✅ Specification ready for implementation
+
+**Kiro Usage**:
+- Requirements-first workflow execution
+- Iterative refinement with user feedback
+- Research integration (RAG best practices, DeepSeek API)
+- Design critique and issue resolution
+- Task atomization with dependency tracking
+
+**Next Steps**:
+- Begin implementing tasks from `.kiro/specs/rag-core-phase/tasks.md`
+- Follow dependency layers sequentially (Layer 1 → Layer 8)
+- Each task includes unit tests unless marked as integration test
+- Property-based tests annotated with requirements they validate
+
+---
 
 ### Day 8 (Jan 17) - Property-Based Testing Suite [~4h]
 
@@ -599,28 +752,29 @@ Building Iubar, an AI-enhanced personal knowledge management and structured lear
 
 | Category | Hours | Percentage |
 |----------|-------|------------|
-| Backend Development | 12h | 35% |
-| Testing & Debugging | 13h | 38% |
-| Frontend Development | 6h | 18% |
-| Configuration & Tooling | 3h | 9% |
-| **Total** | **34h** | **100%** |
+| Backend Development | 12h | 30% |
+| Testing & Debugging | 13h | 33% |
+| Frontend Development | 6h | 15% |
+| Specification & Design | 6h | 15% |
+| Configuration & Tooling | 3h | 7% |
+| **Total** | **40h** | **100%** |
 
 ---
 
 ## Kiro Usage Statistics
 
-- **Total Prompts Used**: 35+
-- **Most Used**: `@execute`, `@code-review`, LSP validation, task status updates, property-based testing
+- **Total Prompts Used**: 40+
+- **Most Used**: `@execute`, `@code-review`, `@plan-feature`, LSP validation, task status updates, property-based testing
 - **Custom Prompts Created**: 2 (update-devlog, create-pr)
 - **Hooks Created**: 5 (explored various triggers, 1 working: ui-playwright-test.kiro.hook)
 - **Agents Configured**: 4 (backend-specialist, frontend-specialist, review-agent, ux-validator)
 - **Subagent Integration**: execute.md enhanced with parallel task delegation
-- **Spec Workflows Completed**: 1 (foundation-phase: requirements → design → tasks → execution)
+- **Spec Workflows Completed**: 4 (advanced-kiro-features, project-setup, foundation-phase, rag-core-phase)
 - **External Tools Used**: Perplexity Research Mode for technology deep-dives
-- **Critique Sessions**: 1 separate Kiro chat for design review
+- **Critique Sessions**: 2 separate Kiro chats for design reviews
 - **Property-Based Tests Created**: 6 test files with 15+ properties
 - **E2E Tests Created**: 1 comprehensive Playwright suite (7 tests)
-- **Estimated Time Saved**: ~15 hours through automated configuration, testing, spec-driven development, and task execution
+- **Estimated Time Saved**: ~20 hours through automated configuration, testing, spec-driven development, iterative refinement, and task execution
 
 ---
 
@@ -629,10 +783,12 @@ Building Iubar, an AI-enhanced personal knowledge management and structured lear
 ### Immediate (Week 3):
 - [x] Phase 1 Spec: Foundation phase specification complete
 - [x] Phase 1 Implementation: All tasks from `.kiro/specs/foundation-phase/tasks.md` complete
-- [ ] Phase 2: RAG Core - Q&A with documents, chat interface
-- [ ] Phase 2: Split-pane UI with focus caret
+- [x] Phase 2 Spec: RAG Core phase specification complete (requirements → design → tasks)
+- [ ] Phase 2 Implementation: Begin implementing tasks from `.kiro/specs/rag-core-phase/tasks.md`
 
 ### Deferred to Dedicated Sessions:
 - [x] 🎨 Visual Identity Design (Day 8-9)
 - [ ] 📄 Demo Documents Selection (Day 8-9)
 - [ ] 🔄 API Resilience Strategy (Day 7-8)
+
+---
