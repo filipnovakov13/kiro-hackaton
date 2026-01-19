@@ -33,6 +33,8 @@ class InputValidator:
         r"<\|endoftext\|>",
         r"\[INST\]",
         r"\[/INST\]",
+        r"reveal\s+your\s+system\s+prompt",
+        r"act\s+as\s+an?\s+admin",
     ]
 
     # UUID regex pattern (RFC 4122)

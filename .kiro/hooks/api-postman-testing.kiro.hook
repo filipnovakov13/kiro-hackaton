@@ -1,21 +1,17 @@
 {
   "enabled": true,
-  "name": "API Postman Testing",
-  "description": "Monitors API source code changes and reminds user to run Postman collection tests manually",
-  "version": "1",
+  "name": "API Postman Collection Sync",
+  "description": "Monitors API source code changes and automatically updates the Postman collection with new endpoints and tests",
+  "version": "2",
   "when": {
     "type": "fileEdited",
     "patterns": [
       "backend/app/api/*.py",
-      "backend/app/services/*.py",
-      "backend/app/models/*.py",
-      "backend/app/core/*.py",
-      "backend/main.py",
-      "backend/requirements.txt"
+      "backend/tests/test_*_api_integration.py"
     ]
   },
   "then": {
     "type": "askAgent",
-    "prompt": "API source code has been modified. Please remind the user to manually run the Postman collection tests. Provide the collection ID from .postman.json and instructions on how to run the tests locally using the Postman desktop app or Newman CLI."
+    "prompt": "API source code or integration tests have been modified. Please analyze the changes and update the Postman collection:\n\n1. Read .postman.json to get the collection_id and workspace_id\n2. Scan backend/app/api/*.py files to identify all API endpoints (GET, POST, PUT, DELETE, PATCH)\n3. For each endpoint, check if corresponding integration tests exist in backend/tests/test_*_api_integration.py\n4. Extract test assertions from the integration tests to create Postman test scripts\n5. Use the Postman power to:\n   - Get the current collection using getCollection\n   - For each new endpoint not in the collection:\n     * Create a new request using createCollectionRequest with:\n       - Proper HTTP method and URL\n       - Request body examples from tests\n       - Test scripts derived from integration test assertions\n   - For existing endpoints with updated tests:\n     * Update the request's test scripts\n6. Provide a summary of endpoints added/updated in the collection\n\nFocus on the most recently modified files to identify new or changed endpoints."
   }
 }

@@ -1,0 +1,648 @@
+{
+	"id": "f61801ea-8f6c-458c-ab01-c28d5dd68aac",
+	"name": "Iubar API",
+	"timestamp": "2026-01-19T21:25:23.292Z",
+	"collection_id": "33082987-f41775c8-b2e2-41dc-aac0-f92f35259e01",
+	"folder_id": 0,
+	"environment_id": "33082987-4feffffd-b024-4ae7-965e-68fc55f4a2f4",
+	"totalPass": 37,
+	"delay": 0,
+	"persist": true,
+	"status": "finished",
+	"startedAt": "2026-01-19T21:25:20.465Z",
+	"totalFail": 9,
+	"results": [
+		{
+			"id": "0705adea-c6f1-420a-9f0c-0c2cfd604cc0",
+			"name": "Root Endpoint",
+			"url": "http://127.0.0.1:8000/",
+			"time": 7,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"Status code is 200": true,
+				"Response has correct structure": true
+			},
+			"testPassFailCounts": {
+				"Status code is 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Response has correct structure": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				7
+			],
+			"allTests": [
+				{
+					"Status code is 200": true,
+					"Response has correct structure": true
+				}
+			]
+		},
+		{
+			"id": "6aa21219-dca5-47de-9a63-5a0cfd2d1df7",
+			"name": "Health Check",
+			"url": "http://localhost:8000/health",
+			"time": 2,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"Status code is 200": true,
+				"Service is healthy": true
+			},
+			"testPassFailCounts": {
+				"Status code is 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Service is healthy": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				2
+			],
+			"allTests": [
+				{
+					"Status code is 200": true,
+					"Service is healthy": true
+				}
+			]
+		},
+		{
+			"id": "c53561c5-4b89-4bf5-b4e1-c67498555207",
+			"name": "System Status",
+			"url": "http://localhost:8000/api/status",
+			"time": 86,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"Status code is 200 or 503": true,
+				"Response has system status": true
+			},
+			"testPassFailCounts": {
+				"Status code is 200 or 503": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Response has system status": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				86
+			],
+			"allTests": [
+				{
+					"Status code is 200 or 503": true,
+					"Response has system status": true
+				}
+			]
+		},
+		{
+			"id": "1dd612da-e817-4378-89af-f3b5e7fbfbde",
+			"name": "List Documents",
+			"url": "http://localhost:8000/api/documents",
+			"time": 16,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"Status code is 200": true,
+				"Response is an array": true
+			},
+			"testPassFailCounts": {
+				"Status code is 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Response is an array": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				16
+			],
+			"allTests": [
+				{
+					"Status code is 200": true,
+					"Response is an array": true
+				}
+			]
+		},
+		{
+			"id": "545b60b5-544f-4501-8cd6-81f86ea41d11",
+			"name": "Upload Document",
+			"url": "http://localhost:8000/api/documents/upload",
+			"time": 10,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"Status code is 200": true,
+				"Upload successful": true
+			},
+			"testPassFailCounts": {
+				"Status code is 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Upload successful": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				10
+			],
+			"allTests": [
+				{
+					"Status code is 200": true,
+					"Upload successful": true
+				}
+			]
+		},
+		{
+			"id": "3b8ee6fa-1bbd-4cab-b128-bdd7225e91fd",
+			"name": "Upload Unsupported File Type",
+			"url": "http://localhost:8000/api/documents/upload",
+			"time": 62,
+			"responseCode": {
+				"code": 415,
+				"name": "Unsupported Media Type"
+			},
+			"tests": {
+				"Status code is 415": true,
+				"Error message is correct": true
+			},
+			"testPassFailCounts": {
+				"Status code is 415": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Error message is correct": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				62
+			],
+			"allTests": [
+				{
+					"Status code is 415": true,
+					"Error message is correct": true
+				}
+			]
+		},
+		{
+			"id": "3f86e284-b9fc-4fb4-8fb0-943d4a201655",
+			"name": "Ingest URL",
+			"url": "http://localhost:8000/api/documents/url",
+			"time": 6,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"Status code is 200": true,
+				"URL ingestion started": true
+			},
+			"testPassFailCounts": {
+				"Status code is 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"URL ingestion started": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				6
+			],
+			"allTests": [
+				{
+					"Status code is 200": true,
+					"URL ingestion started": true
+				}
+			]
+		},
+		{
+			"id": "d1be1aea-6cf6-48a4-9020-57d01f83006d",
+			"name": "Get Task Status",
+			"url": "http://localhost:8000/api/documents/status/5d1e1124-62fe-4f45-8a1c-f5e4ec5dd0d1",
+			"time": 814,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"Status code is 200": true,
+				"Task status returned": true
+			},
+			"testPassFailCounts": {
+				"Status code is 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Task status returned": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				814
+			],
+			"allTests": [
+				{
+					"Status code is 200": true,
+					"Task status returned": true
+				}
+			]
+		},
+		{
+			"id": "2f45fe76-8426-4013-8d1d-cfa8f91cdc44",
+			"name": "Get Task Status - Not Found",
+			"url": "http://localhost:8000/api/documents/status/invalid-task-id",
+			"time": 25,
+			"responseCode": {
+				"code": 404,
+				"name": "Not Found"
+			},
+			"tests": {
+				"Status code is 404": true,
+				"Error message is correct": true
+			},
+			"testPassFailCounts": {
+				"Status code is 404": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Error message is correct": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				25
+			],
+			"allTests": [
+				{
+					"Status code is 404": true,
+					"Error message is correct": true
+				}
+			]
+		},
+		{
+			"id": "afe9c515-f7bd-4d69-0be9-d4c9cccd08de",
+			"name": "Create Chat Session",
+			"url": "http://localhost:8000/api/chat/sessions",
+			"time": 116,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"Status code is 200": true,
+				"Response is JSON": true,
+				"Response contains required fields": true,
+				"session_id is valid UUID": true,
+				"New session has 0 messages": true,
+				"created_at is valid ISO timestamp": true,
+				"Response time is less than 200ms": true
+			},
+			"testPassFailCounts": {
+				"Status code is 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Response is JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Response contains required fields": {
+					"pass": 1,
+					"fail": 0
+				},
+				"session_id is valid UUID": {
+					"pass": 1,
+					"fail": 0
+				},
+				"New session has 0 messages": {
+					"pass": 1,
+					"fail": 0
+				},
+				"created_at is valid ISO timestamp": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Response time is less than 200ms": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				116
+			],
+			"allTests": [
+				{
+					"Status code is 200": true,
+					"Response is JSON": true,
+					"Response contains required fields": true,
+					"session_id is valid UUID": true,
+					"New session has 0 messages": true,
+					"created_at is valid ISO timestamp": true,
+					"Response time is less than 200ms": true
+				}
+			]
+		},
+		{
+			"id": "48215053-a546-6de7-c18f-5a9356f4da6d",
+			"name": "List Chat Sessions",
+			"url": "http://localhost:8000/api/chat/sessions?limit=10&offset=0",
+			"time": 17,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"Status code is 200": true,
+				"Response is JSON": true,
+				"Response contains required fields": true,
+				"sessions is an array": true,
+				"Each session has required fields": true,
+				"Response time is less than 500ms": true
+			},
+			"testPassFailCounts": {
+				"Status code is 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Response is JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Response contains required fields": {
+					"pass": 1,
+					"fail": 0
+				},
+				"sessions is an array": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Each session has required fields": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Response time is less than 500ms": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				17
+			],
+			"allTests": [
+				{
+					"Status code is 200": true,
+					"Response is JSON": true,
+					"Response contains required fields": true,
+					"sessions is an array": true,
+					"Each session has required fields": true,
+					"Response time is less than 500ms": true
+				}
+			]
+		},
+		{
+			"id": "7ae4f306-e5d5-0be1-57bc-88f78143548e",
+			"name": "Get Chat Session Details",
+			"url": "http://localhost:8000/api/chat/sessions/",
+			"time": 19,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"Status code is 200": true,
+				"Response is JSON": true,
+				"Response contains required fields": false,
+				"messages is an array": false,
+				"updated_at is >= created_at": false,
+				"Response time is less than 500ms": true
+			},
+			"testPassFailCounts": {
+				"Status code is 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Response is JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Response contains required fields": {
+					"pass": 0,
+					"fail": 1
+				},
+				"messages is an array": {
+					"pass": 0,
+					"fail": 1
+				},
+				"updated_at is >= created_at": {
+					"pass": 0,
+					"fail": 1
+				},
+				"Response time is less than 500ms": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				19
+			],
+			"allTests": [
+				{
+					"Status code is 200": true,
+					"Response is JSON": true,
+					"Response contains required fields": false,
+					"messages is an array": false,
+					"updated_at is >= created_at": false,
+					"Response time is less than 500ms": true
+				}
+			]
+		},
+		{
+			"id": "12559d86-504f-85f8-8101-bf0597b9a657",
+			"name": "Get Session Stats",
+			"url": "http://localhost:8000/api/chat/sessions//stats",
+			"time": 5,
+			"responseCode": {
+				"code": 404,
+				"name": "Not Found"
+			},
+			"tests": {
+				"Status code is 200": false,
+				"Response is JSON": true,
+				"Response contains required fields": false,
+				"All values are non-negative": false,
+				"cache_hit_rate is between 0 and 1": false,
+				"Response time is less than 500ms": true
+			},
+			"testPassFailCounts": {
+				"Status code is 200": {
+					"pass": 0,
+					"fail": 1
+				},
+				"Response is JSON": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Response contains required fields": {
+					"pass": 0,
+					"fail": 1
+				},
+				"All values are non-negative": {
+					"pass": 0,
+					"fail": 1
+				},
+				"cache_hit_rate is between 0 and 1": {
+					"pass": 0,
+					"fail": 1
+				},
+				"Response time is less than 500ms": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				5
+			],
+			"allTests": [
+				{
+					"Status code is 200": false,
+					"Response is JSON": true,
+					"Response contains required fields": false,
+					"All values are non-negative": false,
+					"cache_hit_rate is between 0 and 1": false,
+					"Response time is less than 500ms": true
+				}
+			]
+		},
+		{
+			"id": "c9de1359-631f-241b-2076-22793159e812",
+			"name": "Delete Chat Session",
+			"url": "http://localhost:8000/api/chat/sessions/",
+			"time": 3,
+			"responseCode": {
+				"code": 405,
+				"name": "Method Not Allowed"
+			},
+			"tests": {
+				"Status code is 204 No Content": false,
+				"Response body is empty": false,
+				"Response time is less than 500ms": true
+			},
+			"testPassFailCounts": {
+				"Status code is 204 No Content": {
+					"pass": 0,
+					"fail": 1
+				},
+				"Response body is empty": {
+					"pass": 0,
+					"fail": 1
+				},
+				"Response time is less than 500ms": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				3
+			],
+			"allTests": [
+				{
+					"Status code is 204 No Content": false,
+					"Response body is empty": false,
+					"Response time is less than 500ms": true
+				}
+			]
+		}
+	],
+	"count": 1,
+	"totalTime": 1188,
+	"collection": {
+		"requests": [
+			{
+				"id": "0705adea-c6f1-420a-9f0c-0c2cfd604cc0",
+				"method": "GET"
+			},
+			{
+				"id": "6aa21219-dca5-47de-9a63-5a0cfd2d1df7",
+				"method": "GET"
+			},
+			{
+				"id": "c53561c5-4b89-4bf5-b4e1-c67498555207",
+				"method": "GET"
+			},
+			{
+				"id": "1dd612da-e817-4378-89af-f3b5e7fbfbde",
+				"method": "GET"
+			},
+			{
+				"id": "545b60b5-544f-4501-8cd6-81f86ea41d11",
+				"method": "POST"
+			},
+			{
+				"id": "3b8ee6fa-1bbd-4cab-b128-bdd7225e91fd",
+				"method": "POST"
+			},
+			{
+				"id": "3f86e284-b9fc-4fb4-8fb0-943d4a201655",
+				"method": "POST"
+			},
+			{
+				"id": "d1be1aea-6cf6-48a4-9020-57d01f83006d",
+				"method": "GET"
+			},
+			{
+				"id": "2f45fe76-8426-4013-8d1d-cfa8f91cdc44",
+				"method": "GET"
+			},
+			{
+				"id": "afe9c515-f7bd-4d69-0be9-d4c9cccd08de",
+				"method": "POST"
+			},
+			{
+				"id": "48215053-a546-6de7-c18f-5a9356f4da6d",
+				"method": "GET"
+			},
+			{
+				"id": "7ae4f306-e5d5-0be1-57bc-88f78143548e",
+				"method": "GET"
+			},
+			{
+				"id": "12559d86-504f-85f8-8101-bf0597b9a657",
+				"method": "GET"
+			},
+			{
+				"id": "c9de1359-631f-241b-2076-22793159e812",
+				"method": "DELETE"
+			}
+		]
+	}
+}

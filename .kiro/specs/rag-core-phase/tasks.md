@@ -200,42 +200,42 @@ This task list implements the RAG Core functionality for Iubar, enabling context
 ## 4. API Endpoints (API Layer)
 
 ### 4.1 Implement POST /api/chat/sessions
-- [ ] Create `backend/app/api/chat.py`
-- [ ] Implement create_session endpoint
-- [ ] Add input validation
-- [ ] Add document existence check
-- [ ] Return session details within 200ms
-- [ ] Add error handling (404 for missing document)
-- [ ] Write integration tests
+- [x] Create `backend/app/api/chat.py`
+- [x] Implement create_session endpoint
+- [x] Add input validation
+- [x] Add document existence check
+- [x] Return session details within 200ms
+- [x] Add error handling (404 for missing document)
+- [x] Write integration tests
 
 
 ### 4.2 Implement GET /api/chat/sessions
-- [ ] Implement list_sessions endpoint
-- [ ] Return all sessions with metadata
-- [ ] Add pagination support (optional)
-- [ ] Write integration tests
+- [x] Implement list_sessions endpoint
+- [x] Return all sessions with metadata
+- [x] Add pagination support (optional)
+- [x] Write integration tests
 
 
 ### 4.3 Implement GET /api/chat/sessions/{id}
-- [ ] Implement get_session endpoint
-- [ ] Return session with message history
-- [ ] Limit to 50 most recent messages
-- [ ] Add error handling (404 for missing session)
-- [ ] Write integration tests
+- [x] Implement get_session endpoint
+- [x] Return session with message history
+- [x] Limit to 50 most recent messages
+- [x] Add error handling (404 for missing session)
+- [x] Write integration tests
 
 
 ### 4.4 Implement DELETE /api/chat/sessions/{id}
-- [ ] Implement delete_session endpoint
+- [x] Implement delete_session endpoint
 - [ ] Verify cascade delete works for messages
-- [ ] Add error handling (404 for missing session)
-- [ ] Write integration tests
+- [x] Add error handling (404 for missing session)
+- [x] Write integration tests
 
 
 ### 4.5 Implement GET /api/chat/sessions/{id}/stats
-- [ ] Implement get_session_stats endpoint
-- [ ] Return message count, tokens, cost, cache hit rate
-- [ ] Add error handling (404 for missing session)
-- [ ] Write integration tests
+- [x] Implement get_session_stats endpoint
+- [x] Return message count, tokens, cost, cache hit rate
+- [x] Add error handling (404 for missing session)
+- [x] Write integration tests
 
 
 ### 4.6 Implement POST /api/chat/sessions/{id}/messages (Streaming)

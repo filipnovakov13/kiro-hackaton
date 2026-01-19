@@ -301,6 +301,197 @@ async def test_check_spending_limit_exceeded(session_manager, mock_db_session):
     assert result is False
 
 
+@pytest.mark.asyncio
+async def test_save_message_user(session_manager, mock_db_session):
+    """Test saving a user message."""
+    session_id = "123e4567-e89b-12d3-a456-426614174000"
+    content = "What is this document about?"
+
+    # Mock session exists
+    mock_session_result = MagicMock()
+    mock_session_result.fetchone.return_value = (
+        session_id,
+        "doc-id",
+        "2026-01-18T10:00:00",
+        "2026-01-18T11:00:00",
+        "{}",
+    )
+
+    mock_count_result = MagicMock()
+    mock_count_result.fetchone.return_value = (0,)
+
+    mock_db_session.execute.side_effect = [
+        mock_session_result,
+        mock_count_result,
+        AsyncMock(),  # INSERT message
+        AsyncMock(),  # UPDATE session
+    ]
+
+    message_id = await session_manager.save_message(session_id, "user", content)
+
+    # Verify message_id is a UUID
+    import uuid
+
+    assert uuid.UUID(message_id)
+
+    # Verify database operations
+    assert mock_db_session.execute.call_count == 4  # get_session (2) + insert + update
+    assert mock_db_session.commit.called
+
+
+@pytest.mark.asyncio
+async def test_save_message_assistant_with_metadata(session_manager, mock_db_session):
+    """Test saving an assistant message with metadata."""
+    session_id = "123e4567-e89b-12d3-a456-426614174000"
+    content = "This document is about Python programming."
+    metadata = {
+        "sources": [{"chunk_id": "chunk-1", "similarity": 0.95}],
+        "token_count": 150,
+        "cost_usd": 0.0001,
+        "cached": False,
+    }
+
+    # Mock session exists
+    mock_session_result = MagicMock()
+    mock_session_result.fetchone.return_value = (
+        session_id,
+        "doc-id",
+        "2026-01-18T10:00:00",
+        "2026-01-18T11:00:00",
+        "{}",
+    )
+
+    mock_count_result = MagicMock()
+    mock_count_result.fetchone.return_value = (1,)
+
+    mock_db_session.execute.side_effect = [
+        mock_session_result,
+        mock_count_result,
+        AsyncMock(),  # INSERT message
+        AsyncMock(),  # UPDATE session
+    ]
+
+    message_id = await session_manager.save_message(
+        session_id, "assistant", content, metadata
+    )
+
+    # Verify message_id is a UUID
+    import uuid
+
+    assert uuid.UUID(message_id)
+
+    # Verify database operations
+    assert mock_db_session.execute.call_count == 4
+    assert mock_db_session.commit.called
+
+
+@pytest.mark.asyncio
+async def test_save_message_session_not_found(session_manager, mock_db_session):
+    """Test saving message to non-existent session raises error."""
+    session_id = "nonexistent"
+
+    # Mock session doesn't exist
+    mock_result = MagicMock()
+    mock_result.fetchone.return_value = None
+    mock_db_session.execute.return_value = mock_result
+
+    with pytest.raises(ValueError, match="Session .* not found"):
+        await session_manager.save_message(session_id, "user", "test message")
+
+
+@pytest.mark.asyncio
+async def test_save_message_invalid_role(session_manager, mock_db_session):
+    """Test saving message with invalid role raises error."""
+    session_id = "123e4567-e89b-12d3-a456-426614174000"
+
+    with pytest.raises(ValueError, match="Invalid role"):
+        await session_manager.save_message(session_id, "invalid_role", "test message")
+
+
+@pytest.mark.asyncio
+async def test_save_message_updates_session_timestamp(session_manager, mock_db_session):
+    """Test that saving message updates session updated_at timestamp."""
+    session_id = "123e4567-e89b-12d3-a456-426614174000"
+
+    # Mock session exists
+    mock_session_result = MagicMock()
+    mock_session_result.fetchone.return_value = (
+        session_id,
+        "doc-id",
+        "2026-01-18T10:00:00",
+        "2026-01-18T10:00:00",  # Initial timestamp
+        "{}",
+    )
+
+    mock_count_result = MagicMock()
+    mock_count_result.fetchone.return_value = (0,)
+
+    mock_db_session.execute.side_effect = [
+        mock_session_result,
+        mock_count_result,
+        AsyncMock(),  # INSERT message
+        AsyncMock(),  # UPDATE session
+    ]
+
+    await session_manager.save_message(session_id, "user", "test message")
+
+    # Verify UPDATE was called (4th call)
+    assert mock_db_session.execute.call_count == 4
+
+
+@pytest.mark.asyncio
+async def test_save_message_can_be_retrieved(session_manager, mock_db_session):
+    """Test that saved message can be retrieved via get_session_messages."""
+    session_id = "123e4567-e89b-12d3-a456-426614174000"
+    content = "Test message"
+
+    # Mock save_message flow
+    mock_session_result = MagicMock()
+    mock_session_result.fetchone.return_value = (
+        session_id,
+        "doc-id",
+        "2026-01-18T10:00:00",
+        "2026-01-18T11:00:00",
+        "{}",
+    )
+
+    mock_count_result = MagicMock()
+    mock_count_result.fetchone.return_value = (0,)
+
+    # Mock get_session_messages flow
+    message_id = "msg-123"
+    mock_messages_result = MagicMock()
+    mock_messages_result.fetchall.return_value = [
+        (
+            message_id,
+            session_id,
+            "user",
+            content,
+            "2026-01-18T11:00:00",
+            None,
+        )
+    ]
+
+    mock_db_session.execute.side_effect = [
+        mock_session_result,
+        mock_count_result,
+        AsyncMock(),  # INSERT message
+        AsyncMock(),  # UPDATE session
+        mock_messages_result,  # get_session_messages
+    ]
+
+    # Save message
+    saved_id = await session_manager.save_message(session_id, "user", content)
+
+    # Retrieve messages
+    messages = await session_manager.get_session_messages(session_id)
+
+    # Verify message is in list
+    assert len(messages) == 1
+    assert messages[0]["content"] == content
+    assert messages[0]["role"] == "user"
+
+
 # ============================================================================
 # Property-Based Tests
 # ============================================================================

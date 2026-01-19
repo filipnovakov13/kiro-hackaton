@@ -116,6 +116,54 @@ class SessionManager:
             "message_count": 0,
         }
 
+    async def list_sessions(
+        self, limit: Optional[int] = None, offset: int = 0
+    ) -> list[dict]:
+        """List all chat sessions with pagination support.
+
+        Args:
+            limit: Maximum number of sessions to return (None for all)
+            offset: Number of sessions to skip (for pagination)
+
+        Returns:
+            List of session dicts ordered by updated_at DESC (most recent first)
+        """
+        # Build query with optional limit
+        query = """
+            SELECT s.id, s.document_id, s.created_at, s.updated_at, s.session_metadata,
+                   COUNT(m.id) as message_count
+            FROM chat_sessions s
+            LEFT JOIN chat_messages m ON s.id = m.session_id
+            GROUP BY s.id, s.document_id, s.created_at, s.updated_at, s.session_metadata
+            ORDER BY s.updated_at DESC
+        """
+
+        params = {"offset": offset}
+
+        if limit is not None:
+            query += " LIMIT :limit OFFSET :offset"
+            params["limit"] = limit
+        elif offset > 0:
+            query += " OFFSET :offset"
+
+        result = await self.db.execute(text(query), params)
+        rows = result.fetchall()
+
+        sessions = []
+        for row in rows:
+            sessions.append(
+                {
+                    "session_id": row[0],
+                    "document_id": row[1],
+                    "created_at": row[2],
+                    "updated_at": row[3],
+                    "metadata": json.loads(row[4]) if row[4] else {},
+                    "message_count": row[5],
+                }
+            )
+
+        return sessions
+
     async def get_session(self, session_id: str) -> Optional[dict]:
         """Get session by ID.
 
@@ -152,6 +200,125 @@ class SessionManager:
             "metadata": json.loads(row[4]) if row[4] else {},
             "message_count": message_count,
         }
+
+    async def get_session_messages(
+        self, session_id: str, limit: int = 50
+    ) -> list[dict]:
+        """Get messages for a session.
+
+        Args:
+            session_id: Session UUID
+            limit: Maximum number of messages to return (default 50, most recent)
+
+        Returns:
+            List of message dicts ordered by created_at ASC
+        """
+        # Get most recent messages, ordered by created_at DESC, then reverse
+        result = await self.db.execute(
+            text(
+                """SELECT id, session_id, role, content, created_at, message_metadata
+                   FROM chat_messages 
+                   WHERE session_id = :session_id
+                   ORDER BY created_at DESC
+                   LIMIT :limit"""
+            ),
+            {"session_id": session_id, "limit": limit},
+        )
+        rows = result.fetchall()
+
+        # Reverse to get chronological order (oldest first)
+        messages = []
+        for row in reversed(rows):
+            messages.append(
+                {
+                    "message_id": row[0],
+                    "session_id": row[1],
+                    "role": row[2],
+                    "content": row[3],
+                    "created_at": row[4],
+                    "metadata": json.loads(row[5]) if row[5] else {},
+                }
+            )
+
+        return messages
+
+    async def save_message(
+        self,
+        session_id: str,
+        role: str,
+        content: str,
+        metadata: Optional[dict] = None,
+    ) -> str:
+        """Save a message to the database.
+
+        Args:
+            session_id: Session ID
+            role: Message role (user or assistant)
+            content: Message content
+            metadata: Optional metadata (sources, tokens, cost, interrupted flag)
+
+        Returns:
+            message_id: UUID of created message
+
+        Raises:
+            ValueError: If session not found or role is invalid
+        """
+        import uuid
+
+        # Validate role
+        if role not in ("user", "assistant"):
+            raise ValueError(f"Invalid role: {role}. Must be 'user' or 'assistant'")
+
+        # Verify session exists
+        session = await self.get_session(session_id)
+        if not session:
+            raise ValueError(f"Session {session_id} not found")
+
+        # Generate message ID
+        message_id = str(uuid.uuid4())
+        now = datetime.now().isoformat()
+
+        # Serialize metadata to JSON
+        metadata_json = json.dumps(metadata) if metadata else None
+
+        # Insert message
+        await self.db.execute(
+            text(
+                """INSERT INTO chat_messages 
+                   (id, session_id, role, content, created_at, message_metadata)
+                   VALUES (:id, :session_id, :role, :content, :created_at, :metadata)"""
+            ),
+            {
+                "id": message_id,
+                "session_id": session_id,
+                "role": role,
+                "content": content,
+                "created_at": now,
+                "metadata": metadata_json,
+            },
+        )
+
+        # Update session updated_at timestamp
+        await self.db.execute(
+            text(
+                """UPDATE chat_sessions 
+                   SET updated_at = :updated
+                   WHERE id = :session_id"""
+            ),
+            {"updated": now, "session_id": session_id},
+        )
+
+        await self.db.commit()
+
+        logger.info(
+            "Saved message",
+            session_id=session_id,
+            message_id=message_id,
+            role=role,
+            content_length=len(content),
+        )
+
+        return message_id
 
     async def update_session_metadata(
         self, session_id: str, metadata_updates: dict

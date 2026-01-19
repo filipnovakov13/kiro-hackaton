@@ -11,6 +11,7 @@ import asyncio
 import numpy as np
 
 from app.core.logging_config import StructuredLogger
+from app.core.prompts import RAG_SYSTEM_PROMPT
 
 logger = StructuredLogger(__name__)
 
@@ -469,7 +470,11 @@ class RAGService:
         focus_context: Optional[dict],
         message_history: Optional[List[dict]],
     ) -> List[dict]:
-        """Construct prompt messages for DeepSeek.
+        """Construct prompt messages for DeepSeek with XML tag separation.
+
+        Uses XML tags to clearly separate different sections of the prompt,
+        which helps prevent prompt injection attacks by making it clear what
+        is system instruction vs user-provided content.
 
         Args:
             query: User's question
@@ -482,53 +487,58 @@ class RAGService:
         """
         messages = []
 
-        # System prompt (cached to save on cost)
+        # System prompt (cached to save on cost) - wrapped in XML tag
         if not message_history or len(message_history) == 0:
-            messages.append({"role": "system", "content": self._get_system_prompt()})
-
-        # Add message history
-        if message_history:
-            messages.extend(message_history)
-
-        # Add context from documents
-        context_text = "Context from documents:\n\n"
-        for chunk in chunks:
-            doc_title = chunk.metadata.get("document_title", "Unknown")
-            context_text += f"[Document: {doc_title}]\n{chunk.content}\n\n"
-
-        # Add focus context if provided
-        if focus_context:
-            context_text += (
-                f"\nUser is focused on: {focus_context['surrounding_text']}\n"
+            system_content = (
+                f"<systemPrompt>\n{self._get_system_prompt()}\n</systemPrompt>"
             )
+            messages.append({"role": "system", "content": system_content})
 
-        # Add user query
-        messages.append({"role": "user", "content": f"{context_text}\nUser: {query}"})
+        # Add message history - wrapped in XML tag
+        if message_history:
+            # Wrap the entire history in a tag
+            history_content = "<messageHistory>\n"
+            for msg in message_history:
+                role = msg.get("role", "unknown")
+                content = msg.get("content", "")
+                history_content += f"<message role='{role}'>\n{content}\n</message>\n"
+            history_content += "</messageHistory>"
+            messages.append({"role": "assistant", "content": history_content})
+
+        # Build the user message with XML-tagged sections
+        user_message_parts = []
+
+        # Add context from documents - wrapped in XML tag
+        if chunks:
+            documents_context = "<documentsContext>\n"
+            for chunk in chunks:
+                doc_title = chunk.metadata.get("document_title", "Unknown")
+                documents_context += f"<documentChunk title='{doc_title}'>\n{chunk.content}\n</documentChunk>\n"
+            documents_context += "</documentsContext>"
+            user_message_parts.append(documents_context)
+
+        # Add focus context if provided - wrapped in XML tag
+        if focus_context:
+            focus_text = f"<surroundingFocusText>\n{focus_context['surrounding_text']}\n</surroundingFocusText>"
+            user_message_parts.append(focus_text)
+
+        # Add user query - wrapped in XML tag
+        user_input = f"<userInput>\n{query}\n</userInput>"
+        user_message_parts.append(user_input)
+
+        # Combine all parts
+        full_user_message = "\n\n".join(user_message_parts)
+        messages.append({"role": "user", "content": full_user_message})
 
         return messages
 
     def _get_system_prompt(self) -> str:
-        """Get the system prompt for DeepSeek.
+        """Get the system prompt for DeepSeek from centralized prompts module.
 
         Returns:
-            System prompt string
+            System prompt string from app.core.prompts
         """
-        return """You are an AI learning instructor with knowledge of all scientific facts about learning.
-Guide through questions rather than just providing answers - utilize the Socratic method. Be direct and honest.
-
-Rules:
-- Sparse praise: Only acknowledge genuine insights or real effort
-- No empty validation: Avoid "Great question!" patterns
-- Challenge assumptions gently: "What makes you think that?"
-- Guide discovery: "What do you notice about this pattern?"
-- Reference context: Always cite which document section you're using
-
-When answering:
-1. Assess user's level from their question or via user profile
-2. Ask clarifying questions when helpful
-3. Provide direct answers when clearly needed or explicitly requested
-4. Connect to previous conversation context
-5. Cite sources: [Source: Document Title, Section]"""
+        return RAG_SYSTEM_PROMPT
 
     def _calculate_cost(
         self, prompt_tokens: int, completion_tokens: int, cached_tokens: int
