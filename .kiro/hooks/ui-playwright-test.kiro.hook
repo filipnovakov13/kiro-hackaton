@@ -2,15 +2,14 @@
   "enabled": true,
   "name": "UX Validation on Component Change",
   "description": "Validates UX principles, design system compliance, and runs tests when React components are modified.",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "when": {
-    "type": "fileEdited",
-    "patterns": [
-      "frontend/src/**/*.tsx"
-    ]
+    "type": "userTriggered"
   },
   "then": {
     "type": "askAgent",
-    "prompt": "A frontend component was modified: ${file}\n\nPerform UX validation directly (do NOT delegate to subagent - execute these steps yourself):\n\n1. Run LSP diagnostics on the modified file using getDiagnostics\n2. Read the component file and frontend/src/design-system/colors.ts\n3. Check design system compliance: Verify all colors come from design tokens (no hardcoded hex values)\n4. Run unit tests using executePwsh: command='npm test', cwd='frontend'\n5. Run Playwright E2E tests using executePwsh: command='npx playwright test tests/ux-validation.spec.ts', cwd='frontend'\n6. Report results with actual test output\n\nUX Principles to validate:\n- Progressive disclosure (only show what's needed)\n- Single primary action per screen\n- Instant feedback (<100ms transitions)\n- Accessibility (keyboard nav, focus indicators, ARIA labels)\n\nOutput format:\n## LSP Status\n## Design System Compliance\n## Unit Test Results (actual output)\n## E2E Test Results (actual output)\n## Verdict: PASS/FAIL"
-  }
+    "prompt": "Frontend components were modified. Perform UX validation:\n\n1. Run: git diff --name-only HEAD to find changed files\n2. Filter for frontend/src/components/**/*.tsx files\n3. Run LSP diagnostics on all changed component files\n4. Read changed components and frontend/src/design-system/*\n5. Check design system compliance: Verify all design elements come from design tokens (no hardcoded hex values)\n6. Run unit tests: executePwsh command='npm test' cwd='frontend'\n7. Run E2E tests: executePwsh command='npx playwright test tests/ux-validation.spec.ts' cwd='frontend'\n8. Report results with actual test output\n\nUX Principles:\n- Progressive disclosure (only show what's needed)\n- Single primary action per screen\n- Instant feedback (<100ms transitions)\n- Accessibility (keyboard nav, focus indicators, ARIA labels)\n\nOutput:\n## Changed Components\n## LSP Status\n## Design System Compliance\n## Unit Test Results\n## E2E Test Results\n## Verdict: PASS/FAIL"
+  },
+  "workspaceFolderName": "kiro-hackaton",
+  "shortName": "ui-playwright-test"
 }

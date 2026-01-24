@@ -277,55 +277,55 @@ This task list implements the RAG Core functionality for Iubar, enabling context
 ## 5. Frontend Components (UI Layer - Part 1)
 
 ### 5.1 Create ChatInterface component
-- [ ] Create `frontend/src/components/chat/ChatInterface.tsx`
-- [ ] Implement split-pane layout (70/30 default)
-- [ ] Add resizable border with drag handling
-- [ ] Add document pane collapse/expand
-- [ ] Persist pane width to localStorage
-- [ ] Enforce minimum widths (40% doc, 20% chat)
-- [ ] Write component tests
+- [x] Create `frontend/src/components/chat/ChatInterface.tsx`
+- [x] Implement split-pane layout (70/30 default)
+- [x] Add resizable border with drag handling
+- [x] Add document pane collapse/expand
+- [x] Persist pane width to localStorage
+- [x] Enforce minimum widths (40% doc, 20% chat)
+- [x] Write component tests
 
 
 ### 5.2 Create MessageList component
-- [ ] Create `frontend/src/components/chat/MessageList.tsx`
-- [ ] Display user and assistant messages
-- [ ] Auto-scroll to latest message
-- [ ] Handle empty state
-- [ ] Write component tests
+- [x] Create `frontend/src/components/chat/MessageList.tsx`
+- [x] Display user and assistant messages
+- [x] Auto-scroll to latest message
+- [x] Handle empty state
+- [x] Write component tests
 
 
 ### 5.3 Create MessageInput component
-- [ ] Create `frontend/src/components/chat/MessageInput.tsx`
-- [ ] Add text input with 6000 char limit
-- [ ] Add send button
-- [ ] Handle Enter key to send
-- [ ] Disable during streaming
-- [ ] Write component tests
+- [x] Create `frontend/src/components/chat/MessageInput.tsx`
+- [x] Add text input with 6000 char limit
+- [x] Add send button
+- [x] Handle Enter key to send
+- [x] Disable during streaming
+- [x] Write component tests
 
 
 ### 5.4 Create StreamingMessage component
-- [ ] Create `frontend/src/components/chat/StreamingMessage.tsx`
-- [ ] Display streaming tokens as they arrive
-- [ ] Show thinking indicator during streaming
-- [ ] Display source attribution after completion
-- [ ] Handle partial responses on errors
-- [ ] Write component tests
+- [x] Create `frontend/src/components/chat/StreamingMessage.tsx`
+- [x] Display streaming tokens as they arrive
+- [x] Show thinking indicator during streaming
+- [x] Display source attribution after completion
+- [x] Handle partial responses on errors
+- [x] Write component tests
 
 
 ### 5.5 Create ThinkingIndicator component
-- [ ] Create `frontend/src/components/chat/ThinkingIndicator.tsx`
-- [ ] Implement pulsing glow effect (golden #D4A574)
-- [ ] Animate opacity 0.5 → 1.0 with 1.5s cycle
-- [ ] Write component tests
+- [x] Create `frontend/src/components/chat/ThinkingIndicator.tsx`
+- [x] Implement pulsing glow effect (golden #D4A574)
+- [x] Animate opacity 0.5 → 1.0 with 1.5s cycle
+- [x] Write component tests
 
 
 ### 5.6 Create SourceAttribution component
-- [ ] Create `frontend/src/components/chat/SourceAttribution.tsx`
-- [ ] Display individual source links
-- [ ] Handle click to scroll document viewer
-- [ ] Highlight referenced chunk
-- [ ] Place focus caret at chunk start
-- [ ] Write component tests
+- [x] Create `frontend/src/components/chat/SourceAttribution.tsx`
+- [x] Display individual source links
+- [x] Handle click to scroll document viewer
+- [x] Highlight referenced chunk
+- [x] Place focus caret at chunk start
+- [x] Write component tests
 
 
 ---
@@ -333,29 +333,29 @@ This task list implements the RAG Core functionality for Iubar, enabling context
 ## 6. Frontend Components (UI Layer - Part 2)
 
 ### 6.1 Create DocumentViewer component
-- [ ] Create `frontend/src/components/document/DocumentViewer.tsx`
-- [ ] Render Markdown with syntax highlighting
-- [ ] Support independent scrolling
-- [ ] Handle chunk highlighting on source click
-- [ ] Integrate focus caret
-- [ ] Write component tests
+- [x] Create `frontend/src/components/document/DocumentViewer.tsx`
+- [x] Render Markdown with syntax highlighting
+- [x] Support independent scrolling
+- [x] Handle chunk highlighting on source click
+- [x] Integrate focus caret
+- [x] Write component tests
 
 
 ### 6.2 Create FocusCaret component
-- [ ] Create `frontend/src/components/document/FocusCaret.tsx`
-- [ ] Implement letter-level glow (anchor at 40% of word)
-- [ ] Add click-to-place functionality
-- [ ] Add keyboard navigation (arrow keys)
-- [ ] Extract surrounding context (±150 chars)
-- [ ] Fade in/out animations (200ms/150ms)
-- [ ] Write component tests
+- [x] Create `frontend/src/components/document/FocusCaret.tsx`
+- [x] Implement letter-level glow (anchor at 40% of word)
+- [x] Add click-to-place functionality
+- [x] Add keyboard navigation (arrow keys)
+- [x] Extract surrounding context (±150 chars)
+- [x] Fade in/out animations (200ms/150ms)
+- [x] Write component tests
 
 
 ### 6.3 Create ChunkHighlight component
-- [ ] Create `frontend/src/components/document/ChunkHighlight.tsx`
-- [ ] Highlight chunk with background color (#253550)
-- [ ] Scroll to chunk on source link click
-- [ ] Write component tests
+- [x] Create `frontend/src/components/document/ChunkHighlight.tsx`
+- [x] Highlight chunk with background color (#253550)
+- [x] Scroll to chunk on source link click
+- [x] Write component tests
 
 
 ---
