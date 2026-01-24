@@ -820,7 +820,7 @@ The focus indicator isn't just visual—it's foundational for RSVP speed reading
 
 ### **Phase 1: Design Tokens** (Hand-off to Kiro)
 
-**Output**: Design tokens JSON + Figma reference file
+**Output**: Design tokens JSON
 
 ```json
 {
@@ -964,7 +964,6 @@ All text passes WCAG AA minimum, most pass AAA.
 
 - Use CSS animations where possible (GPU-accelerated)
 - Transform and opacity only (no layout thrashing)
-- Reduce motion on lower-end devices (detect performance API)
 
 
 ### **Font Loading**

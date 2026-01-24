@@ -1,13 +1,17 @@
+---
+inclusion: manual
+---
+
 # Technical Architecture
 
-## Technology Stack
-- **Backend**: Python 3.11+ with FastAPI (async support, auto-generated docs)
-- **Frontend**: React 18+ with TypeScript, Vite, and TailwindCSS
+## Stack
+- **Backend**: Python 3.11+ with FastAPI (async, auto-docs)
+- **Frontend**: React 18+ with TypeScript, Vite, TailwindCSS
 - **AI/ML**: 
-  - Vector Store: Chroma (embedded, no external dependencies)
+  - Vector Store: Chroma (embedded, no external deps)
   - RAG Framework: LlamaIndex (document processing)
   - LLM: DeepSeek V3.2-Exp (single model, cost-optimized via caching)
-  - Embeddings: Voyage 3.5 Lite ($0.02/M tokens, 80.3% nDCG, 512 dimensions)
+  - Embeddings: Voyage 3.5 Lite ($0.02/M tokens, 80.3% nDCG, 512 dims)
 - **Document Processing**: 
   - Docling (PDF/DOCX/PPTX/HTML → Markdown)
   - gitingest/repo2txt (GitHub repos → Markdown)
@@ -15,24 +19,15 @@
 - **Memory**: JSON-based structured memory store
 - **Development**: Kiro IDE for agentic development
 
-## Architecture Overview
+## Architecture
 **Hybrid RAG with Structured Memory**:
 ```
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│   Documents     │──▶│   Vector Store   │───▶│   DeepSeek      │
-│  (via Docling)  │    │    (Chroma)      │    │   V3.2-Exp      │
-└─────────────────┘    └──────────────────┘    └─────────────────┘
-                                ▲                        │
-┌─────────────────┐     ┌──────────────────┐             ▼
-│ Structured      │───▶│    SQLite DB     │    ┌─────────────────┐
-│ Memory (JSON)   │     │  (Relationships) │    │   AI Response   │
-└─────────────────┘     └──────────────────┘    └─────────────────┘
+Documents (Docling) → Vector Store (Chroma) → DeepSeek V3.2-Exp
+                              ↑                        ↓
+Structured Memory (JSON) → SQLite DB     ------→    AI Response
 ```
 
-**Document Processing Pipeline**:
-```
-PDF/DOCX/URL/GitHub → Docling/gitingest → Markdown → Chunker → Voyage Embeddings → Chroma
-```
+**Pipeline**: PDF/DOCX/URL/GitHub → Docling/gitingest → Markdown → Chunker → Voyage Embeddings → Chroma
 
 ## AI Cost Optimization
 
@@ -63,7 +58,7 @@ PDF/DOCX/URL/GitHub → Docling/gitingest → Markdown → Chunker → Voyage Em
 - **IDE**: Kiro IDE with Python, TypeScript
 
 ## Code Standards
-- **Keywords** DO NOT use restricted keywords for any naming
+- **Keywords**: DO NOT use restricted keywords for any naming
 - **Python**: PEP 8, Black formatting, type hints with mypy
 - **TypeScript**: ESLint + Prettier, strict TypeScript configuration
 - **API Design**: RESTful endpoints, OpenAPI/Swagger documentation
@@ -98,3 +93,4 @@ PDF/DOCX/URL/GitHub → Docling/gitingest → Markdown → Chunker → Voyage Em
 - **Backend**: `python -m uvicorn main:app --reload`
 - **Frontend**: `npm run dev`
 - **Production**: Docker containerization, environment variables
+

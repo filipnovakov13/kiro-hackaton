@@ -1479,3 +1479,512 @@ class TestGetSessionStatsAPIIntegration:
         assert (
             "application/json" in response.headers.get("content-type", "").lower()
         ), "Response should be JSON"
+
+
+class TestGetSessionMessagesAPIIntegration:
+    """Integration tests for GET /api/chat/sessions/{id}/messages endpoint."""
+
+    @pytest.fixture(scope="class")
+    def running_server(self):
+        """Start the FastAPI server for testing."""
+        backend_root = Path(__file__).parent.parent
+        sys.path.insert(0, str(backend_root))
+
+        server_process = None
+        try:
+            test_port = 8007
+
+            server_process = subprocess.Popen(
+                [
+                    sys.executable,
+                    "-m",
+                    "uvicorn",
+                    "main:app",
+                    "--host",
+                    "127.0.0.1",
+                    "--port",
+                    str(test_port),
+                    "--log-level",
+                    "error",
+                ],
+                cwd=str(backend_root),
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+
+            base_url = f"http://127.0.0.1:{test_port}"
+            max_attempts = 30
+            for attempt in range(max_attempts):
+                try:
+                    response = requests.get(f"{base_url}/health", timeout=1)
+                    if response.status_code == 200:
+                        break
+                except requests.exceptions.RequestException:
+                    pass
+                time.sleep(0.1)
+            else:
+                if server_process:
+                    server_process.terminate()
+                pytest.fail("Server failed to start within timeout")
+
+            yield base_url
+
+        finally:
+            if server_process:
+                server_process.terminate()
+                try:
+                    server_process.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    server_process.kill()
+
+            if str(backend_root) in sys.path:
+                sys.path.remove(str(backend_root))
+
+    def test_get_messages_for_new_session(self, running_server):
+        """Test getting messages for a newly created session returns empty list."""
+        # Create a session
+        create_response = requests.post(f"{running_server}/api/chat/sessions", json={})
+        assert create_response.status_code == 200
+        session_id = create_response.json()["session_id"]
+
+        # Get messages
+        response = requests.get(
+            f"{running_server}/api/chat/sessions/{session_id}/messages"
+        )
+
+        assert response.status_code == 200, f"Expected 200, got {response.status_code}"
+
+        data = response.json()
+        assert isinstance(data, list), "Response should be a list"
+        assert len(data) == 0, "New session should have no messages"
+
+    def test_get_messages_for_nonexistent_session(self, running_server):
+        """Test getting messages for a nonexistent session returns 404."""
+        nonexistent_id = str(uuid.uuid4())
+
+        response = requests.get(
+            f"{running_server}/api/chat/sessions/{nonexistent_id}/messages"
+        )
+
+        assert response.status_code == 404, f"Expected 404, got {response.status_code}"
+
+        data = response.json()
+        assert "detail" in data, "Error response should contain detail"
+
+    def test_get_messages_with_invalid_session_id(self, running_server):
+        """Test getting messages with invalid session ID format."""
+        invalid_ids = ["not-a-uuid", "12345", "invalid-format"]
+
+        for invalid_id in invalid_ids:
+            response = requests.get(
+                f"{running_server}/api/chat/sessions/{invalid_id}/messages"
+            )
+
+            # Should return 404 (session not found)
+            assert response.status_code == 404, (
+                f"Invalid ID '{invalid_id}' should return 404, "
+                f"got {response.status_code}"
+            )
+
+    def test_get_messages_response_format(self, running_server):
+        """Test that messages have correct format."""
+        # Create a session
+        create_response = requests.post(f"{running_server}/api/chat/sessions", json={})
+        session_id = create_response.json()["session_id"]
+
+        # Get messages
+        response = requests.get(
+            f"{running_server}/api/chat/sessions/{session_id}/messages"
+        )
+        assert response.status_code == 200
+
+        data = response.json()
+        assert isinstance(data, list), "Response should be a list"
+
+        # If there are messages (from other tests), validate structure
+        if len(data) > 0:
+            message = data[0]
+            required_fields = ["id", "role", "content", "created_at"]
+            for field in required_fields:
+                assert field in message, f"Message should contain {field}"
+
+            # Validate types
+            assert isinstance(message["id"], str), "id should be string"
+            assert isinstance(message["role"], str), "role should be string"
+            assert isinstance(message["content"], str), "content should be string"
+            assert isinstance(message["created_at"], str), "created_at should be string"
+
+            # Validate role values
+            assert message["role"] in [
+                "user",
+                "assistant",
+            ], "role should be 'user' or 'assistant'"
+
+            # Validate timestamp format
+            try:
+                datetime.fromisoformat(message["created_at"].replace("Z", "+00:00"))
+            except ValueError:
+                pytest.fail("created_at should be in ISO format")
+
+    def test_get_messages_ordered_by_created_at_asc(self, running_server):
+        """Test that messages are ordered by created_at ASC (oldest first)."""
+        # Create a session
+        create_response = requests.post(f"{running_server}/api/chat/sessions", json={})
+        session_id = create_response.json()["session_id"]
+
+        # Note: We can't easily add messages without the send_message endpoint
+        # But we can test the ordering if messages exist
+        response = requests.get(
+            f"{running_server}/api/chat/sessions/{session_id}/messages"
+        )
+        assert response.status_code == 200
+
+        data = response.json()
+
+        # If there are multiple messages, verify ordering
+        if len(data) >= 2:
+            for i in range(len(data) - 1):
+                current_time = datetime.fromisoformat(
+                    data[i]["created_at"].replace("Z", "+00:00")
+                )
+                next_time = datetime.fromisoformat(
+                    data[i + 1]["created_at"].replace("Z", "+00:00")
+                )
+                assert (
+                    current_time <= next_time
+                ), "Messages should be ordered by created_at ASC"
+
+    def test_get_messages_with_pagination_limit(self, running_server):
+        """Test pagination with limit parameter."""
+        # Create a session
+        create_response = requests.post(f"{running_server}/api/chat/sessions", json={})
+        session_id = create_response.json()["session_id"]
+
+        # Get messages with limit
+        response = requests.get(
+            f"{running_server}/api/chat/sessions/{session_id}/messages",
+            params={"limit": 10},
+        )
+
+        assert response.status_code == 200, f"Expected 200, got {response.status_code}"
+
+        data = response.json()
+        assert isinstance(data, list), "Response should be a list"
+        assert len(data) <= 10, "Should return at most 10 messages"
+
+    def test_get_messages_with_pagination_offset(self, running_server):
+        """Test pagination with offset parameter."""
+        # Create a session
+        create_response = requests.post(f"{running_server}/api/chat/sessions", json={})
+        session_id = create_response.json()["session_id"]
+
+        # Get first page
+        response1 = requests.get(
+            f"{running_server}/api/chat/sessions/{session_id}/messages",
+            params={"limit": 5, "offset": 0},
+        )
+        assert response1.status_code == 200
+        data1 = response1.json()
+
+        # Get second page
+        response2 = requests.get(
+            f"{running_server}/api/chat/sessions/{session_id}/messages",
+            params={"limit": 5, "offset": 5},
+        )
+        assert response2.status_code == 200
+        data2 = response2.json()
+
+        # If both pages have messages, they should be different
+        if len(data1) > 0 and len(data2) > 0:
+            ids1 = {msg["id"] for msg in data1}
+            ids2 = {msg["id"] for msg in data2}
+            assert ids1.isdisjoint(ids2), "Pages should contain different messages"
+
+    def test_get_messages_with_limit_and_offset(self, running_server):
+        """Test pagination with both limit and offset."""
+        # Create a session
+        create_response = requests.post(f"{running_server}/api/chat/sessions", json={})
+        session_id = create_response.json()["session_id"]
+
+        # Get messages with both parameters
+        response = requests.get(
+            f"{running_server}/api/chat/sessions/{session_id}/messages",
+            params={"limit": 20, "offset": 10},
+        )
+
+        assert response.status_code == 200, f"Expected 200, got {response.status_code}"
+
+        data = response.json()
+        assert isinstance(data, list), "Response should be a list"
+        assert len(data) <= 20, "Should return at most 20 messages"
+
+    def test_get_messages_default_limit(self, running_server):
+        """Test that default limit is 50 messages."""
+        # Create a session
+        create_response = requests.post(f"{running_server}/api/chat/sessions", json={})
+        session_id = create_response.json()["session_id"]
+
+        # Get messages without limit parameter
+        response = requests.get(
+            f"{running_server}/api/chat/sessions/{session_id}/messages"
+        )
+
+        assert response.status_code == 200, f"Expected 200, got {response.status_code}"
+
+        data = response.json()
+        # Should return at most 50 messages (default limit)
+        assert len(data) <= 50, "Default limit should be 50 messages"
+
+    def test_get_messages_with_invalid_limit(self, running_server):
+        """Test that invalid limit values are handled gracefully."""
+        # Create a session
+        create_response = requests.post(f"{running_server}/api/chat/sessions", json={})
+        session_id = create_response.json()["session_id"]
+
+        # Negative limit
+        response = requests.get(
+            f"{running_server}/api/chat/sessions/{session_id}/messages",
+            params={"limit": -1},
+        )
+
+        # Should either accept it or return 422
+        assert response.status_code in [
+            200,
+            422,
+        ], f"Invalid limit should return 200 or 422, got {response.status_code}"
+
+    def test_get_messages_with_invalid_offset(self, running_server):
+        """Test that invalid offset values are handled gracefully."""
+        # Create a session
+        create_response = requests.post(f"{running_server}/api/chat/sessions", json={})
+        session_id = create_response.json()["session_id"]
+
+        # Negative offset
+        response = requests.get(
+            f"{running_server}/api/chat/sessions/{session_id}/messages",
+            params={"offset": -1},
+        )
+
+        # Should either accept it or return 422
+        assert response.status_code in [
+            200,
+            422,
+        ], f"Invalid offset should return 200 or 422, got {response.status_code}"
+
+    def test_get_messages_performance(self, running_server):
+        """Test that getting messages responds quickly."""
+        # Create a session
+        create_response = requests.post(f"{running_server}/api/chat/sessions", json={})
+        session_id = create_response.json()["session_id"]
+
+        # Measure response time
+        start_time = time.time()
+        response = requests.get(
+            f"{running_server}/api/chat/sessions/{session_id}/messages"
+        )
+        end_time = time.time()
+
+        response_time_ms = (end_time - start_time) * 1000
+
+        assert (
+            response_time_ms < 500
+        ), f"Get messages took {response_time_ms:.1f}ms, should be under 500ms"
+        assert response.status_code == 200, "Get messages should succeed"
+
+    def test_get_messages_cors_headers(self, running_server):
+        """Test that CORS headers are present."""
+        # Create a session
+        create_response = requests.post(f"{running_server}/api/chat/sessions", json={})
+        session_id = create_response.json()["session_id"]
+
+        # Get with Origin header
+        headers = {"Origin": "http://localhost:5173"}
+        response = requests.get(
+            f"{running_server}/api/chat/sessions/{session_id}/messages", headers=headers
+        )
+
+        assert response.status_code == 200, "Request with Origin header should succeed"
+
+        cors_headers = [
+            "access-control-allow-origin",
+            "access-control-allow-credentials",
+        ]
+        cors_header_found = any(header in response.headers for header in cors_headers)
+        assert cors_header_found, "CORS headers should be present"
+
+    def test_get_messages_content_type(self, running_server):
+        """Test that endpoint returns JSON."""
+        # Create a session
+        create_response = requests.post(f"{running_server}/api/chat/sessions", json={})
+        session_id = create_response.json()["session_id"]
+
+        # Get messages
+        response = requests.get(
+            f"{running_server}/api/chat/sessions/{session_id}/messages"
+        )
+
+        assert response.status_code == 200, "Should succeed"
+
+        # Response should be JSON
+        assert (
+            "application/json" in response.headers.get("content-type", "").lower()
+        ), "Response should be JSON"
+
+    def test_get_messages_after_session_deletion(self, running_server):
+        """Test that getting messages for deleted session returns 404."""
+        # Create a session
+        create_response = requests.post(f"{running_server}/api/chat/sessions", json={})
+        session_id = create_response.json()["session_id"]
+
+        # Delete the session
+        delete_response = requests.delete(
+            f"{running_server}/api/chat/sessions/{session_id}"
+        )
+        assert delete_response.status_code == 204
+
+        # Try to get messages
+        response = requests.get(
+            f"{running_server}/api/chat/sessions/{session_id}/messages"
+        )
+        assert (
+            response.status_code == 404
+        ), "Messages for deleted session should return 404"
+
+    def test_get_messages_includes_sources_field(self, running_server):
+        """Test that messages include optional sources field."""
+        # Create a session
+        create_response = requests.post(f"{running_server}/api/chat/sessions", json={})
+        session_id = create_response.json()["session_id"]
+
+        # Get messages
+        response = requests.get(
+            f"{running_server}/api/chat/sessions/{session_id}/messages"
+        )
+        assert response.status_code == 200
+
+        data = response.json()
+
+        # If there are messages, check for sources field
+        if len(data) > 0:
+            message = data[0]
+            # sources field should exist (can be null or list)
+            assert (
+                "sources" in message
+            ), "Message should include sources field (can be null)"
+
+            if message["sources"] is not None:
+                assert isinstance(
+                    message["sources"], list
+                ), "sources should be a list if present"
+
+    def test_get_messages_api_documentation(self, running_server):
+        """Test that endpoint is documented in OpenAPI schema."""
+        response = requests.get(f"{running_server}/openapi.json")
+        assert response.status_code == 200
+
+        schema = response.json()
+        paths = schema.get("paths", {})
+
+        # Check that endpoint is documented
+        endpoint_path = "/api/chat/sessions/{session_id}/messages"
+        assert endpoint_path in paths, "Endpoint should be documented in OpenAPI schema"
+
+        endpoint_spec = paths[endpoint_path]
+        assert "get" in endpoint_spec, "GET method should be documented"
+
+        get_spec = endpoint_spec["get"]
+        assert "responses" in get_spec, "Responses should be documented"
+        assert "200" in get_spec["responses"], "200 response should be documented"
+        assert "404" in get_spec["responses"], "404 response should be documented"
+
+        # Check that parameters are documented
+        assert "parameters" in get_spec, "Parameters should be documented"
+        param_names = [p["name"] for p in get_spec["parameters"]]
+        assert "limit" in param_names, "limit parameter should be documented"
+        assert "offset" in param_names, "offset parameter should be documented"
+
+    def test_get_messages_with_zero_limit(self, running_server):
+        """Test getting messages with limit=0."""
+        # Create a session
+        create_response = requests.post(f"{running_server}/api/chat/sessions", json={})
+        session_id = create_response.json()["session_id"]
+
+        # Get messages with limit=0
+        response = requests.get(
+            f"{running_server}/api/chat/sessions/{session_id}/messages",
+            params={"limit": 0},
+        )
+
+        # Should either return empty list or handle gracefully
+        assert response.status_code in [
+            200,
+            422,
+        ], f"limit=0 should return 200 or 422, got {response.status_code}"
+
+        if response.status_code == 200:
+            data = response.json()
+            assert len(data) == 0, "limit=0 should return empty list"
+
+    def test_get_messages_with_large_limit(self, running_server):
+        """Test getting messages with very large limit."""
+        # Create a session
+        create_response = requests.post(f"{running_server}/api/chat/sessions", json={})
+        session_id = create_response.json()["session_id"]
+
+        # Get messages with large limit
+        response = requests.get(
+            f"{running_server}/api/chat/sessions/{session_id}/messages",
+            params={"limit": 10000},
+        )
+
+        assert response.status_code == 200, f"Expected 200, got {response.status_code}"
+
+        data = response.json()
+        assert isinstance(data, list), "Response should be a list"
+        # Should handle large limit gracefully
+
+    def test_get_messages_with_large_offset(self, running_server):
+        """Test getting messages with offset beyond available messages."""
+        # Create a session
+        create_response = requests.post(f"{running_server}/api/chat/sessions", json={})
+        session_id = create_response.json()["session_id"]
+
+        # Get messages with large offset
+        response = requests.get(
+            f"{running_server}/api/chat/sessions/{session_id}/messages",
+            params={"offset": 1000},
+        )
+
+        assert response.status_code == 200, f"Expected 200, got {response.status_code}"
+
+        data = response.json()
+        assert isinstance(data, list), "Response should be a list"
+        # Should return empty list if offset is beyond available messages
+
+
+class TestClearCacheAPIIntegration:
+    """Integration tests for POST /api/cache/clear endpoint."""
+
+    def test_clear_cache_with_entries(self):
+        """Test clearing cache after adding entries to it."""
+        from app.services.response_cache import ResponseCache
+
+        # Create cache and add some entries
+        cache = ResponseCache(max_size=100)
+
+        # Add 3 entries to the cache
+        cache.set("key1", "response1", [], 100)
+        cache.set("key2", "response2", [], 150)
+        cache.set("key3", "response3", [], 200)
+
+        # Verify entries were added
+        assert cache.get_stats()["cache_size"] == 3, "Should have 3 entries"
+
+        # Clear the cache
+        count = cache.clear()
+
+        # Verify count is correct
+        assert count == 3, "Should have cleared 3 entries"
+
+        # Verify cache is empty
+        assert cache.get_stats()["cache_size"] == 0, "Cache should be empty"

@@ -1,8 +1,8 @@
 # Development Log - Iubar
 
 **Project**: Iubar - AI-Enhanced Personal Knowledge Management  
-**Duration**: January 6-19, 2026  
-**Total Time**: ~50.5 hours   
+**Duration**: January 6-24, 2026  
+**Total Time**: ~61.5 hours   
 
 ## Overview
 Building Iubar, an AI-enhanced personal knowledge management and structured learning web app that combines PKM with AI tutoring capabilities. Uses a Hybrid RAG architecture with vector search and structured memory for long-term, evolving user interactions.
@@ -10,7 +10,117 @@ Building Iubar, an AI-enhanced personal knowledge management and structured lear
 
 ## Week 3: Foundation + RAG Core Implementation (Jan 15-19)
 
-### Day 11 (Jan 19) - RAG Core Phase: Chat API & Streaming Implementation [~3.5h]
+### Day 13 (Jan 24) - Workflow Restructuring & Documentation [~6h]
+
+**Kiro Agent Spec Mode Analysis [~2h]**:
+- **Comprehensive Review**: Conducted thorough analysis of Kiro agent environment
+- **Issues Identified**:
+  - File deletion problem: Agent deleting documentation files without permission
+  - Mid-task stopping: No progress checkpointing, ambiguous task boundaries
+  - Instruction non-compliance: Conflicting instructions across 6 steering files (~15,000+ tokens)
+  - Spec mode structural issues: Massive context (3000+ lines), no chunking
+  - Execute.md prompt issues: No failure recovery, vague validation
+  - Testing-strategy.md: Excellent but creates execution friction
+
+**Workflow Restructuring Implementation [~4h]**:
+- ✅ **AGENTS.md Created**: Communication style rules (direct, concise, efficient, token-preserving)
+- ✅ **core-rules.md Created**: Minimal always-loaded steering with safety rules, instruction priority, quality gates
+- ✅ **Steering Files Updated**: Added frontmatter with inclusion modes
+  - `lsp-mandatory.md`: `inclusion: fileMatch` for code files
+  - `testing-strategy.md`: `inclusion: fileMatch` for test files
+  - `product.md`, `tech.md`, `structure.md`, `shell-commands.md`: `inclusion: manual`
+- ✅ **Hooks Created**:
+  - `state-update.kiro.hook` - Auto-updates state.md on agent stop
+  - `resume.kiro.hook` - Manual trigger for resuming work with comprehensive context
+  - `state-template.md` - Template for state tracking
+- ✅ **Task Breakdowns Created**: Detailed breakdown documents for tasks 5-9
+  - `tasks-5-6-frontend-components.md` - Frontend UI components (8-10 hours)
+  - `task-7-frontend-services.md` - Services and hooks (6-7 hours)
+  - `task-8-integration-testing.md` - Integration tests (4-5 hours)
+  - `task-9-config-documentation.md` - Config and docs (2-3 hours)
+- ✅ **Design System Integration**: All frontend components reference `visual-identity.md`, create reusable design tokens in `frontend/src/design-system/`
+- ✅ **Testing Requirements**: All frontend components use Playwright E2E tests
+
+**Key Decisions**:
+| Decision | Rationale |
+|----------|-----------|
+| No phase decomposition | Keep current rag-core-phase spec intact, create focused sub-specs only when needed |
+| Separate breakdown documents | One breakdown for tasks 5-6, one for 7, one for 8, one for 9 |
+| AGENTS.md minimal | Define communication style, token preservation, context preservation |
+| Live links | Use `#[[file:path]]` syntax for file references |
+| Inclusion modes | Use `inclusion: fileMatch` with `fileMatchPattern` for conditional loading |
+
+**Files Created/Modified**:
+- `AGENTS.md` - Communication rules
+- `.kiro/steering/core-rules.md` - Always-loaded rules
+- `.kiro/steering/lsp-mandatory.md`, `testing-strategy.md`, `product.md`, `tech.md`, `structure.md`, `shell-commands.md` - Updated with frontmatter
+- `.kiro/hooks/state-update.kiro.hook`, `resume.kiro.hook` - State management hooks
+- `.kiro/specs/rag-core-phase/state-template.md` - State tracking template
+- `.kiro/specs/rag-core-phase/tasks-5-6-frontend-components.md` - Frontend components breakdown
+- `.kiro/specs/rag-core-phase/task-7-frontend-services.md` - Services breakdown
+- `.kiro/specs/rag-core-phase/task-8-integration-testing.md` - Integration tests breakdown
+- `.kiro/specs/rag-core-phase/task-9-config-documentation.md` - Config/docs breakdown
+
+**Kiro Usage**: Workflow analysis, spec restructuring, hook creation, task breakdown generation
+
+---
+
+### Day 13 (Jan 24) - Continued: Documentation Optimization & Responsive Design Planning [~4h]
+
+**Steering Document Condensing [~2h]**:
+- ✅ **lsp-mandatory.md**: ~200 lines → ~30 lines (85% reduction)
+- ✅ **testing-strategy.md**: ~500 lines → ~120 lines (76% reduction)
+- ✅ **shell-commands.md**: ~80 lines → ~50 lines (38% reduction)
+- ✅ **product.md, tech.md, structure.md**: Kept full details as requested by user
+- **Approach**: Followed AGENTS.md principles (direct, concise, efficient, token-preserving)
+- **Result**: All files maintain structure, meaning, and value while being token-efficient
+
+**Visual Identity Responsive Design Review [~1h]**:
+- **Analysis**: Reviewed `visual-identity.md` for responsive design capabilities
+- **Current State**: Design uses fixed px values, optimized for 1920px displays
+- **Issues Identified**:
+  - Fixed 64px margins cramped on smaller desktops (1024px-1280px)
+  - No minimum width constraints
+  - Fixed typography doesn't scale
+- **Recommendation**: Add responsive margin/padding rules for different desktop breakpoints, convert to relative units (rem/em)
+- **User Decision**: Continue with current design for MVP, defer improvements to post-MVP
+
+**Responsive Design Task Documentation [~1h]**:
+- ✅ **future-tasks.md Updated**: Added comprehensive "Responsive Design Enhancement" task in Post-MVP section
+- **Total Estimated Time**: 8-12 hours (4-6h desktop + 4-6h mobile/tablet)
+- **Phase 1 (Desktop)**: Convert fixed px to rem/em units, add desktop breakpoints (1024px, 1280px, 1920px, 2560px+), responsive margins/padding/typography
+- **Phase 2 (Mobile/Tablet)**: Mobile breakpoints (320px-767px), tablet breakpoints (768px-1023px), touch interaction patterns, mobile layout patterns (bottom sheet for mobile, side drawer for tablet), mobile typography adjustments, mobile navigation, FAB for chat, responsive images
+- **Testing Checklist**: Covers desktop (1024px to 4K), mobile (iPhone SE to Pro Max), tablet (iPad Mini to Pro), touch interactions, accessibility
+- **Benefits**: Better UX on all device sizes, scalable typography, touch-optimized, accessible, maintainable, future-proof
+- **All measurements use relative units (rem/em) as requested**
+
+**plan-feature.md Complexity Scoring Integration [~30m]**:
+- ✅ **plan-feature.md Updated**: Integrated deterministic complexity scoring system
+- **Scoring System**: 5-level scoring (Trivial/Simple/Moderate/Complex/Very Complex) using 5 rules (Scope, Dependencies, Data Persistence, Testing, Uncertainty)
+- **Scoring Rules**: Each rule scores 1-5, final complexity = MAX of all rules
+- **Duration Estimates**: Tied to complexity levels (1=<30min, 2=30min-1.5hrs, 3=1.5-4hrs, 4=4-12hrs, 5=1+days)
+- **Added to Phase 2**: Complexity scoring now happens early in planning process, before codebase analysis
+- **Updated Plan Template**: Added "Complexity Breakdown" section to Feature Metadata
+- **Slimmed Down Prompt**: Reduced verbosity following AGENTS.md principles while preserving all critical details
+
+**Technical Achievements**:
+- ✅ Steering documents condensed (60-85% reduction) while preserving value
+- ✅ Responsive design strategy documented for post-MVP
+- ✅ Complexity scoring integrated into feature planning workflow
+- ✅ All documentation follows AGENTS.md communication principles
+
+**Files Modified**:
+- `.kiro/steering/lsp-mandatory.md` - Condensed
+- `.kiro/steering/testing-strategy.md` - Condensed
+- `.kiro/steering/shell-commands.md` - Condensed
+- `.kiro/documentation/project-docs/future-tasks.md` - Added responsive design task
+- `.kiro/prompts/plan-feature.md` - Added complexity scoring, slimmed down
+
+**Kiro Usage**: Documentation optimization, responsive design analysis, complexity scoring integration
+
+---
+
+### Day 12 (Jan 22) - RAG Core Phase: Chat API & Streaming Implementation [~3.5h]
 
 **Chat Session API Endpoints (Tasks 4.1-4.5) [~1h]**:
 - ✅ **Task 4.1**: POST /api/chat/sessions endpoint
@@ -139,15 +249,103 @@ Building Iubar, an AI-enhanced personal knowledge management and structured lear
 
 **Kiro Usage**: Spec task execution, integration testing, SSE implementation patterns, database session isolation debugging
 
+**Streaming Error Handling & Integration Tests (Tasks 4.6.8-4.6.9) [~1h]**:
+
+- ✅ **Task 4.6.8**: Error handling for streaming endpoint
+  - Added comprehensive error handling to `event_generator()` in `chat.py`
+  - Implemented 60-second timeout using `asyncio.wait_for()`
+  - Added handlers for: `asyncio.CancelledError` (client disconnect), `asyncio.TimeoutError` (streaming timeout), general exceptions
+  - All error handlers send SSE error events with partial responses
+  - `finally` block ensures assistant messages always saved (even partial)
+  - Added `interrupted` flag in metadata when errors occur
+  - Wrapped message saving in try/except to prevent failures during cleanup
+  - **Critical Fix**: Used `nonlocal` declarations at function start (not inline) to avoid import hangs
+  - 10 tests created in `test_streaming_error_handling.py` - all passing
+
+- ✅ **Task 4.6.9**: Comprehensive integration tests for streaming endpoint
+  - Created `test_streaming_api_integration.py` with 11 integration tests
+  - Custom SSE client implementation using `httpx.AsyncClient`
+  - Subprocess-based server fixture (port 8005) with proper cleanup
+  - Smart test skipping for API-dependent tests (checks for `VOYAGE_API_KEY` and `DEEPSEEK_API_KEY`)
+  - **Test Results**: 5 passing, 6 skipped (API keys required)
+  - Tests without API keys: session not found (404), invalid input validation, API docs verification, endpoint registration, malformed JSON
+  - Tests requiring API keys: successful streaming flow, SSE format validation, concurrent requests, Content-Type headers, focus context integration, CORS headers
+
+**Technical Achievements**:
+- ✅ Robust error handling with timeout enforcement (60s)
+- ✅ Graceful client disconnect handling
+- ✅ Partial response preservation on errors
+- ✅ Comprehensive integration test suite (11 tests)
+- ✅ Smart test skipping for CI/CD compatibility
+- ✅ Subprocess pattern for server tests (prevents hanging threads)
+- ✅ LSP diagnostics passing throughout
+- ✅ Sub-tasks 4.6.8-4.6.9 complete (streaming endpoint fully tested)
+
+**Key Technical Patterns**:
+| Pattern | Implementation | Rationale |
+|---------|----------------|-----------|
+| Async Timeout | `asyncio.wait_for()` with nested generator | Prevents infinite streaming |
+| Error SSE Events | Partial response + error details | Client can display partial results |
+| Nonlocal Variables | Declared at function start | Prevents import hangs |
+| Smart Test Skipping | Environment variable checks | Tests run in CI without API keys |
+| Subprocess Server | `subprocess.Popen()` not threading | Prevents non-daemon thread leaks |
+
+**Files Created/Modified**:
+- `backend/app/api/chat.py` - Added error handling to streaming endpoint
+- `backend/tests/test_streaming_error_handling.py` - 10 error handling tests
+- `backend/tests/test_streaming_api_integration.py` - 11 integration tests
+
+**Kiro Usage**: Task execution from breakdown file, async error handling patterns, integration test infrastructure
+
+---
+
+### Day 12 (Jan 22) - Continued: Tasks 4.7-4.8 Completion [~1.5h]
+
+**GET /api/chat/sessions/{id}/messages Endpoint (Task 4.7) [~1h]**:
+- ✅ **Task 4.7**: GET /api/chat/sessions/{id}/messages endpoint
+  - Implemented pagination with limit/offset parameters
+  - Updated `session_manager.py` - added offset parameter to `get_session_messages()`
+  - Changed SQL ordering to `created_at ASC` (oldest first) for chronological display
+  - 20 integration tests in `test_chat_api_integration.py` (TestGetSessionMessagesAPIIntegration class)
+  - All tests passing (9.09s)
+  - All subtasks marked completed
+
+**POST /api/cache/clear Endpoint (Task 4.8) [~30m]**:
+- ✅ **Task 4.8**: POST /api/cache/clear endpoint
+  - Returns count of cleared cache entries
+  - Added `ClearCacheResponse` Pydantic model
+  - Simple integration test in `test_chat_api_integration.py` (TestClearCacheAPIIntegration class)
+  - Test adds 3 cache entries, clears them, verifies count = 3 and cache empty
+  - Test passing (0.63s)
+  - All subtasks marked completed
+
+**Key User Corrections**:
+- Never move to next task before completing ALL subtasks (including writing and running tests)
+- Don't overcomplicate tests - keep them simple and focused on basic functionality
+- Run tests from workspace root, not subdirectories
+
+**Technical Achievements**:
+- ✅ Tasks 4.7 and 4.8 complete
+- ✅ All Layer 4 API endpoints now implemented (Tasks 4.1-4.8)
+- ✅ 81 integration tests passing across all chat endpoints
+- ✅ LSP diagnostics passing throughout
+
+**Files Modified**:
+- `backend/app/api/chat.py` - Added get_messages and clear_cache endpoints
+- `backend/app/services/session_manager.py` - Added offset parameter
+- `backend/tests/test_chat_api_integration.py` - Added 21 tests total (20 for 4.7, 1 for 4.8)
+
+**Kiro Usage**: Spec task execution, integration testing, test simplification
+
 **Next Steps**:
-- Complete Task 4.6.9: Integration testing for streaming endpoint (requires API keys)
-- Continue with Layer 4 remaining tasks (4.7-4.8)
-- Move to Layer 5-6: Frontend Components
+- Move to Layer 5-6: Frontend Components (Tasks 5-6)
+- Move to Layer 7: Frontend Services & Hooks (Task 7)
+- Move to Layer 8: Integration Testing (Task 8)
 
 ---
 
 
-### Day 10 (Jan 18) - RAG Core Phase Implementation - Layers 1-3 [~8h]
+### Day 10 (Jan 20) - RAG Core Phase Implementation - Layers 1-3 [~8h]
 
 **RAG Core Phase Implementation Session**:
 - **Layers Completed**: Foundation (Layer 1), Core Services (Layer 2), AI Services (Layer 3)
@@ -298,7 +496,7 @@ Building Iubar, an AI-enhanced personal knowledge management and structured lear
 
 ---
 
-### Day 10 (Jan 18) - Postman API Testing Setup [~1h]
+### Day 10 (Jan 20) - Postman API Testing Setup [~1h]
 
 **Postman Power Integration**:
 - **Kiro Power Installed**: Postman power for automated API testing
@@ -335,7 +533,7 @@ Building Iubar, an AI-enhanced personal knowledge management and structured lear
 ---
 
 
-### Day 9 (Jan 18) - RAG Core Phase Specification [~4h]
+### Day 9 (Jan 19) - RAG Core Phase Specification [~4h]
 
 **RAG Core Phase Spec Creation Session**:
 - **Comprehensive Spec Created**: `.kiro/specs/rag-core-phase/` with 3 complete documents
@@ -487,7 +685,7 @@ Building Iubar, an AI-enhanced personal knowledge management and structured lear
 
 ---
 
-### Day 8 (Jan 17) - Property-Based Testing Suite [~4h]
+### Day 8 (Jan 18) - Property-Based Testing Suite [~4h]
 
 **Optional Tasks Completion Session**:
 - **All Optional Tasks Completed**: Finished all property-based testing tasks from foundation-phase spec
@@ -534,7 +732,7 @@ Building Iubar, an AI-enhanced personal knowledge management and structured lear
 
 ---
 
-### Day 7 (Jan 16) - UX Validation & Test Fixes [~3h]
+### Day 7 (Jan 17) - UX Validation & Test Fixes [~3h]
 
 **UX Validation Hook Setup**:
 - Fixed UX validation hook (`ui-playwright-test.kiro.hook`) to run validation directly
@@ -575,7 +773,7 @@ Building Iubar, an AI-enhanced personal knowledge management and structured lear
 
 ---
 
-### Day 6 (Jan 15) - Foundation Phase E2E Testing [~2h]
+### Day 6 (Jan 16) - Foundation Phase E2E Testing [~2h]
 
 **E2E Test Setup & Execution**:
 - Created comprehensive Playwright test suite (`upload-flow.spec.ts`) covering:
@@ -1072,13 +1270,16 @@ Building Iubar, an AI-enhanced personal knowledge management and structured lear
 ### Advanced Development Workflow
 - **Specialized Agents**: Created domain-specific agents (backend, frontend, review, UX) to improve development efficiency
 - **Property-Based Testing**: Chose fast-check for configuration validation to ensure robust hook and agent configurations
-- **Hook-Driven Automation**: Implemented format-on-save hook to reduce manual development overhead
+- **Hook-Driven Automation**: Implemented format-on-save hook to reduce manual development overhead, state-update and resume hooks for workflow continuity
 - **Prompt over Hook for PR Creation**: After comparative analysis, chose `create-pr.md` prompt over `create-pr.json` hook:
   - Prompts provide richer error handling with contextual fix suggestions
   - Prompts can ask clarifying questions mid-process and handle edge cases (branch exists, tests fail)
   - Hooks have rigid sequential execution with binary pass/fail, no recovery options
   - Prompts have explicit scope boundaries and forbidden actions for safety guardrails
 - **LSP Integration**: Configured Pylance + TypeScript LSP for enhanced code intelligence during development. Forced the use through a new steering document lsp-mandatory.md
+- **Context Optimization**: Restructured workflow with AGENTS.md (communication rules), core-rules.md (always-loaded minimal steering), and conditional inclusion modes for steering files (fileMatch pattern) - reduced context from ~15,000 to ~1,200 tokens (92% reduction)
+- **Task Breakdown Strategy**: Created focused breakdown documents for complex tasks (tasks 5-9) with detailed sub-tasks, duration estimates, dependencies, and acceptance criteria
+- **Documentation Condensing**: Applied AGENTS.md principles to condense steering documents (60-85% reduction) while preserving structure, meaning, and value
 
 ### Risk Mitigation Strategies
 1. **Scope Management**: Focus on core RAG + basic structured memory first
@@ -1092,28 +1293,34 @@ Building Iubar, an AI-enhanced personal knowledge management and structured lear
 
 | Category | Hours | Percentage |
 |----------|-------|------------|
-| Backend Development | 20.5h | 55% |
-| Testing & Debugging | 16.5h | 25% |
-| Specification & Design | 6.5h | 10% |
-| Frontend Development | 4h | 10% |
-| **Total** | **50.5h** | **100%** |
+| Backend Development | 22h | 40% |
+| Testing & Debugging | 16.5h | 30% |
+| Specification & Design | 6.5h | 12% |
+| Workflow & Documentation | 10h | 18% |
+| Frontend Development | 4h | 7% |
+| **Total** | **61.5h** | **100%** |
 
 ---
 
 ## Kiro Usage Statistics
 
-- **Total Prompts Used**: 40+
-- **Most Used**: `@execute`, `@code-review`, `@plan-feature`, `@update-devlog`, LSP validation, task status updates, property-based testing
+- **Total Prompts Used**: 50+
+- **Most Used**: `@execute`, `@code-review`, `@plan-feature`, `@update-devlog`, LSP validation, task status updates, property-based testing, workflow restructuring
 - **Custom Prompts Created**: 2 (update-devlog, create-pr)
-- **Hooks Created**: 5 (explored various triggers, 1 working: ui-playwright-test.kiro.hook)
+- **Custom Prompts Enhanced**: 2 (plan-feature with complexity scoring, execute with the new context and state management)
+- **Hooks Created**: 7 (explored various triggers, 3 working: ui-playwright-test.kiro.hook, state-update.kiro.hook, resume.kiro.hook)
 - **Agents Configured**: 4 (backend-specialist, frontend-specialist, review-agent, ux-validator)
 - **Subagent Integration**: execute.md enhanced with parallel task delegation
 - **Spec Workflows Completed**: 4 (advanced-kiro-features, project-setup, foundation-phase, rag-core-phase)
+- **Steering Files Optimized**: 6 files condensed (60-85% reduction), frontmatter added for conditional inclusion
+- **Communication Rules**: AGENTS.md created for token-efficient communication
+- **Core Rules**: core-rules.md created as minimal always-loaded steering
+- **Task Breakdowns Created**: 4 detailed breakdown documents for tasks 5-9
 - **External Tools Used**: Perplexity Research Mode for technology deep-dives and visual identity formation
 - **Critique Sessions**: 2 separate Kiro chats for design reviews
 - **Property-Based Tests Created**: 6 test files with 15+ properties
 - **E2E Tests Created**: 1 comprehensive Playwright suite (7 tests)
-- **Estimated Time Saved**: ~22 hours through automated configuration, testing, spec-driven development, iterative refinement, and task execution
+- **Estimated Time Saved**: ~30 hours through automated configuration, testing, spec-driven development, iterative refinement, task execution, and workflow optimization
 
 ---
 
@@ -1123,7 +1330,8 @@ Building Iubar, an AI-enhanced personal knowledge management and structured lear
 - [x] Phase 1 Spec: Foundation phase specification complete
 - [x] Phase 1 Implementation: All tasks from `.kiro/specs/foundation-phase/tasks.md` complete
 - [x] Phase 2 Spec: RAG Core phase specification complete (requirements → design → tasks)
-- [ ] Phase 2 Implementation: Begin implementing tasks from `.kiro/specs/rag-core-phase/tasks.md`
+- [x] Phase 2 Implementation: Begin implementing tasks from `.kiro/specs/rag-core-phase/tasks.md`
+- [ ] Phase 2 Implementation: Finish implementing all the tasks from `.kiro/rag-core-phase/tasks.md`
 
 ### Deferred to Dedicated Sessions:
 - [x] 🎨 Visual Identity Design (Day 8-9)

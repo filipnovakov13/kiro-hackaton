@@ -52,6 +52,25 @@ async def startup_event():
     logger.info("Database initialized successfully")
 
 
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Cleanup resources on application shutdown.
+
+    Note: This is a temporary solution. Full implementation requires:
+    - Singleton pattern for EmbeddingService with ThreadPoolExecutor.shutdown()
+    - Cancellation of background cleanup tasks (SessionManager, RateLimiter)
+    - Proper dependency injection for service lifecycle management
+
+    See .kiro/documentation/project-docs/future-tasks.md for complete solution.
+    """
+    logger.info("Application shutting down...")
+    logger.warning(
+        "Shutdown handler is incomplete - ThreadPoolExecutor and background tasks "
+        "are not being cleaned up. Server may hang on exit. "
+        "See future-tasks.md for full implementation."
+    )
+
+
 @app.get("/")
 async def root():
     """Root endpoint - basic API information"""

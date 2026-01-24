@@ -202,33 +202,34 @@ class SessionManager:
         }
 
     async def get_session_messages(
-        self, session_id: str, limit: int = 50
+        self, session_id: str, limit: int = 50, offset: int = 0
     ) -> list[dict]:
-        """Get messages for a session.
+        """Get messages for a session with pagination.
 
         Args:
             session_id: Session UUID
-            limit: Maximum number of messages to return (default 50, most recent)
+            limit: Maximum number of messages to return (default 50)
+            offset: Number of messages to skip (for pagination, default 0)
 
         Returns:
             List of message dicts ordered by created_at ASC
         """
-        # Get most recent messages, ordered by created_at DESC, then reverse
+        # Get messages with pagination, ordered by created_at ASC
         result = await self.db.execute(
             text(
                 """SELECT id, session_id, role, content, created_at, message_metadata
                    FROM chat_messages 
                    WHERE session_id = :session_id
-                   ORDER BY created_at DESC
-                   LIMIT :limit"""
+                   ORDER BY created_at ASC
+                   LIMIT :limit OFFSET :offset"""
             ),
-            {"session_id": session_id, "limit": limit},
+            {"session_id": session_id, "limit": limit, "offset": offset},
         )
         rows = result.fetchall()
 
-        # Reverse to get chronological order (oldest first)
+        # Convert rows to message dicts
         messages = []
-        for row in reversed(rows):
+        for row in rows:
             messages.append(
                 {
                     "message_id": row[0],

@@ -1,5 +1,5 @@
 ---
-description: "Create comprehensive feature plan with deep codebase analysis and research"
+description: "Create comprehensive feature plan with complexity scoring and codebase analysis"
 ---
 
 # Plan a new task
@@ -8,306 +8,299 @@ description: "Create comprehensive feature plan with deep codebase analysis and 
 
 ## Mission
 
-Transform a feature request into a **comprehensive implementation plan** through systematic codebase analysis, external research, and strategic planning.
+Transform feature request into **comprehensive implementation plan** through systematic codebase analysis, external research, and complexity scoring.
 
-**Core Principle**: We do NOT write code in this phase. Our goal is to create a context-rich implementation plan that enables one-pass implementation success for ai agents.
+**Core Principle**: Planning only - no code. Create context-rich plan enabling one-pass implementation.
 
-**Key Philosophy**: Context is King. The plan must contain ALL information needed for implementation - patterns, mandatory reading, documentation, validation commands - so the execution agent succeeds on the first attempt.
+**Philosophy**: Context is King. Plan must contain ALL information needed - patterns, docs, validation commands, complexity scores.
 
 ## Critical Constraints
 
-- DO NOT write any implementation code in this phase - planning only
-- DO NOT make assumptions about unclear requirements - ASK the user
-- DO NOT skip codebase analysis phases
-- Plan must be complete enough for one-pass implementation
+- DO NOT write implementation code - planning only
+- DO NOT assume unclear requirements - ASK user
+- DO NOT skip codebase analysis or complexity scoring
+- Plan must enable one-pass implementation
 
-## When to Ask for Clarification
+## When to Ask
 
-Before proceeding, ask the user if:
-- Feature scope is ambiguous or could be interpreted multiple ways
-- Multiple valid architectural approaches exist with significant trade-offs
-- Security implications are unclear or potentially significant
-- Performance requirements are unspecified but likely important
-- The feature conflicts with existing patterns in the codebase
+Ask user if:
+- Feature scope ambiguous or multiple interpretations
+- Multiple architectural approaches with significant trade-offs
+- Security implications unclear or potentially significant
+- Performance requirements unspecified but likely important
+- Feature conflicts with existing patterns
 
-## Forbidden Outcomes
+## Forbidden
 
-- Plans that require additional research during execution
-- Plans with vague task descriptions like "implement the feature"
-- Plans missing validation commands for each task
-- Plans that don't reference existing codebase patterns
+- Plans requiring additional research during execution
+- Vague tasks like "implement the feature"
+- Missing validation commands
+- No codebase pattern references
+- No complexity scores
 
 ## Planning Process
 
 ### Phase 1: Feature Understanding
 
-**Deep Feature Analysis:**
-
-- Extract the core problem being solved
-- Identify user value and business impact
-- Determine feature type: New Capability/Enhancement/Refactor/Bug Fix
-- Assess complexity: Low/Medium/High
+**Deep Analysis:**
+- Extract core problem and user value
+- Feature type: New/Enhancement/Refactor/Bug Fix
 - Map affected systems and components
 
-**Create User Story Format Or Refine If Story Was Provided By The User:**
-
+**User Story (create or refine):**
 ```
-As a <type of user>
-I want to <action/goal>
-So that <benefit/value>
+As a <user type>
+I want to <action>
+So that <benefit>
 ```
 
-### Phase 2: Codebase Intelligence Gathering
+### Phase 2: Complexity Scoring
 
-**Use specialized agents and parallel analysis:**
+**Score using deterministic rules (pick HIGHEST):**
 
-**1. Project Structure Analysis**
+1. **Scope** (Files/modules):
+   - 1 = Single file
+   - 2 = Single module
+   - 3 = 2-3 modules
+   - 4 = 3-5 modules
+   - 5 = 5+ modules
 
-- Detect primary language(s), frameworks, and runtime versions
-- Map directory structure and architectural patterns
-- Identify service/component boundaries and integration points
-- Locate configuration files (pyproject.toml, package.json, etc.)
-- Find environment setup and build processes
+2. **Dependencies**:
+   - 1 = None
+   - 2 = 1 internal
+   - 3 = 2-3 dependencies
+   - 4 = 3-5 OR 1 external API
+   - 5 = 5+ OR multiple APIs OR migration
 
-**2. Pattern Recognition** (Use specialized subagents when beneficial)
+3. **Data Persistence**:
+   - 1 = No changes
+   - 2 = Query changes only
+   - 3 = 1-2 schema changes
+   - 4 = Multiple OR migration
+   - 5 = Breaking changes OR backfill
 
-- Search for similar implementations in codebase
-- Identify coding conventions:
-  - Naming patterns (CamelCase, snake_case, kebab-case)
-  - File organization and module structure
-  - Error handling approaches
-  - Logging patterns and standards
-- Extract common patterns for the feature's domain
-- Document anti-patterns to avoid
-- Check project-specific rules and conventions in steering documents
+4. **Testing**:
+   - 1 = None or trivial (<10 cases)
+   - 2 = Basic (10-30 cases)
+   - 3 = Integration (30-100 cases)
+   - 4 = Complex + E2E (100+ cases)
+   - 5 = Multiple suites + security + performance
 
-**3. Dependency Analysis**
+5. **Uncertainty**:
+   - 1 = Crystal clear
+   - 2 = 1-2 unknowns
+   - 3 = 3-4 unknowns
+   - 4 = 5+ OR needs POC
+   - 5 = Research required
 
-- Catalog external libraries relevant to feature
-- Understand how libraries are integrated (check imports, configs)
-- Find relevant documentation in docs/, ai_docs/, .agents/reference or ai-wiki if available
-- Note library versions and compatibility requirements
+**Final Complexity = MAX(all 5 rules)**
 
-**4. Testing Patterns**
+**Duration Estimates:**
+- 1 (Trivial): < 30 min
+- 2 (Simple): 30 min - 1.5 hrs
+- 3 (Moderate): 1.5 - 4 hrs
+- 4 (Complex): 4 - 12 hrs
+- 5 (Very Complex): 1+ days
 
-- Identify test framework and structure (pytest, jest, etc.)
-- Find similar test examples for reference
-- Understand test organization (unit vs integration)
-- Note coverage requirements and testing standards
+### Phase 3: Codebase Intelligence
 
-**5. Integration Points**
+**Use subagents for parallel analysis:**
 
-- Identify existing files that need updates
-- Determine new files that need creation and their locations
-- Map router/API registration patterns
-- Understand database/model patterns if applicable
-- Identify authentication/authorization patterns if relevant
+1. **Project Structure**
+   - Languages, frameworks, versions
+   - Directory structure, architectural patterns
+   - Service boundaries, integration points
+   - Config files, build processes
 
-**Clarify Ambiguities:**
+2. **Pattern Recognition**
+   - Similar implementations
+   - Coding conventions (naming, organization, error handling, logging)
+   - Domain patterns
+   - Anti-patterns to avoid
+   - Project-specific rules in steering docs
 
-- If requirements are unclear at this point, ask the user to clarify before you continue
-- Get specific implementation preferences (libraries, approaches, patterns)
-- Resolve architectural decisions before proceeding
+3. **Dependency Analysis**
+   - External libraries relevant to feature
+   - Integration patterns (imports, configs)
+   - Documentation in docs/, ai_docs/, .agents/reference
+   - Versions and compatibility
 
-### Phase 3: External Research & Documentation
+4. **Testing Patterns**
+   - Framework and structure
+   - Similar test examples
+   - Organization (unit vs integration)
+   - Coverage requirements
 
-**Use specialized subagents when beneficial for external research:**
+5. **Integration Points**
+   - Files to update
+   - Files to create and locations
+   - Router/API registration patterns
+   - Database/model patterns
+   - Auth/authorization patterns
 
-**Documentation Gathering:**
+**Clarify ambiguities before continuing.**
 
-- Research latest library versions and best practices
-- Find official documentation with specific section anchors
-- Locate implementation examples and tutorials
-- Identify common gotchas and known issues
-- Check for breaking changes and migration guides
+### Phase 4: External Research
 
-**Technology Trends:**
+**Use subagents for documentation:**
+- Latest library versions and best practices
+- Official docs with section anchors
+- Implementation examples and tutorials
+- Common gotchas and known issues
+- Breaking changes and migration guides
+- Current best practices
+- Performance optimization patterns
+- Security considerations
 
-- Research current best practices for the technology stack
-- Find relevant blog posts, guides, or case studies
-- Identify performance optimization patterns
-- Document security considerations
-
-**Compile Research References:**
-
+**Compile references:**
 ```markdown
 ## Relevant Documentation
-
-- [Library Official Docs](https://example.com/docs#section)
-  - Specific feature implementation guide
-  - Why: Needed for X functionality
-- [Framework Guide](https://example.com/guide#integration)
-  - Integration patterns section
-  - Why: Shows how to connect components
+- [Library Docs](url#section) - Why: Needed for X
+- [Framework Guide](url#integration) - Why: Shows Y pattern
 ```
 
-### Phase 4: Deep Strategic Thinking
+### Phase 5: Strategic Thinking
 
-**Think Harder About:**
-
-- How does this feature fit into the existing architecture?
-- What are the critical dependencies and order of operations?
-- What could go wrong? (Edge cases, race conditions, errors)
-- How will this be tested comprehensively?
-- What performance implications exist?
-- Are there security considerations?
-- How maintainable is this approach?
+**Consider:**
+- Architectural fit
+- Critical dependencies and order
+- Edge cases, race conditions, errors
+- Comprehensive testing approach
+- Performance implications
+- Security considerations
+- Maintainability
 
 **Design Decisions:**
+- Choose approaches with clear rationale
+- Design for extensibility
+- Plan for backward compatibility
+- Consider scalability
 
-- Choose between alternative approaches with clear rationale
-- Design for extensibility and future modifications
-- Plan for backward compatibility if needed
-- Consider scalability implications
+### Phase 6: Plan Generation
 
-### Phase 5: Plan Structure Generation
+**Create plan with structure below.**
 
-**Create comprehensive plan with the following structure:**
+---
 
-Whats below here is a template for you to fill for th4e implementation agent:
+## PLAN TEMPLATE
 
 ```markdown
 # Feature: <feature-name>
 
-The following plan should be complete, but its important that you validate documentation and codebase patterns and task sanity before you start implementing.
-
-Pay special attention to naming of existing utils types and models. Import from the right files etc.
+IMPORTANT: Validate docs, codebase patterns, and task sanity before implementing.
+Pay attention to naming of existing utils, types, models. Import from correct files.
 
 ## Feature Description
-
-<Detailed description of the feature, its purpose, and value to users>
+<Detailed description, purpose, user value>
 
 ## User Story
-
-As a <type of user>
-I want to <action/goal>
-So that <benefit/value>
+As a <user type>
+I want to <action>
+So that <benefit>
 
 ## Problem Statement
-
-<Clearly define the specific problem or opportunity this feature addresses>
+<Specific problem or opportunity>
 
 ## Solution Statement
-
-<Describe the proposed solution approach and how it solves the problem>
+<Proposed solution and how it solves problem>
 
 ## Feature Metadata
+**Type**: [New/Enhancement/Refactor/Bug Fix]
+**Complexity Score**: [1-5] (see breakdown below)
+**Duration Estimate**: [Based on complexity]
+**Risk Level**: [Low/Medium/High/Very High]
+**Primary Systems**: [Components/services]
+**Dependencies**: [External libraries/services]
 
-**Feature Type**: [New Capability/Enhancement/Refactor/Bug Fix]
-**Estimated Complexity**: [Low/Medium/High]
-**Primary Systems Affected**: [List of main components/services]
-**Dependencies**: [External libraries or services required]
+### Complexity Breakdown
+- Scope: [X files/modules] → [1-5]
+- Dependencies: [List] → [1-5]
+- Data: [DB changes, type] → [1-5]
+- Testing: [What's needed] → [1-5]
+- Uncertainty: [Known unknowns] → [1-5]
+**Final**: MAX(above) = **[1-5]**
 
 ---
 
 ## CONTEXT REFERENCES
 
-### Relevant Codebase Files IMPORTANT: YOU MUST READ THESE FILES BEFORE IMPLEMENTING!
-
-<List files with line numbers and relevance>
-
-- `path/to/file.py` (lines 15-45) - Why: Contains pattern for X that we'll mirror
-- `path/to/model.py` (lines 100-120) - Why: Database model structure to follow
+### Relevant Codebase Files (READ BEFORE IMPLEMENTING!)
+- `path/to/file.py` (lines 15-45) - Why: Pattern for X
+- `path/to/model.py` (lines 100-120) - Why: DB model structure
 - `path/to/test.py` - Why: Test pattern example
 
 ### New Files to Create
+- `path/to/new_service.py` - Service for X
+- `path/to/new_model.py` - Data model for Y
+- `tests/path/to/test_new_service.py` - Unit tests
 
-- `path/to/new_service.py` - Service implementation for X functionality
-- `path/to/new_model.py` - Data model for Y resource
-- `tests/path/to/test_new_service.py` - Unit tests for new service
-
-### Relevant Documentation YOU SHOULD READ THESE BEFORE IMPLEMENTING!
-
-- [Documentation Link 1](https://example.com/doc1#section)
-  - Specific section: Authentication setup
-  - Why: Required for implementing secure endpoints
-- [Documentation Link 2](https://example.com/doc2#integration)
-  - Specific section: Database integration
-  - Why: Shows proper async database patterns
+### Relevant Documentation (READ BEFORE IMPLEMENTING!)
+- [Doc Link 1](url#section) - Section: Auth setup - Why: Secure endpoints
+- [Doc Link 2](url#integration) - Section: DB integration - Why: Async patterns
 
 ### Patterns to Follow
+<Specific patterns from codebase with code examples>
 
-<Specific patterns extracted from codebase - include actual code examples from the project>
-
-**Naming Conventions:** (for example)
-
-**Error Handling:** (for example)
-
-**Logging Pattern:** (for example)
-
-**Other Relevant Patterns:** (for example)
+**Naming Conventions:**
+**Error Handling:**
+**Logging Pattern:**
+**Other Patterns:**
 
 ---
 
 ## IMPLEMENTATION PLAN
 
 ### Phase 1: Foundation
-
-<Describe foundational work needed before main implementation>
-
+<Foundational work before main implementation>
 **Tasks:**
-
-- Set up base structures (schemas, types, interfaces)
-- Configure necessary dependencies
-- Create foundational utilities or helpers
+- Set up base structures
+- Configure dependencies
+- Create utilities/helpers
 
 ### Phase 2: Core Implementation
-
-<Describe the main implementation work>
-
+<Main implementation work>
 **Tasks:**
-
-- Implement core business logic
-- Create service layer components
-- Add API endpoints or interfaces
+- Implement business logic
+- Create service layer
+- Add API endpoints
 - Implement data models
 
 ### Phase 3: Integration
-
-<Describe how feature integrates with existing functionality>
-
+<Integration with existing functionality>
 **Tasks:**
-
-- Connect to existing routers/handlers
-- Register new components
-- Update configuration files
-- Add middleware or interceptors if needed
+- Connect to routers/handlers
+- Register components
+- Update configs
+- Add middleware/interceptors
 
 ### Phase 4: Testing & Validation
-
-<Describe testing approach>
-
+<Testing approach>
 **Tasks:**
-
-- Implement unit tests for each component
-- Create integration tests for feature workflow
-- Add edge case tests
-- Validate against acceptance criteria
+- Unit tests per component
+- Integration tests for workflow
+- Edge case tests
+- Validate acceptance criteria
 
 ---
 
 ## STEP-BY-STEP TASKS
 
-IMPORTANT: Execute every task in order, top to bottom. Each task is atomic and independently testable.
+IMPORTANT: Execute in order, top to bottom. Each task atomic and testable.
 
-### Task Format Guidelines
-
-Use information-dense keywords for clarity:
-
-- **CREATE**: New files or components
-- **UPDATE**: Modify existing files
-- **ADD**: Insert new functionality into existing code
-- **REMOVE**: Delete deprecated code
-- **REFACTOR**: Restructure without changing behavior
-- **MIRROR**: Copy pattern from elsewhere in codebase
+### Task Keywords:
+- **CREATE**: New files/components
+- **UPDATE**: Modify existing
+- **ADD**: Insert new functionality
+- **REMOVE**: Delete deprecated
+- **REFACTOR**: Restructure without behavior change
+- **MIRROR**: Copy pattern from elsewhere
 
 ### {ACTION} {target_file}
-
-- **IMPLEMENT**: {Specific implementation detail}
-- **PATTERN**: {Reference to existing pattern - file:line}
-- **IMPORTS**: {Required imports and dependencies}
-- **GOTCHA**: {Known issues or constraints to avoid}
-- **VALIDATE**: `{executable validation command}`
+- **IMPLEMENT**: {Specific detail}
+- **PATTERN**: {Reference - file:line}
+- **IMPORTS**: {Required imports}
+- **GOTCHA**: {Known issues to avoid}
+- **VALIDATE**: `{executable command}`
 
 <Continue with all tasks in dependency order...>
 
@@ -315,142 +308,117 @@ Use information-dense keywords for clarity:
 
 ## TESTING STRATEGY
 
-<Define testing approach based on project's test framework and patterns discovered in during research>
-
 ### Unit Tests
-
-<Scope and requirements based on project standards>
-
-Design unit tests with fixtures and assertions following existing testing approaches
+<Scope based on project standards>
 
 ### Integration Tests
-
-<Scope and requirements based on project standards>
+<Scope based on project standards>
 
 ### Edge Cases
-
-<List specific edge cases that must be tested for this feature>
+<Specific edge cases for this feature>
 
 ---
 
 ## VALIDATION COMMANDS
 
-<Define validation commands based on project's tools discovered in Phase 2>
-
-Execute every command to ensure zero regressions and 100% feature correctness.
+Execute every command for zero regressions and 100% correctness.
 
 ### Level 1: Syntax & Style
-
-<Project-specific linting and formatting commands>
+<Project-specific linting/formatting>
 
 ### Level 2: Unit Tests
-
 <Project-specific unit test commands>
 
 ### Level 3: Integration Tests
-
 <Project-specific integration test commands>
 
 ### Level 4: Manual Validation
+<Feature-specific manual testing - API calls, UI testing>
 
-<Feature-specific manual testing steps - API calls, UI testing, etc.>
-
-### Level 5: Additional Validation (Optional)
-
-<MCP servers or additional CLI tools if available>
+### Level 5: Additional (Optional)
+<MCP servers or additional CLI tools>
 
 ---
 
 ## ACCEPTANCE CRITERIA
-
-<List specific, measurable criteria that must be met for completion>
-
-- [ ] Feature implements all specified functionality
-- [ ] All validation commands pass with zero errors
+- [ ] All functionality implemented
+- [ ] All validation commands pass
 - [ ] Unit test coverage meets requirements (80%+)
-- [ ] Integration tests verify end-to-end workflows
-- [ ] Code follows project conventions and patterns
-- [ ] No regressions in existing functionality
-- [ ] Documentation is updated (if applicable)
+- [ ] Integration tests verify workflows
+- [ ] Code follows project conventions
+- [ ] No regressions
+- [ ] Documentation updated (if applicable)
 - [ ] Performance meets requirements (if applicable)
-- [ ] Security considerations addressed (if applicable)
+- [ ] Security addressed (if applicable)
 
 ---
 
 ## COMPLETION CHECKLIST
-
 - [ ] All tasks completed in order
-- [ ] Each task validation passed immediately
-- [ ] All validation commands executed successfully
-- [ ] Full test suite passes (unit + integration)
-- [ ] No linting or type checking errors
+- [ ] Each task validation passed
+- [ ] All validation commands successful
+- [ ] Full test suite passes
+- [ ] No linting/type errors
 - [ ] Manual testing confirms feature works
-- [ ] Acceptance criteria all met
-- [ ] Code reviewed for quality and maintainability
+- [ ] Acceptance criteria met
+- [ ] Code reviewed for quality
 
 ---
 
 ## NOTES
-
 <Additional context, design decisions, trade-offs>
 ```
 
+---
+
 ## Output Format
 
-**Filename**: `.agents/plans/{kebab-case-descriptive-name}.md`
+**Filename**: `.agents/plans/{kebab-case-name}.md`
+**Directory**: Create `.agents/plans/` if doesn't exist
 
-- Replace `{kebab-case-descriptive-name}` with short, descriptive feature name
-- Examples: `add-user-authentication.md`, `implement-search-api.md`, `refactor-database-layer.md`
-
-**Directory**: Create `.agents/plans/` if it doesn't exist
+Examples: `add-user-auth.md`, `implement-search-api.md`, `refactor-db-layer.md`
 
 ## Quality Criteria
 
 ### Context Completeness ✓
-
-- [ ] All necessary patterns identified and documented
+- [ ] All patterns identified and documented
 - [ ] External library usage documented with links
-- [ ] Integration points clearly mapped
+- [ ] Integration points mapped
 - [ ] Gotchas and anti-patterns captured
-- [ ] Every task has executable validation command
+- [ ] Every task has validation command
+- [ ] Complexity scored with breakdown
 
 ### Implementation Ready ✓
-
-- [ ] Another developer could execute without additional context
-- [ ] Tasks ordered by dependency (can execute top-to-bottom)
-- [ ] Each task is atomic and independently testable
-- [ ] Pattern references include specific file:line numbers
+- [ ] Another dev could execute without additional context
+- [ ] Tasks ordered by dependency
+- [ ] Each task atomic and testable
+- [ ] Pattern references include file:line
 
 ### Pattern Consistency ✓
-
-- [ ] Tasks follow existing codebase conventions
-- [ ] New patterns justified with clear rationale
-- [ ] No reinvention of existing patterns or utils
-- [ ] Testing approach matches project standards
+- [ ] Tasks follow existing conventions
+- [ ] New patterns justified
+- [ ] No reinvention of existing patterns
+- [ ] Testing matches project standards
 
 ### Information Density ✓
-
-- [ ] No generic references (all specific and actionable)
-- [ ] URLs include section anchors when applicable
+- [ ] No generic references (all specific)
+- [ ] URLs include section anchors
 - [ ] Task descriptions use codebase keywords
-- [ ] Validation commands are non interactive executable
+- [ ] Validation commands executable
 
 ## Success Metrics
 
-**One-Pass Implementation**: Execution agent can complete feature without additional research or clarification
-
-**Validation Complete**: Every task has at least one working validation command
-
-**Context Rich**: The Plan passes "No Prior Knowledge Test" - someone unfamiliar with codebase can implement using only Plan content
-
-**Confidence Score**: #/10 that execution will succeed on first attempt
+**One-Pass Implementation**: Execution agent completes without additional research
+**Validation Complete**: Every task has working validation command
+**Context Rich**: Passes "No Prior Knowledge Test"
+**Confidence Score**: X/10 for first-attempt success
 
 ## Report
 
-After creating the Plan, provide:
-
+After creating plan, provide:
 - Summary of feature and approach
-- Full path to created Plan file
-- Complexity assessment
-- Key implementation risks or considerations
-- Estimated confidence score for one-pass success
+- Full path to plan file
+- Complexity score and breakdown
+- Duration estimate
+- Key risks or considerations
+- Confidence score for one-pass success

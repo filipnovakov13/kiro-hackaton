@@ -1,3 +1,7 @@
+---
+inclusion: manual
+---
+
 # Project Structure
 
 ## Directory Layout
@@ -8,11 +12,11 @@ iubar/
 │   │   ├── api/              # FastAPI routes and endpoints
 │   │   ├── core/             # Core business logic
 │   │   ├── models/           # SQLAlchemy/Pydantic models
-│   │   ├── services/         # AI, RAG, and document processing services
+│   │   ├── services/         # AI, RAG, document processing
 │   │   └── utils/            # Helper functions
 │   ├── tests/                # Backend tests (pytest)
 │   ├── requirements.txt      # Python dependencies
-│   ├── main.py               # FastAPI application entry point
+│   ├── main.py               # FastAPI entry point
 │   └── start_server.py       # Server startup script
 ├── frontend/
 │   ├── src/
@@ -21,6 +25,7 @@ iubar/
 │   │   ├── hooks/            # Custom React hooks
 │   │   ├── services/         # API client functions
 │   │   ├── types/            # TypeScript type definitions
+│   │   ├── design-system/    # Design tokens (colors, typography, etc.)
 │   │   └── utils/            # Frontend utilities
 │   ├── tests/                # Frontend tests (Vitest + Playwright)
 │   ├── public/               # Static assets
@@ -48,25 +53,15 @@ iubar/
 └── README.md                 # Project overview and setup
 ```
 
-## Architecture Overview
-
+## Architecture
 **Hybrid RAG with Structured Memory**:
 ```
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│   Documents     │──▶│   Vector Store   │───▶│   DeepSeek      │
-│  (via Docling)  │    │    (Chroma)      │    │   V3.2-Exp      │
-└─────────────────┘    └──────────────────┘    └─────────────────┘
-                                ▲                        │
-┌─────────────────┐     ┌──────────────────┐             ▼
-│ Structured      │───▶│    SQLite DB     │    ┌─────────────────┐
-│ Memory (JSON)   │     │  (Relationships) │    │   AI Response   │
-└─────────────────┘     └──────────────────┘    └─────────────────┘
+Documents (Docling) → Vector Store (Chroma) → DeepSeek V3.2-Exp
+                              ↑                        ↓
+Structured Memory (JSON) → SQLite DB → AI Response
 ```
 
-**Document Processing Pipeline**:
-```
-PDF/DOCX/URL/GitHub → Docling/gitingest → Markdown → Chunker → Voyage Embeddings → Chroma
-```
+**Pipeline**: PDF/DOCX/URL/GitHub → Docling/gitingest → Markdown → Chunker → Voyage Embeddings → Chroma
 
 ## File Naming Conventions
 - **General**: Descriptive names for maximum readability
@@ -131,3 +126,4 @@ PDF/DOCX/URL/GitHub → Docling/gitingest → Markdown → Chunker → Voyage Em
 | **URL** | Blog posts, articles | Web scrape → Markdown → Chunks |
 | **Text/MD** | Notes, documentation | Direct → Chunks |
 | **GitHub** | Repositories | gitingest/repo2txt → Markdown → Chunks |
+

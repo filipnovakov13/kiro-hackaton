@@ -4,6 +4,7 @@ Chat session and message API endpoints.
 Handles chat session CRUD operations and streaming message responses.
 """
 
+import asyncio
 import json
 import uuid
 from datetime import datetime
@@ -16,6 +17,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
+from app.core.logging_config import StructuredLogger
 from app.models.chat import ChatSession
 from app.models.document import Document
 from app.models.schemas import ErrorResponse, SessionStatsResponse, SendMessageRequest
@@ -37,6 +39,9 @@ validator_service = InputValidator()
 
 # Initialize rate limiter (singleton for the module)
 rate_limiter = RateLimiter()
+
+# Initialize logger
+logger = StructuredLogger("chat_api")
 
 
 # =============================================================================
@@ -375,6 +380,72 @@ async def get_session_stats(
 # =============================================================================
 
 
+@router.get(
+    "/sessions/{session_id}/messages",
+    response_model=list[MessageResponse],
+    responses={
+        404: {"model": ErrorResponse, "description": "Session not found"},
+    },
+)
+async def get_messages(
+    session_id: str,
+    limit: Optional[int] = 50,
+    offset: int = 0,
+    db: AsyncSession = Depends(get_db),
+) -> list[MessageResponse]:
+    """Get messages for a session with pagination.
+
+    Args:
+        session_id: Session UUID
+        limit: Maximum number of messages to return (default 50)
+        offset: Number of messages to skip (for pagination)
+        db: Database session
+
+    Returns:
+        List of MessageResponse objects ordered by created_at ASC
+
+    Raises:
+        HTTPException 404: If session not found
+    """
+    session_manager = SessionManager(db)
+
+    # Verify session exists
+    session = await session_manager.get_session(session_id)
+    if not session:
+        raise HTTPException(
+            status_code=404,
+            detail={
+                "error": "Not found",
+                "message": "Session not found. It may have been deleted.",
+            },
+        )
+
+    # Get messages with pagination
+    messages = await session_manager.get_session_messages(
+        session_id, limit=limit, offset=offset
+    )
+
+    # Convert messages to response format
+    message_responses = []
+    for msg in messages:
+        # Extract sources from metadata if present
+        sources = None
+        if msg.get("metadata") and "sources" in msg["metadata"]:
+            sources = msg["metadata"]["sources"]
+
+        message_responses.append(
+            MessageResponse(
+                id=msg["message_id"],
+                role=msg["role"],
+                content=msg["content"],
+                created_at=msg["created_at"],
+                sources=sources,
+            )
+        )
+
+    return message_responses
+
+
 @router.post(
     "/sessions/{session_id}/messages",
     responses={
@@ -469,47 +540,112 @@ async def send_message(
     ]
 
     async def event_generator():
-        """Generate SSE events and save assistant message."""
-        # Accumulate response
+        """Generate SSE events with comprehensive error handling."""
         response_text = ""
         sources = []
         done_metadata = {}
+        interrupted = False
 
-        async for event in rag_service.generate_response(
-            query=request.message,
-            context=retrieval_result,
-            session_id=session_id,
-            focus_context=(
-                request.focus_context.dict() if request.focus_context else None
-            ),
-            message_history=message_history,
-        ):
-            # Format as SSE
-            event_type = event["event"]
-            event_data = event["data"]
+        try:
+            # Wrap generation in async generator with timeout
+            async def generate_with_timeout():
+                nonlocal response_text, sources, done_metadata
 
-            # Accumulate data
-            if event_type == "token":
-                response_text += event_data.get("content", "")
-            elif event_type == "source":
-                sources.append(event_data)
-            elif event_type == "done":
-                done_metadata = event_data
+                async for event in rag_service.generate_response(
+                    query=request.message,
+                    context=retrieval_result,
+                    session_id=session_id,
+                    focus_context=(
+                        request.focus_context.dict() if request.focus_context else None
+                    ),
+                    message_history=message_history,
+                ):
+                    event_type = event["event"]
+                    event_data = event["data"]
 
-            yield format_sse_event(event_type, event_data)
+                    # Handle error events from RAG service
+                    if event_type == "error":
+                        yield format_sse_event("error", event_data)
+                        return
 
-        # Save assistant message after streaming
-        await session_manager.save_message(
-            session_id=session_id,
-            role="assistant",
-            content=response_text,
-            metadata={
-                "sources": sources,
-                "token_count": done_metadata.get("token_count"),
-                "cost_usd": done_metadata.get("cost_usd"),
-                "cached": done_metadata.get("cached", False),
-            },
-        )
+                    # Accumulate data
+                    if event_type == "token":
+                        response_text += event_data.get("content", "")
+                    elif event_type == "source":
+                        sources.append(event_data)
+                    elif event_type == "done":
+                        done_metadata = event_data
+
+                    yield format_sse_event(event_type, event_data)
+
+            # Apply 60s timeout
+            async for sse_event in asyncio.wait_for(
+                generate_with_timeout(), timeout=60.0
+            ):
+                yield sse_event
+
+        except asyncio.CancelledError:
+            # Client disconnected
+            logger.warning(
+                "Client disconnected during streaming", session_id=session_id
+            )
+            interrupted = True
+            yield format_sse_event(
+                "error",
+                {
+                    "error": "Connection interrupted",
+                    "partial_response": response_text,
+                },
+            )
+            raise  # Re-raise to properly close the connection
+
+        except asyncio.TimeoutError:
+            # Streaming timeout
+            logger.warning("Streaming timeout", session_id=session_id)
+            interrupted = True
+            yield format_sse_event(
+                "error",
+                {
+                    "error": "Response generation timed out after 60 seconds",
+                    "partial_response": response_text,
+                },
+            )
+
+        except Exception as e:
+            # Unexpected error
+            logger.error("Error during streaming", error=str(e), session_id=session_id)
+            interrupted = True
+            yield format_sse_event(
+                "error",
+                {
+                    "error": "An error occurred while generating response",
+                    "partial_response": response_text,
+                },
+            )
+
+        finally:
+            # Always save assistant message (even if partial)
+            if response_text:
+                try:
+                    await session_manager.save_message(
+                        session_id=session_id,
+                        role="assistant",
+                        content=response_text,
+                        metadata={
+                            "sources": sources,
+                            "token_count": done_metadata.get("token_count", 0),
+                            "cost_usd": done_metadata.get("cost_usd", 0.0),
+                            "cached": done_metadata.get("cached", False),
+                            "interrupted": interrupted,
+                        },
+                    )
+                except Exception as e:
+                    # Log error but don't raise - streaming is already complete
+                    logger.error(
+                        "Failed to save assistant message",
+                        error=str(e),
+                        session_id=session_id,
+                    )
 
     return StreamingResponse(
         event_generator(),

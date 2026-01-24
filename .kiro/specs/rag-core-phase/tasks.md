@@ -239,18 +239,18 @@ This task list implements the RAG Core functionality for Iubar, enabling context
 
 
 ### 4.6 Implement POST /api/chat/sessions/{id}/messages (Streaming)
-- [ ] Implement send_message endpoint with SSE
-- [ ] Add input validation (message + focus_context)
-- [ ] Add rate limiting checks
-- [ ] Integrate RAGService for retrieval and generation
-- [ ] Stream token events
-- [ ] Stream source events
-- [ ] Stream done event with metadata
-- [ ] Stream error events on failures
-- [ ] Save message to database after streaming
-- [ ] Handle client disconnect gracefully
-- [ ] Add 60s streaming timeout
-- [ ] Write integration tests with SSE client
+- [x] Implement send_message endpoint with SSE
+- [x] Add input validation (message + focus_context)
+- [x] Add rate limiting checks
+- [x] Integrate RAGService for retrieval and generation
+- [x] Stream token events
+- [x] Stream source events
+- [x] Stream done event with metadata
+- [x] Stream error events on failures
+- [x] Save message to database after streaming
+- [x] Handle client disconnect gracefully
+- [x] Add 60s streaming timeout
+- [x] Write integration tests with SSE client
 
 
 **Property-Based Test**: Validates: Requirements 6.1-6.10 (Streaming)
@@ -259,17 +259,17 @@ This task list implements the RAG Core functionality for Iubar, enabling context
 - Property: Messages are saved after streaming completes
 
 ### 4.7 Implement GET /api/chat/sessions/{id}/messages
-- [ ] Implement get_messages endpoint
-- [ ] Add pagination (limit, offset)
-- [ ] Return messages ordered by created_at ASC
-- [ ] Write integration tests
+- [x] Implement get_messages endpoint
+- [x] Add pagination (limit, offset)
+- [x] Return messages ordered by created_at ASC
+- [x] Write integration tests
 
 
 ### 4.8 Implement POST /api/cache/clear
-- [ ] Implement clear_cache endpoint
+- [x] Implement clear_cache endpoint
 - [ ] Add admin-only check (optional for MVP)
-- [ ] Return count of cleared entries
-- [ ] Write integration tests
+- [x] Return count of cleared entries
+- [x] Write integration tests
 
 
 ---

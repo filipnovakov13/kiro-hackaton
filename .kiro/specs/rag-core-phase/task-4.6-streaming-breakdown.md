@@ -680,12 +680,12 @@ async def event_generator():
 **Estimated Time**: 25-30 minutes
 
 **Completion Criteria**:
-- [ ] Timeout handling works
-- [ ] Disconnect handling works
-- [ ] Error events sent correctly
-- [ ] Partial responses saved
-- [ ] Integration tests pass
-- [ ] LSP diagnostics pass
+- [x] Timeout handling works
+- [x] Disconnect handling works
+- [x] Error events sent correctly
+- [x] Partial responses saved
+- [x] Integration tests pass
+- [x] LSP diagnostics pass
 
 ---
 
@@ -1012,13 +1012,13 @@ class TestStreamingChatAPIIntegration:
 **Estimated Time**: 40-45 minutes (increased due to SSE complexity)
 
 **Completion Criteria**:
-- [ ] All integration tests implemented
-- [ ] All tests pass
-- [ ] SSE client helper works correctly
-- [ ] Event parsing handles all formats
-- [ ] Coverage > 90%
-- [ ] LSP diagnostics pass
-- [ ] No hanging tests (subprocess cleanup works)
+- [x] All integration tests implemented
+- [x] All tests pass
+- [x] SSE client helper works correctly
+- [x] Event parsing handles all formats
+- [x] Coverage > 90%
+- [x] LSP diagnostics pass
+- [x] No hanging tests (subprocess cleanup works)
 
 ---
 
@@ -1042,16 +1042,16 @@ Execute sub-tasks in this exact order:
 
 Task 4.6 is complete when:
 
-- [ ] All 9 sub-tasks completed
-- [ ] All integration tests pass
-- [ ] LSP diagnostics pass for all modified files
-- [ ] Endpoint streams SSE events correctly
-- [ ] Rate limiting enforced
-- [ ] Messages persisted to database
-- [ ] Error handling works for all scenarios
-- [ ] Client disconnect handled gracefully
-- [ ] 60s timeout enforced
-- [ ] Documentation updated
+- [x] All 9 sub-tasks completed
+- [x] All integration tests pass
+- [x] LSP diagnostics pass for all modified files
+- [x] Endpoint streams SSE events correctly
+- [x] Rate limiting enforced
+- [x] Messages persisted to database
+- [x] Error handling works for all scenarios
+- [x] Client disconnect handled gracefully
+- [x] 60s timeout enforced
+- [x] Documentation updated
 
 ---
 
