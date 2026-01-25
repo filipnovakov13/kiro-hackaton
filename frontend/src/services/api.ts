@@ -22,14 +22,14 @@ export class ApiError extends Error {
   constructor(
     message: string,
     public statusCode: number,
-    public details?: Record<string, unknown>
+    public details?: Record<string, unknown>,
   ) {
     super(message);
     this.name = "ApiError";
   }
 }
 
-async function handleResponse<T>(response: Response): Promise<T> {
+export async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
     let error: ErrorResponse;
     try {
@@ -46,7 +46,7 @@ async function handleResponse<T>(response: Response): Promise<T> {
     throw new ApiError(
       error.message || `HTTP ${response.status}: ${response.statusText}`,
       response.status,
-      error.details
+      error.details,
     );
   }
   return response.json();
@@ -83,10 +83,10 @@ export async function ingestUrl(url: string): Promise<UploadResponse> {
 // ============================================================================
 
 export async function getTaskStatus(
-  taskId: string
+  taskId: string,
 ): Promise<TaskStatusResponse> {
   const response = await fetch(
-    `${API_BASE_URL}/api/documents/status/${taskId}`
+    `${API_BASE_URL}/api/documents/status/${taskId}`,
   );
   return handleResponse<TaskStatusResponse>(response);
 }

@@ -1,14 +1,223 @@
 # Development Log - Iubar
 
 **Project**: Iubar - AI-Enhanced Personal Knowledge Management  
-**Duration**: January 6-24, 2026  
-**Total Time**: ~61.5 hours   
+**Duration**: January 6-25, 2026  
+**Total Time**: ~66 hours   
 
 ## Overview
 Building Iubar, an AI-enhanced personal knowledge management and structured learning web app that combines PKM with AI tutoring capabilities. Uses a Hybrid RAG architecture with vector search and structured memory for long-term, evolving user interactions.
 ---
 
-## Week 3: Foundation + RAG Core Implementation (Jan 15-19)
+## Week 3: Foundation + RAG Core Implementation (Jan 19-25)
+
+### Day 14 (Jan 25) - RAG Core Phase: Frontend Services & Hooks Implementation [~49min]
+
+**Frontend Services & Hooks Implementation Session [~49min]**:
+- **Phase Complete**: All 6 frontend service/hook tasks completed (Task 7.1-7.6)
+- **Total Duration**: 49 minutes (88% faster than estimated 6-7 hours)
+- **Test Results**: 98/98 tests passing (100% coverage)
+- **Efficiency**: Completed in 12% of estimated time
+
+**Implementation Order: Types → API Client → SSE Client → Hooks**:
+
+- ✅ **Sub-Task 7.6**: TypeScript Types (15 min, estimated 30 min)
+  - Created `frontend/src/types/chat.ts` with complete type definitions
+  - ChatSession, ChatMessage, FocusContext, Source interfaces
+  - SSE event types, API request/response types
+  - All types match backend Pydantic schemas
+  - No TypeScript errors
+
+- ✅ **Sub-Task 7.1**: Chat API Client (6 min, estimated 90 min)
+  - Created `frontend/src/services/chat-api.ts` with ChatAPI class
+  - CRUD operations: createSession, getSessions, getSession, deleteSession, getSessionStats
+  - Modified `frontend/src/services/api.ts` - exported handleResponse for reuse
+  - Proper error handling with ApiError
+  - 16 unit tests passing (100% coverage)
+
+- ✅ **Sub-Task 7.2**: SSE Client (13 min, estimated 90 min)
+  - Created `frontend/src/services/sse-client.ts` with SSEClient class
+  - EventSource connection handling with reconnection logic (max 3 attempts)
+  - Event parsing: token, source, done, error events
+  - Connection state management and cleanup
+  - **Issue Fixed**: EventSource.OPEN constant access in tests (added to mock)
+  - 18 unit tests passing (100% coverage)
+
+- ✅ **Sub-Task 7.3**: useChatSession Hook (4 min, estimated 60 min)
+  - Created `frontend/src/hooks/useChatSession.ts` React hook
+  - Session state management with loading/error states
+  - CRUD operations: createSession, loadSessions, loadSession, deleteSession, fetchStats
+  - Error clearing and state reset
+  - 18 unit tests passing (100% coverage)
+
+- ✅ **Sub-Task 7.4**: useStreamingMessage Hook (4 min, estimated 90 min)
+  - Created `frontend/src/hooks/useStreamingMessage.ts` React hook
+  - SSE connection management with token accumulation
+  - Source collection and metadata tracking
+  - Cleanup on unmount, prevents concurrent streaming
+  - Error handling and streaming state management
+  - 17 unit tests passing (100% coverage)
+
+- ✅ **Sub-Task 7.5**: useFocusCaret Hook (7 min, estimated 60 min)
+  - Created `frontend/src/hooks/useFocusCaret.ts` React hook
+  - Focus caret position management with keyboard navigation
+  - Context extraction (±150 chars around position)
+  - FocusContext object creation for API
+  - Boundary handling and edge cases (empty text, document updates)
+  - **Issue Fixed**: Test batching (multiple state updates in single act() - separated into individual act() calls)
+  - 29 unit tests passing (100% coverage)
+
+**Technical Achievements**:
+- ✅ 12 files created (6 implementation + 6 test files)
+- ✅ 98 tests passing with 100% coverage across all services and hooks
+- ✅ All TypeScript types match backend schemas
+- ✅ Proper error handling patterns established
+- ✅ LSP diagnostics passing throughout
+- ✅ No blocking issues encountered
+- ✅ 88% faster than estimated (49 min vs 6-7 hours)
+
+**Key Technical Patterns Established**:
+| Pattern | Implementation | Rationale |
+|---------|----------------|-----------|
+| Type Safety | All types match backend Pydantic schemas | Prevents runtime type errors |
+| Error Handling | Consistent ApiError usage across services | Unified error handling |
+| SSE Streaming | EventSource with reconnection logic | Robust streaming connections |
+| React Hooks | Custom hooks for state management | Reusable, testable logic |
+| Test Mocking | Vitest with mocked dependencies | Fast, isolated unit tests |
+
+**Files Created**:
+- **Types**: `frontend/src/types/chat.ts`
+- **Services**: `frontend/src/services/chat-api.ts`, `frontend/src/services/sse-client.ts`
+- **Hooks**: `frontend/src/hooks/useChatSession.ts`, `frontend/src/hooks/useStreamingMessage.ts`, `frontend/src/hooks/useFocusCaret.ts`
+- **Tests**: `frontend/tests/chat-api.test.ts`, `frontend/tests/sse-client.test.ts`, `frontend/tests/useChatSession.test.ts`, `frontend/tests/useStreamingMessage.test.ts`, `frontend/tests/useFocusCaret.test.ts`
+- **Modified**: `frontend/src/services/api.ts` (exported handleResponse)
+- **State Tracking**: `.kiro/specs/rag-core-phase/breakdowns/task-7/task-7-state.md`
+
+**Kiro Usage**: Spec task execution, service implementation, React hooks development, comprehensive unit testing, LSP validation
+
+**Next Steps**:
+- Layer 8: Integration Testing (Task 8)
+- Layer 9: Configuration & Documentation (Task 9)
+
+---
+
+### Day 13 (Jan 24) - RAG Core Phase: Frontend Components Implementation [~3.5h]
+
+**Frontend Components Implementation Session [~3.5h]**:
+- **Phase Complete**: All 9 frontend component tasks completed (Tasks 5.1-5.6, 6.1-6.3)
+- **Total Duration**: ~207 minutes (70% faster than estimated)
+- **Test Results**: 245/245 tests passing (100% coverage)
+
+**Phase 1: Design System Setup [~18 min]**:
+- ✅ Created comprehensive design system following `visual-identity.md`
+- **Files Created** (6 design system files):
+  - `frontend/src/design-system/layout.ts` - Spacing, grid, dimensions
+  - `frontend/src/design-system/typography.ts` - Font scales, families
+  - `frontend/src/design-system/forms.ts` - Input, button styles
+  - `frontend/src/design-system/animations.ts` - Motion tokens, keyframes
+  - `frontend/src/design-system/markdown.ts` - Document rendering styles
+  - `frontend/src/design-system/index.ts` - Centralized exports
+- All tokens extracted from visual identity specification
+
+**Chat Components (Tasks 5.1-5.6) [~2h]**:
+- ✅ **Task 5.1**: ChatInterface Component (~36 min including fixes)
+  - Split-pane layout (70/30 default) with resizable border
+  - Document pane collapse/expand with smooth transitions
+  - Width persistence to localStorage
+  - **Issues Fixed**: Design system violations (5 hardcoded hex values), keyboard accessibility (tabIndex + key handlers), test environment (switched jsdom → happy-dom)
+  - 23 unit tests passing
+
+- ✅ **Task 5.2**: MessageList Component (~23 min)
+  - Display user/assistant messages with auto-scroll
+  - Empty/loading states with custom messages
+  - Role indicators and timestamps
+  - 19 unit tests passing
+
+- ✅ **Task 5.3**: MessageInput Component (~23 min)
+  - Text input with 6000 character limit enforced
+  - Enter to send (Shift+Enter for new line)
+  - Auto-resize textarea (80px-200px)
+  - Character count with warning at <100 remaining
+  - 26 unit tests passing
+
+- ✅ **Task 5.4**: ThinkingIndicator Component (~9 min)
+  - Pulsing glow effect with golden accent (#D4A574)
+  - Three animated dots with staggered delays
+  - Size variants (small, medium, large)
+  - 23 unit tests passing
+
+- ✅ **Task 5.5**: StreamingMessage Component (~18 min)
+  - Real-time streaming token display
+  - Streaming cursor animation (blinking)
+  - Source attribution with clickable links
+  - Error message display
+  - 30 unit tests passing
+
+- ✅ **Task 5.6**: SourceAttribution Component (~18 min)
+  - Individual source links with document title and section
+  - Grouped view (sources by document) and flat view
+  - Click callbacks for document navigation
+  - Handles missing data gracefully
+  - 28 unit tests passing
+
+**Document Components (Tasks 6.1-6.3) [~1h]**:
+- ✅ **Task 6.1**: DocumentViewer Component (~27 min)
+  - Markdown rendering (H1-H3, paragraphs, code blocks)
+  - Syntax highlighting with language labels
+  - Independent scrolling with optimal reading width (800px)
+  - Chunk highlighting support
+  - Empty and loading states
+  - 37 unit tests passing
+
+- ✅ **Task 6.2**: FocusCaret Component (~27 min)
+  - Letter-level focus indicator with golden glow
+  - Click-to-place functionality
+  - Keyboard navigation (Arrow keys, paragraph jumping)
+  - Context extraction (±150 chars)
+  - Fade in/out animations (200ms/150ms)
+  - RSVP-ready design (40% anchor position)
+  - **Issues Fixed**: 4 test failures (boundary behavior, animation check, word extraction)
+  - 32 unit tests passing
+
+- ✅ **Task 6.3**: ChunkHighlight Component (~9 min)
+  - Highlight chunk with background color (#253550)
+  - Smooth scroll to chunk
+  - Click callback support
+  - Keyboard accessibility (Enter/Space)
+  - Transition animations (200ms)
+  - 27 unit tests passing
+
+**Technical Achievements**:
+- ✅ 9 components created with comprehensive functionality
+- ✅ 245 tests passing (100% coverage)
+- ✅ All components use design system tokens (no hardcoded colors)
+- ✅ Full keyboard accessibility throughout
+- ✅ LSP diagnostics passing for all files
+- ✅ 70% faster than estimated (207 min vs 690 min estimated)
+
+**Key Technical Patterns Established**:
+| Pattern | Implementation | Rationale |
+|---------|----------------|-----------|
+| Design System Tokens | All colors/spacing from centralized tokens | Consistency, maintainability |
+| Keyboard Accessibility | tabIndex + Enter/Space handlers | WCAG compliance |
+| Test Environment | happy-dom instead of jsdom | Avoids ESM module conflicts |
+| Component Composition | Small, focused components | Reusability, testability |
+
+**Files Created/Modified**:
+- **Components** (9 files): ChatInterface, MessageList, MessageInput, ThinkingIndicator, StreamingMessage, SourceAttribution, DocumentViewer, FocusCaret, ChunkHighlight
+- **Tests** (9 files): Comprehensive test suites for all components
+- **Design System** (6 files): Complete token system
+- **Config** (1 file): `frontend/vitest.config.ts` - switched to happy-dom
+- **State Tracking** (1 file): `.kiro/specs/rag-core-phase/breakdowns/task-5-6-state.md`
+- **Total**: 25 files created, 1 modified
+
+**Kiro Usage**: Spec task execution, design system implementation, component development, comprehensive testing, LSP validation
+
+**Next Steps**:
+- Layer 7: Frontend Services & Hooks (Task 7)
+- Layer 8: Integration Testing (Task 8)
+- Layer 9: Configuration & Documentation (Task 9)
+
+---
 
 ### Day 13 (Jan 24) - Workflow Restructuring & Documentation [~6h]
 
@@ -532,6 +741,7 @@ Building Iubar, an AI-enhanced personal knowledge management and structured lear
 
 ---
 
+## Week 2: Product Definition & Core Development (Jan 13-19)
 
 ### Day 9 (Jan 19) - RAG Core Phase Specification [~4h]
 
@@ -844,7 +1054,6 @@ Building Iubar, an AI-enhanced personal knowledge management and structured lear
 
 ---
 
-## Week 2: Product Definition & Core Development (Jan 13-19)
 
 ### Day 5 (Jan 15) - Python 3.12 Migration [~30m]
 
@@ -1293,19 +1502,19 @@ Building Iubar, an AI-enhanced personal knowledge management and structured lear
 
 | Category | Hours | Percentage |
 |----------|-------|------------|
-| Backend Development | 22h | 40% |
-| Testing & Debugging | 16.5h | 30% |
-| Specification & Design | 6.5h | 12% |
-| Workflow & Documentation | 10h | 18% |
-| Frontend Development | 4h | 7% |
-| **Total** | **61.5h** | **100%** |
+| Backend Development | 22h | 34% |
+| Testing & Debugging | 16.5h | 25% |
+| Frontend Development | 8.5h | 12% |
+| Specification & Design | 6.5h | 10% |
+| Workflow & Documentation | 12.5h | 19% |
+| **Total** | **66h** | **100%** |
 
 ---
 
 ## Kiro Usage Statistics
 
-- **Total Prompts Used**: 50+
-- **Most Used**: `@execute`, `@code-review`, `@plan-feature`, `@update-devlog`, LSP validation, task status updates, property-based testing, workflow restructuring
+- **Total Prompts Used**: 55+
+- **Most Used**: `@execute`, `@code-review`, `@plan-feature`, `@update-devlog`, LSP validation, task status updates, property-based testing, workflow restructuring, component development
 - **Custom Prompts Created**: 2 (update-devlog, create-pr)
 - **Custom Prompts Enhanced**: 2 (plan-feature with complexity scoring, execute with the new context and state management)
 - **Hooks Created**: 7 (explored various triggers, 3 working: ui-playwright-test.kiro.hook, state-update.kiro.hook, resume.kiro.hook)
@@ -1320,7 +1529,9 @@ Building Iubar, an AI-enhanced personal knowledge management and structured lear
 - **Critique Sessions**: 2 separate Kiro chats for design reviews
 - **Property-Based Tests Created**: 6 test files with 15+ properties
 - **E2E Tests Created**: 1 comprehensive Playwright suite (7 tests)
-- **Estimated Time Saved**: ~30 hours through automated configuration, testing, spec-driven development, iterative refinement, task execution, and workflow optimization
+- **Frontend Components Created**: 9 components with 245 comprehensive tests (100% coverage)
+- **Design System Created**: 6 design system files with complete token system
+- **Estimated Time Saved**: ~35 hours through automated configuration, testing, spec-driven development, iterative refinement, task execution, workflow optimization, and component development
 
 ---
 

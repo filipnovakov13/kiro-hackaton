@@ -363,58 +363,58 @@ This task list implements the RAG Core functionality for Iubar, enabling context
 ## 7. Frontend Services & Hooks
 
 ### 7.1 Create chat API client
-- [ ] Create `frontend/src/services/chat-api.ts`
-- [ ] Implement createSession method
-- [ ] Implement getSessions method
-- [ ] Implement getSession method
-- [ ] Implement deleteSession method
-- [ ] Implement getSessionStats method
-- [ ] Add error handling
-- [ ] Write unit tests
+- [x] Create `frontend/src/services/chat-api.ts`
+- [x] Implement createSession method
+- [x] Implement getSessions method
+- [x] Implement getSession method
+- [x] Implement deleteSession method
+- [x] Implement getSessionStats method
+- [x] Add error handling
+- [x] Write unit tests
 
 
 ### 7.2 Create SSE client
-- [ ] Create `frontend/src/services/sse-client.ts`
-- [ ] Implement SSE connection handling
-- [ ] Parse token, source, done, error events
-- [ ] Handle connection errors
-- [ ] Handle reconnection logic
-- [ ] Write unit tests
+- [x] Create `frontend/src/services/sse-client.ts`
+- [x] Implement SSE connection handling
+- [x] Parse token, source, done, error events
+- [x] Handle connection errors
+- [x] Handle reconnection logic
+- [x] Write unit tests
 
 
 ### 7.3 Create useChatSession hook
-- [ ] Create `frontend/src/hooks/useChatSession.ts`
-- [ ] Manage session state
-- [ ] Handle session creation
-- [ ] Handle session deletion
-- [ ] Fetch session stats
-- [ ] Write hook tests
+- [x] Create `frontend/src/hooks/useChatSession.ts`
+- [x] Manage session state
+- [x] Handle session creation
+- [x] Handle session deletion
+- [x] Fetch session stats
+- [x] Write hook tests
 
 
 ### 7.4 Create useStreamingMessage hook
-- [ ] Create `frontend/src/hooks/useStreamingMessage.ts`
-- [ ] Manage SSE connection
-- [ ] Accumulate streaming tokens
-- [ ] Handle error events
-- [ ] Handle done events
-- [ ] Write hook tests
+- [x] Create `frontend/src/hooks/useStreamingMessage.ts`
+- [x] Manage SSE connection
+- [x] Accumulate streaming tokens
+- [x] Handle error events
+- [x] Handle done events
+- [x] Write hook tests
 
 
 ### 7.5 Create useFocusCaret hook
-- [ ] Create `frontend/src/hooks/useFocusCaret.ts`
-- [ ] Manage focus caret position
-- [ ] Handle keyboard navigation
-- [ ] Extract surrounding context
-- [ ] Write hook tests
+- [x] Create `frontend/src/hooks/useFocusCaret.ts`
+- [x] Manage focus caret position
+- [x] Handle keyboard navigation
+- [x] Extract surrounding context
+- [x] Write hook tests
 
 
 ### 7.6 Create TypeScript types
-- [ ] Create `frontend/src/types/chat.ts`
-- [ ] Define ChatSession interface
-- [ ] Define ChatMessage interface
-- [ ] Define FocusContext interface
-- [ ] Define SSE event types
-- [ ] Define API response types
+- [x] Create `frontend/src/types/chat.ts`
+- [x] Define ChatSession interface
+- [x] Define ChatMessage interface
+- [x] Define FocusContext interface
+- [x] Define SSE event types
+- [x] Define API response types
 
 
 ---
