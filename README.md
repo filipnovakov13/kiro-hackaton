@@ -337,7 +337,7 @@ npm run dev -- --port 3000
 
 ## Development Status
 
-**Current Phase**: Foundation Phase Complete ✅ (Week 3)
+**Current Phase**: RAG Core Phase Complete ✅ (Week 3)
 
 ### Completed Features
 
@@ -358,6 +358,27 @@ npm run dev -- --port 3000
   - 28 frontend tests (unit + integration)
   - 7 E2E Playwright tests
 
+**Phase 2: RAG Core (100% Complete)**
+- ✅ Chat session management (CRUD operations)
+- ✅ Message persistence with metadata
+- ✅ DeepSeek V3.2-Exp LLM integration with streaming
+- ✅ RAG service with context retrieval and generation
+- ✅ Response caching (LRU cache, 500 entries)
+- ✅ Rate limiting (100 queries/hour, 5 concurrent streams)
+- ✅ Spending limits ($5.00 per session)
+- ✅ Focus caret support with chunk boosting (0.15)
+- ✅ Source attribution with similarity scores
+- ✅ Document summaries for multi-document search
+- ✅ Circuit breaker pattern for API resilience
+- ✅ Structured logging with JSON formatting
+- ✅ Input validation and security (prompt injection defense)
+- ✅ Comprehensive integration test suite (28 tests passing)
+  - E2E RAG flow tests
+  - Focus caret integration tests
+  - Cache integration tests
+  - Error handling integration tests
+  - Rate limiting integration tests
+
 **Infrastructure & Tooling**
 - ✅ Hybrid RAG architecture design completed
 - ✅ PRD finalized with all core decisions
@@ -366,29 +387,47 @@ npm run dev -- --port 3000
 - ✅ E2E testing with Playwright
 - ✅ LSP integration (Pylance + TypeScript)
 - ✅ Unified test runner for backend + frontend
+- ✅ OpenAPI/Swagger documentation for all endpoints
 
-### In Progress
-
-**Phase 2: RAG Core (Next)**
-- 🚧 DeepSeek V3.2-Exp LLM integration
-- 🚧 RAG query pipeline with vector search
-- 🚧 Chat interface with streaming responses
-- 🚧 Source attribution and suggested questions
-- ⏳ Split-pane UI with focus caret
-- ⏳ User profile system
-
-**Time Investment**: ~34 hours
-- Architecture & Planning: 5h
-- Backend Development: 12h
-- Frontend Development: 6h
-- Testing & Debugging: 13h
+**Time Investment**: ~68 hours
+- Architecture & Planning: 9h
+- Backend Development: 28h
+- Frontend Development: 9h
+- Testing & Debugging: 19h
 - Configuration & Tooling: 3h
 
-**Next Milestones**:
-1. DeepSeek chat integration with RAG
-2. Split-pane UI with document viewer
-3. Focus caret implementation (spark indicator)
-4. Streaming chat responses with source attribution
+### Next Steps
+
+**Phase 4: Polish & Optimization (Future)**
+- ⏳ User profile system
+- ⏳ Suggested questions from summaries
+- ⏳ Performance optimizations
+- ⏳ Enhanced error handling
+
+## API Documentation
+
+All API endpoints are documented with OpenAPI/Swagger. Access the interactive documentation at:
+- **Swagger UI**: http://localhost:8000/docs
+- **ReDoc**: http://localhost:8000/redoc
+
+### Key Endpoints
+
+**Document Management**
+- `POST /api/documents/upload` - Upload document
+- `GET /api/documents` - List documents
+- `DELETE /api/documents/{id}` - Delete document
+
+**Chat Sessions**
+- `POST /api/chat/sessions` - Create session
+- `GET /api/chat/sessions` - List sessions
+- `GET /api/chat/sessions/{id}` - Get session details
+- `DELETE /api/chat/sessions/{id}` - Delete session
+- `GET /api/chat/sessions/{id}/stats` - Get session statistics
+
+**Messages**
+- `POST /api/chat/sessions/{id}/messages` - Send message (streaming SSE)
+- `GET /api/chat/sessions/{id}/messages` - Get messages
+
 
 ## Contributing
 

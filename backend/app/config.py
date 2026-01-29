@@ -53,6 +53,7 @@ class Settings(BaseSettings):
         env_file = ".env"
         env_file_encoding = "utf-8"
         populate_by_name = True
+        extra = "allow"  # Quick fix: allow extra fields from .env
 
     @property
     def cors_origins_list(self) -> List[str]:

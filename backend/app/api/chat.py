@@ -136,7 +136,22 @@ class SessionDetailResponse(BaseModel):
 @router.post(
     "/sessions",
     response_model=SessionResponse,
+    summary="Create Chat Session",
+    description="Create a new chat session, optionally associated with a document",
     responses={
+        200: {
+            "description": "Session created successfully",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "session_id": "550e8400-e29b-41d4-a716-446655440000",
+                        "document_id": "660e8400-e29b-41d4-a716-446655440000",
+                        "created_at": "2026-01-25T10:00:00Z",
+                        "message_count": 0,
+                    }
+                }
+            },
+        },
         400: {"model": ErrorResponse, "description": "Invalid input"},
         404: {"model": ErrorResponse, "description": "Document not found"},
     },
@@ -189,6 +204,28 @@ async def create_session(
 @router.get(
     "/sessions",
     response_model=SessionListResponse,
+    summary="List Chat Sessions",
+    description="Retrieve all chat sessions with optional pagination",
+    responses={
+        200: {
+            "description": "List of sessions retrieved successfully",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "sessions": [
+                            {
+                                "session_id": "550e8400-e29b-41d4-a716-446655440000",
+                                "document_id": "660e8400-e29b-41d4-a716-446655440000",
+                                "created_at": "2026-01-25T10:00:00Z",
+                                "updated_at": "2026-01-25T10:05:00Z",
+                                "message_count": 5,
+                            }
+                        ]
+                    }
+                }
+            },
+        }
+    },
 )
 async def list_sessions(
     limit: Optional[int] = None,
@@ -222,7 +259,30 @@ async def list_sessions(
 @router.get(
     "/sessions/{session_id}",
     response_model=SessionDetailResponse,
+    summary="Get Chat Session",
+    description="Retrieve session details with message history (up to 50 most recent messages)",
     responses={
+        200: {
+            "description": "Session details retrieved successfully",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "session_id": "550e8400-e29b-41d4-a716-446655440000",
+                        "document_id": "660e8400-e29b-41d4-a716-446655440000",
+                        "created_at": "2026-01-25T10:00:00Z",
+                        "updated_at": "2026-01-25T10:05:00Z",
+                        "messages": [
+                            {
+                                "id": "770e8400-e29b-41d4-a716-446655440000",
+                                "role": "user",
+                                "content": "What is this document about?",
+                                "created_at": "2026-01-25T10:01:00Z",
+                            }
+                        ],
+                    }
+                }
+            },
+        },
         404: {"model": ErrorResponse, "description": "Session not found"},
     },
 )
@@ -288,7 +348,10 @@ async def get_session(
 @router.delete(
     "/sessions/{session_id}",
     status_code=204,
+    summary="Delete Chat Session",
+    description="Delete a chat session and all its messages (cascade delete)",
     responses={
+        204: {"description": "Session deleted successfully"},
         404: {"model": ErrorResponse, "description": "Session not found"},
     },
 )
@@ -331,7 +394,23 @@ async def delete_session(
 @router.get(
     "/sessions/{session_id}/stats",
     response_model=SessionStatsResponse,
+    summary="Get Session Statistics",
+    description="Retrieve session statistics including message count, tokens, cost, and cache hit rate",
     responses={
+        200: {
+            "description": "Session statistics retrieved successfully",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "message_count": 10,
+                        "total_tokens": 5000,
+                        "estimated_cost_usd": 0.05,
+                        "cache_hit_rate": 0.3,
+                        "avg_response_time_ms": 1200,
+                    }
+                }
+            },
+        },
         404: {"model": ErrorResponse, "description": "Session not found"},
     },
 )
@@ -383,7 +462,24 @@ async def get_session_stats(
 @router.get(
     "/sessions/{session_id}/messages",
     response_model=list[MessageResponse],
+    summary="Get Session Messages",
+    description="Retrieve messages for a session with pagination (ordered chronologically)",
     responses={
+        200: {
+            "description": "Messages retrieved successfully",
+            "content": {
+                "application/json": {
+                    "example": [
+                        {
+                            "id": "770e8400-e29b-41d4-a716-446655440000",
+                            "role": "user",
+                            "content": "What is AI?",
+                            "created_at": "2026-01-25T10:01:00Z",
+                        }
+                    ]
+                }
+            },
+        },
         404: {"model": ErrorResponse, "description": "Session not found"},
     },
 )
@@ -448,7 +544,34 @@ async def get_messages(
 
 @router.post(
     "/sessions/{session_id}/messages",
+    summary="Send Message (Streaming)",
+    description="""Send a message and receive streaming response via Server-Sent Events (SSE).
+    
+    **SSE Event Types:**
+    
+    1. **token** - Streaming response tokens as they are generated
+       - Format: `event: token\\ndata: {"token": "word"}\\n\\n`
+    
+    2. **source** - Source attribution for retrieved chunks
+       - Format: `event: source\\ndata: {"chunk_id": "uuid", "document_id": "uuid", "similarity": 0.85, "text": "excerpt..."}\\n\\n`
+    
+    3. **done** - Stream completion with metadata
+       - Format: `event: done\\ndata: {"token_count": 150, "cost_usd": 0.0002, "cached": false}\\n\\n`
+    
+    4. **error** - Error occurred during streaming
+       - Format: `event: error\\ndata: {"error": "message", "partial_response": "tokens..."}\\n\\n`
+    
+    **Focus Context:** Optional parameter to boost relevance of specific document sections (0.15 similarity boost applied).
+    """,
     responses={
+        200: {
+            "description": "Streaming response (Server-Sent Events)",
+            "content": {
+                "text/event-stream": {
+                    "example": 'event: token\ndata: {"token": "Hello"}\n\nevent: token\ndata: {"token": " world"}\n\nevent: source\ndata: {"chunk_id": "abc-123", "document_id": "doc-456", "similarity": 0.85, "text": "relevant excerpt..."}\n\nevent: done\ndata: {"token_count": 150, "cost_usd": 0.0002, "cached": false}\n\n'
+                }
+            },
+        },
         404: {"model": ErrorResponse, "description": "Session not found"},
         422: {"model": ErrorResponse, "description": "Invalid message format"},
         429: {"model": ErrorResponse, "description": "Rate limit exceeded"},

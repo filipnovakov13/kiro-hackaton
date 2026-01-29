@@ -422,39 +422,39 @@ This task list implements the RAG Core functionality for Iubar, enabling context
 ## 8. Integration & Testing
 
 ### 8.1 End-to-end RAG flow test
-- [ ] Write test: create session → send message → receive streaming response
-- [ ] Verify source attribution is correct
-- [ ] Verify cost tracking is accurate
-- [ ] Test with missing document summaries (fallback)
+- [x] Write test: create session → send message → receive streaming response
+- [x] Verify source attribution is correct
+- [x] Verify cost tracking is accurate
+- [x] Test with missing document summaries (fallback)
 
 
 ### 8.2 Focus caret integration test
-- [ ] Write test: send query with focus context
-- [ ] Verify chunk boosting is applied
-- [ ] Verify context is included in prompt
+- [x] Write test: send query with focus context
+- [x] Verify chunk boosting is applied
+- [x] Verify context is included in prompt
 - [ ] Verify focus context is stored in metadata
 
 
 ### 8.3 Cache integration test
-- [ ] Write test: send identical queries
-- [ ] Verify cache hit on second query
-- [ ] Verify cost savings (0 for cached)
-- [ ] Test cache invalidation on document update
+- [x] Write test: send identical queries
+- [x] Verify cache hit on second query
+- [x] Verify cost savings (0 for cached)
+- [x] Test cache invalidation on document update
 
 
 ### 8.4 Error handling integration test
-- [ ] Test DeepSeek API failures during streaming
+- [x] Test DeepSeek API failures during streaming
 - [ ] Test network timeouts
 - [ ] Test invalid input handling
 - [ ] Test spending limit enforcement
-- [ ] Verify user-friendly error messages
+- [x] Verify user-friendly error messages
 
 
 ### 8.5 Rate limiting integration test
-- [ ] Test concurrent stream limits
-- [ ] Test queries per hour limits
-- [ ] Test backpressure handling
-- [ ] Verify 429 responses with retry-after
+- [x] Test concurrent stream limits
+- [x] Test queries per hour limits
+- [x] Test backpressure handling
+- [x] Verify 429 responses with retry-after
 
 
 ---
@@ -462,24 +462,24 @@ This task list implements the RAG Core functionality for Iubar, enabling context
 ## 9. Configuration & Documentation
 
 ### 9.1 Update environment variables
-- [ ] Add all new env vars to `.env.template`
-- [ ] Document each variable with description
-- [ ] Set sensible defaults
+- [x] Add all new env vars to `.env.template`
+- [x] Document each variable with description
+- [x] Set sensible defaults
 - [ ] Update README with configuration guide
 
 
 ### 9.2 Update API documentation
-- [ ] Add all chat endpoints to OpenAPI/Swagger
-- [ ] Document SSE event formats
-- [ ] Add example requests/responses
-- [ ] Document error codes
+- [x] Add all chat endpoints to OpenAPI/Swagger
+- [x] Document SSE event formats
+- [x] Add example requests/responses
+- [x] Document error codes
 
 
 ### 9.3 Update README
-- [ ] Document Phase 2 features
-- [ ] Add setup instructions for new services
-- [ ] Add usage examples
-- [ ] Document testing procedures
+- [x] Document Phase 2 features
+- [x] Add setup instructions for new services
+- [x] Add usage examples
+- [x] Document testing procedures
 
 
 ---

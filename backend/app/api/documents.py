@@ -55,9 +55,25 @@ task_manager = TaskManager()
 @router.post(
     "/upload",
     response_model=UploadResponse,
+    summary="Upload Document",
+    description="Upload a document file (PDF, DOCX, TXT, MD) for processing. Maximum file size is 10MB. Returns a task ID for status polling.",
     responses={
-        413: {"model": ErrorResponse, "description": "File too large"},
-        415: {"model": ErrorResponse, "description": "Unsupported file type"},
+        200: {
+            "description": "Document uploaded successfully and queued for processing",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "task_id": "550e8400-e29b-41d4-a716-446655440000",
+                        "status": "pending",
+                    }
+                }
+            },
+        },
+        413: {"model": ErrorResponse, "description": "File too large (exceeds 10MB)"},
+        415: {
+            "model": ErrorResponse,
+            "description": "Unsupported file type (only PDF, DOCX, TXT, MD allowed)",
+        },
     },
 )
 async def upload_document(
@@ -135,8 +151,21 @@ async def upload_document(
 @router.post(
     "/url",
     response_model=UploadResponse,
+    summary="Ingest URL",
+    description="Fetch content from a URL and convert it to Markdown using Docling. Returns a task ID for status polling.",
     responses={
-        400: {"model": ErrorResponse, "description": "Invalid URL"},
+        200: {
+            "description": "URL ingestion started successfully",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "task_id": "550e8400-e29b-41d4-a716-446655440000",
+                        "status": "pending",
+                    }
+                }
+            },
+        },
+        400: {"model": ErrorResponse, "description": "Invalid URL format"},
     },
 )
 async def ingest_url(
@@ -181,7 +210,22 @@ async def ingest_url(
 @router.get(
     "/status/{task_id}",
     response_model=TaskStatusResponse,
+    summary="Get Processing Status",
+    description="Check the processing status of an uploaded document or URL ingestion task",
     responses={
+        200: {
+            "description": "Task status retrieved successfully",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "document_id": "550e8400-e29b-41d4-a716-446655440000",
+                        "status": "embedding",
+                        "progress": 50,
+                        "error": None,
+                    }
+                }
+            },
+        },
         404: {"model": ErrorResponse, "description": "Task not found"},
     },
 )
@@ -201,7 +245,34 @@ async def get_task_status(task_id: str) -> TaskStatusResponse:
 # =============================================================================
 
 
-@router.get("", response_model=DocumentListResponse)
+@router.get(
+    "",
+    response_model=DocumentListResponse,
+    summary="List Documents",
+    description="Retrieve all uploaded documents with their processing status and chunk counts",
+    responses={
+        200: {
+            "description": "List of documents retrieved successfully",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "documents": [
+                            {
+                                "id": "550e8400-e29b-41d4-a716-446655440000",
+                                "original_name": "document.pdf",
+                                "file_type": "pdf",
+                                "file_size": 1024000,
+                                "upload_time": "2026-01-25T10:00:00Z",
+                                "processing_status": "complete",
+                                "chunk_count": 42,
+                            }
+                        ]
+                    }
+                }
+            },
+        }
+    },
+)
 async def list_documents(db: AsyncSession = Depends(get_db)) -> DocumentListResponse:
     """List all uploaded documents."""
     # Query documents with chunk counts
@@ -235,7 +306,30 @@ async def list_documents(db: AsyncSession = Depends(get_db)) -> DocumentListResp
 @router.get(
     "/{document_id}",
     response_model=DocumentDetail,
+    summary="Get Document Details",
+    description="Retrieve full document details including markdown content and metadata",
     responses={
+        200: {
+            "description": "Document details retrieved successfully",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "id": "550e8400-e29b-41d4-a716-446655440000",
+                        "original_name": "document.pdf",
+                        "file_type": "pdf",
+                        "file_size": 1024000,
+                        "upload_time": "2026-01-25T10:00:00Z",
+                        "processing_status": "complete",
+                        "markdown_content": "# Document Title\n\nContent here...",
+                        "metadata": {
+                            "title": "Document Title",
+                            "detected_language": "en",
+                        },
+                        "chunk_count": 42,
+                    }
+                }
+            },
+        },
         404: {"model": ErrorResponse, "description": "Document not found"},
     },
 )
@@ -287,9 +381,15 @@ async def get_document(
 @router.delete(
     "/{document_id}",
     status_code=204,
+    summary="Delete Document",
+    description="Delete a document and all associated data (chunks, embeddings, uploaded file). This operation cannot be undone.",
     responses={
+        204: {"description": "Document deleted successfully"},
         404: {"model": ErrorResponse, "description": "Document not found"},
-        500: {"model": ErrorResponse, "description": "Deletion failed"},
+        500: {
+            "model": ErrorResponse,
+            "description": "Deletion failed due to server error",
+        },
     },
 )
 async def delete_document(
