@@ -1,0 +1,4 @@
+# file: C:\Users\user\Desktop\Projects\kiro-hackaton\backend\app\services\input_validator.py
+# hypothesis_version: 6.150.2
+
+[500, 6000, 10000, '<\\|endoftext\\|>', '<\\|im_end\\|>', '<\\|im_start\\|>', '\\[/INST\\]', '\\[INST\\]', 'disregard\\s+previous', 'document_id', 'end_char', 'start_char', 'surrounding_text', 'system\\s*:']

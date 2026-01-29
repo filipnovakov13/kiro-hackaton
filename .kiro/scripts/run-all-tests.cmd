@@ -21,15 +21,19 @@ echo Directory: %BACKEND_DIR%
 
 if exist "%VENV_PYTHON%" (
     pushd "%BACKEND_DIR%"
-    "%VENV_PYTHON%" -m pytest -v
-    if !errorlevel! equ 0 (
+    "%VENV_PYTHON%" -m pytest -v --tb=short
+    set PYTEST_EXIT=!errorlevel!
+    echo [DEBUG] Pytest exit code: !PYTEST_EXIT!
+    popd
+    
+    REM Pytest returns 0 for success, non-zero for failures/errors
+    if !PYTEST_EXIT! equ 0 (
         set BACKEND_PASSED=1
         echo [PASS] Backend tests PASSED
     ) else (
-        echo [FAIL] Backend tests FAILED
+        echo [FAIL] Backend tests FAILED with exit code !PYTEST_EXIT!
         set ALL_PASSED=0
     )
-    popd
 ) else (
     echo [ERROR] Python virtual environment not found
     set ALL_PASSED=0

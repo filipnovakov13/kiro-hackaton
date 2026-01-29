@@ -1,0 +1,4 @@
+# file: C:\Users\user\Desktop\Projects\kiro-hackaton\backend\app\services\rag_service.py
+# hypothesis_version: 6.150.2
+
+[0.0, 0.028, 0.15, 0.28, 0.42, 0.7, 1.0, 1000, 8000, 1000000, 'Retrieval metrics', 'RetrievedChunk', 'Unknown', 'cached', 'cached_tokens', 'chunk_id', 'completion_tokens', 'content', 'cost_usd', 'data', 'document_id', 'document_title', 'done', 'end_char', 'error', 'event', 'partial_response', 'prompt_tokens', 'role', 'similarity', 'source', 'start_char', 'system', 'token', 'token_count', 'type', 'user']

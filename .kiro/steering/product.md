@@ -1,4 +1,10 @@
+---
+inclusion: manual
+---
+
 # Product Overview
+
+**Detailed docs**: #[[file:.kiro/documentation/project-docs/visual-identity.md]] | #[[file:.kiro/documentation/project-docs/PRD.md]]
 
 ## Product Purpose
 Iubar is an AI-enhanced personal knowledge management and structured learning web app. It makes thinking, learning, and creating feel effortless through a hybrid RAG architecture combining vector search with structured memory for intelligent, context-aware interactions.
@@ -19,7 +25,7 @@ Iubar is an AI-enhanced personal knowledge management and structured learning we
 - Instant feedback on every interaction (<100ms)
 - Beautiful defaults that just work
 - Delight in the details
-- Desktop-optimized (no mobile in MVP)
+- Desktop-optimized while still responsive (no mobile in MVP)
 
 ## Key UI Components
 - **Chat-first interface** with document upload prompt

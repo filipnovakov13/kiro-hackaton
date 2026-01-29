@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "Resume Work Helper",
+  "description": "Helps resume work by reading state.md and providing full context",
+  "version": "1",
+  "when": {
+    "type": "userTriggered"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Read the current phase state.md file. Provide a complete resume summary:\n\n1. **Phase Overview**: Name, status, progress (X/Y tasks)\n2. **Current Task**: ID, name, status, what was being worked on\n3. **Last Completed**: Most recent completed task and when\n4. **Files Modified**: List files changed in current task\n5. **Context**: What was the developer doing last?\n6. **Next Steps**: What should happen next?\n7. **Blockers**: Any issues or blockers?\n\nThen ask: 'Ready to continue with [current task]?' or 'Start next task [ID]?'"
+  }
+}

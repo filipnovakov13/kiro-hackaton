@@ -5,13 +5,14 @@ Handles batching, rate limiting, retry logic, and caching.
 
 import asyncio
 import hashlib
-import logging
 from concurrent.futures import ThreadPoolExecutor
 from typing import Dict, List, Optional
 
 import voyageai
 
-logger = logging.getLogger(__name__)
+from app.core.logging_config import StructuredLogger
+
+logger = StructuredLogger(__name__)
 
 
 class EmbeddingError(Exception):
@@ -195,8 +196,10 @@ class EmbeddingService:
 
             except voyageai.error.RateLimitError as e:
                 logger.warning(
-                    f"Rate limited, waiting {self.RATE_LIMIT_WAIT}s "
-                    f"(attempt {attempt + 1})"
+                    "Rate limited, waiting",
+                    wait_seconds=self.RATE_LIMIT_WAIT,
+                    attempt=attempt + 1,
+                    max_retries=self.MAX_RETRIES,
                 )
                 await asyncio.sleep(self.RATE_LIMIT_WAIT)
                 last_error = e
@@ -210,8 +213,12 @@ class EmbeddingService:
             except Exception as e:
                 wait_time = self.SERVER_ERROR_WAIT * (2**attempt)
                 logger.warning(
-                    f"Embedding error, waiting {wait_time}s "
-                    f"(attempt {attempt + 1}): {e}"
+                    "Embedding error, waiting with exponential backoff",
+                    wait_seconds=wait_time,
+                    attempt=attempt + 1,
+                    max_retries=self.MAX_RETRIES,
+                    error_type=type(e).__name__,
+                    error_message=str(e),
                 )
                 await asyncio.sleep(wait_time)
                 last_error = e

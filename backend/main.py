@@ -14,7 +14,11 @@ from fastapi.responses import JSONResponse
 from app.config import settings
 from app.core.exceptions import IubarError, NotFoundError, ValidationError
 from app.api.documents import router as documents_router
+from app.api.chat import router as chat_router
 from app.core.database import init_db
+
+# Import models to register them with SQLAlchemy
+from app.models import ChatSession, ChatMessage, DocumentSummary, Document, Chunk
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +42,7 @@ app.add_middleware(
 
 # Register API routers
 app.include_router(documents_router)
+app.include_router(chat_router)
 
 
 @app.on_event("startup")
@@ -45,6 +50,25 @@ async def startup_event():
     """Initialize database on application startup."""
     await init_db()
     logger.info("Database initialized successfully")
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Cleanup resources on application shutdown.
+
+    Note: This is a temporary solution. Full implementation requires:
+    - Singleton pattern for EmbeddingService with ThreadPoolExecutor.shutdown()
+    - Cancellation of background cleanup tasks (SessionManager, RateLimiter)
+    - Proper dependency injection for service lifecycle management
+
+    See .kiro/documentation/project-docs/future-tasks.md for complete solution.
+    """
+    logger.info("Application shutting down...")
+    logger.warning(
+        "Shutdown handler is incomplete - ThreadPoolExecutor and background tasks "
+        "are not being cleaned up. Server may hang on exit. "
+        "See future-tasks.md for full implementation."
+    )
 
 
 @app.get("/")

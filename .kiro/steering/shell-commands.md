@@ -1,81 +1,67 @@
-# Shell Command Guidelines for Windows CMD
+---
+inclusion: manual
+---
+
+# Shell Commands (Windows CMD)
 
 ## Known Bug: executePwsh cwd Parameter
+The `executePwsh` tool generates PowerShell syntax even in CMD shell, causing failures.
 
-The `executePwsh` tool has a bug where it generates PowerShell syntax (`cd "path" ; command`) even when running in CMD shell, causing commands to fail.
+**Workaround**: Use `cmd /c` with `&` separator instead of `cwd` parameter.
 
-**Workaround: Use `cmd /c` with `&` separator**
-
-## Correct Command Format
-
-### ALWAYS use this pattern:
+## Command Format
 ```
-command: "cmd /c cd /d frontend & npm test"
+command: "cmd /c cd /d <directory> & <command>"
 ```
 
-Do NOT use the `cwd` parameter - it's broken. Instead, include the directory change in the command itself using CMD syntax.
+## Templates
 
-## Command Templates
+### Frontend Tests
+```bash
+# Unit tests
+cmd /c cd /d frontend & npm test
 
-### Frontend Tests (Unit)
-```
-command: "cmd /c cd /d frontend & npm test"
-```
+# Playwright
+cmd /c cd /d frontend & npx playwright test
 
-### Frontend Tests (Playwright)
-```
-command: "cmd /c cd /d frontend & npx playwright test"
-```
-
-### Frontend Tests (Specific Playwright file)
-```
-command: "cmd /c cd /d frontend & npx playwright test tests/ux-validation.spec.ts"
+# Specific Playwright file
+cmd /c cd /d frontend & npx playwright test tests/ux-validation.spec.ts
 ```
 
-### Backend Tests (pytest)
-```
-command: "cmd /c cd /d backend & python -m pytest"
-```
-
-### Install Dependencies (Frontend)
-```
-command: "cmd /c cd /d frontend & npm install"
+### Backend Tests
+```bash
+cmd /c cd /d backend & python -m pytest
 ```
 
-### Install Dependencies (Backend)
-```
-command: "cmd /c cd /d backend & pip install -r requirements.txt"
+### Dependencies
+```bash
+# Frontend
+cmd /c cd /d frontend & npm install
+
+# Backend
+cmd /c cd /d backend & pip install -r requirements.txt
 ```
 
-### Start Dev Server (use controlPwshProcess for long-running)
-```
-command: "cmd /c cd /d frontend & npm run dev"
+### Dev Server (use controlPwshProcess)
+```bash
+cmd /c cd /d frontend & npm run dev
 ```
 
-### Build Frontend
-```
-command: "cmd /c cd /d frontend & npm run build"
+### Build
+```bash
+cmd /c cd /d frontend & npm run build
 ```
 
 ## Syntax Rules
-
-1. **Always prefix with `cmd /c`** - ensures CMD interpreter is used
-2. **Use `cd /d`** - the `/d` flag allows changing drives if needed
+1. **Always prefix with `cmd /c`** - ensures CMD interpreter
+2. **Use `cd /d`** - `/d` flag allows changing drives
 3. **Use `&` as separator** - CMD command separator (not `;` which is PowerShell)
-4. **Use relative paths** - `frontend`, `backend`, not absolute paths
-5. **Do NOT use `cwd` parameter** - it's broken, ignore it
+4. **Use relative paths** - `frontend`, `backend`, not absolute
+5. **Do NOT use `cwd` parameter** - it's broken
 
 ## Multiple Commands
-
-Chain multiple commands with `&`:
+Chain with `&`:
+```bash
+cmd /c cd /d frontend & npm install & npm test
 ```
-command: "cmd /c cd /d frontend & npm install & npm test"
-```
 
-## Troubleshooting
-
-If you see errors like:
-- `The system cannot find the path specified`
-- Commands with `cd "path" ;` failing
-
-You're hitting the bug. Use the `cmd /c cd /d path &` workaround instead.

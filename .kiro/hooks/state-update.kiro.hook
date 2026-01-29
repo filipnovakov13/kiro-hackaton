@@ -1,0 +1,13 @@
+{
+  "enabled": false,
+  "name": "Auto-Update State on Stop",
+  "description": "Updates state.md when agent stops",
+  "version": "1",
+  "when": {
+    "type": "agentStop"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Update the current phase state.md file with task completion details. Follow the format in #[[file:.kiro/specs/state-template.md]]. Include: task status (✅ COMPLETE with timestamp), duration (actual vs estimated), files modified, tests status (passing/failing/coverage), any issues encountered, and lessons learned."
+  }
+}

@@ -1,0 +1,4 @@
+# file: C:\Users\user\Desktop\Projects\kiro-hackaton\backend\app\models\document.py
+# hypothesis_version: 6.150.2
+
+[255, 'CASCADE', 'Chunk', 'Document', 'all, delete-orphan', 'chunk_index', 'chunks', 'document', 'document_id', 'documents', 'documents.id', 'pending', 'uq_document_chunk']

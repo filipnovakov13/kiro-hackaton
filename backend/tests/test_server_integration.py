@@ -26,25 +26,31 @@ class TestFastAPIServerIntegration:
         backend_root = Path(__file__).parent.parent
         sys.path.insert(0, str(backend_root))
 
+        server_process = None
         try:
-            from main import app
-            from app.config import settings
-
             # Use a different port for testing to avoid conflicts
             test_port = 8001
 
-            # Start server in a separate thread
-            server_thread = threading.Thread(
-                target=uvicorn.run,
-                args=(app,),
-                kwargs={
-                    "host": "127.0.0.1",
-                    "port": test_port,
-                    "log_level": "error",  # Reduce log noise during tests
-                },
-                daemon=True,
+            # Start server in a subprocess instead of thread for proper cleanup
+            import subprocess
+
+            server_process = subprocess.Popen(
+                [
+                    sys.executable,
+                    "-m",
+                    "uvicorn",
+                    "main:app",
+                    "--host",
+                    "127.0.0.1",
+                    "--port",
+                    str(test_port),
+                    "--log-level",
+                    "error",
+                ],
+                cwd=str(backend_root),
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
             )
-            server_thread.start()
 
             # Wait for server to start
             base_url = f"http://127.0.0.1:{test_port}"
@@ -58,11 +64,21 @@ class TestFastAPIServerIntegration:
                     pass
                 time.sleep(0.1)
             else:
+                if server_process:
+                    server_process.terminate()
                 pytest.fail("Server failed to start within timeout")
 
             yield base_url
 
         finally:
+            # Properly terminate the server process
+            if server_process:
+                server_process.terminate()
+                try:
+                    server_process.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    server_process.kill()
+
             if str(backend_root) in sys.path:
                 sys.path.remove(str(backend_root))
 

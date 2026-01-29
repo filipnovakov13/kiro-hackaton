@@ -1,0 +1,4 @@
+# file: C:\Users\user\Desktop\Projects\kiro-hackaton\backend\app\services\session_manager.py
+# hypothesis_version: 6.150.2
+
+[0.0, 5.0, 100, 'avg_response_time_ms', 'cache_hit_rate', 'created', 'created_at', 'cutoff', 'doc_id', 'document_id', 'estimated_cost_usd', 'id', 'message_count', 'metadata', 'session_id', 'total_tokens', 'updated', 'updated_at', '{}']

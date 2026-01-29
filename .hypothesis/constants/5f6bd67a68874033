@@ -1,0 +1,4 @@
+# file: C:\Users\user\Desktop\Projects\kiro-hackaton\backend\app\config.py
+# hypothesis_version: 6.150.2
+
+[8000, ',', './data/chroma', './data/uploads', '.env', '0.0.0.0', '0.1.0', 'CORS_ORIGINS', 'DEEPSEEK_API_KEY', 'INFO', 'Iubar API', 'VOYAGE_API_KEY', 'sqlite:///', 'utf-8']

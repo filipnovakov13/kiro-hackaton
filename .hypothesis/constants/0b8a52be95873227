@@ -1,0 +1,4 @@
+# file: C:\Users\user\Desktop\Projects\kiro-hackaton\backend\app\services\response_cache.py
+# hypothesis_version: 6.150.2
+
+[0.0, 500, '__dict__', 'cache_size', 'document_id', 'hit_rate', 'hits', 'max_size', 'misses', 'total_queries']

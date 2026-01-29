@@ -1,0 +1,355 @@
+{
+	"id": "5351c3d6-3dc8-4830-b862-df99e2d8b274",
+	"name": "Iubar API",
+	"timestamp": "2026-01-18T13:12:28.652Z",
+	"collection_id": "33082987-f41775c8-b2e2-41dc-aac0-f92f35259e01",
+	"folder_id": 0,
+	"environment_id": "33082987-4feffffd-b024-4ae7-965e-68fc55f4a2f4",
+	"totalPass": 18,
+	"delay": 0,
+	"persist": true,
+	"status": "finished",
+	"startedAt": "2026-01-18T13:12:26.846Z",
+	"totalFail": 0,
+	"results": [
+		{
+			"id": "0705adea-c6f1-420a-9f0c-0c2cfd604cc0",
+			"name": "Root Endpoint",
+			"url": "http://127.0.0.1:8000/",
+			"time": 5,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"Status code is 200": true,
+				"Response has correct structure": true
+			},
+			"testPassFailCounts": {
+				"Status code is 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Response has correct structure": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				5
+			],
+			"allTests": [
+				{
+					"Status code is 200": true,
+					"Response has correct structure": true
+				}
+			]
+		},
+		{
+			"id": "6aa21219-dca5-47de-9a63-5a0cfd2d1df7",
+			"name": "Health Check",
+			"url": "http://localhost:8000/health",
+			"time": 2,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"Status code is 200": true,
+				"Service is healthy": true
+			},
+			"testPassFailCounts": {
+				"Status code is 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Service is healthy": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				2
+			],
+			"allTests": [
+				{
+					"Status code is 200": true,
+					"Service is healthy": true
+				}
+			]
+		},
+		{
+			"id": "c53561c5-4b89-4bf5-b4e1-c67498555207",
+			"name": "System Status",
+			"url": "http://localhost:8000/api/status",
+			"time": 78,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"Status code is 200 or 503": true,
+				"Response has system status": true
+			},
+			"testPassFailCounts": {
+				"Status code is 200 or 503": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Response has system status": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				78
+			],
+			"allTests": [
+				{
+					"Status code is 200 or 503": true,
+					"Response has system status": true
+				}
+			]
+		},
+		{
+			"id": "1dd612da-e817-4378-89af-f3b5e7fbfbde",
+			"name": "List Documents",
+			"url": "http://localhost:8000/api/documents",
+			"time": 11,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"Status code is 200": true,
+				"Response is an array": true
+			},
+			"testPassFailCounts": {
+				"Status code is 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Response is an array": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				11
+			],
+			"allTests": [
+				{
+					"Status code is 200": true,
+					"Response is an array": true
+				}
+			]
+		},
+		{
+			"id": "545b60b5-544f-4501-8cd6-81f86ea41d11",
+			"name": "Upload Document",
+			"url": "http://localhost:8000/api/documents/upload",
+			"time": 27,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"Status code is 200": true,
+				"Upload successful": true
+			},
+			"testPassFailCounts": {
+				"Status code is 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Upload successful": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				27
+			],
+			"allTests": [
+				{
+					"Status code is 200": true,
+					"Upload successful": true
+				}
+			]
+		},
+		{
+			"id": "3b8ee6fa-1bbd-4cab-b128-bdd7225e91fd",
+			"name": "Upload Unsupported File Type",
+			"url": "http://localhost:8000/api/documents/upload",
+			"time": 23,
+			"responseCode": {
+				"code": 415,
+				"name": "Unsupported Media Type"
+			},
+			"tests": {
+				"Status code is 415": true,
+				"Error message is correct": true
+			},
+			"testPassFailCounts": {
+				"Status code is 415": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Error message is correct": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				23
+			],
+			"allTests": [
+				{
+					"Status code is 415": true,
+					"Error message is correct": true
+				}
+			]
+		},
+		{
+			"id": "3f86e284-b9fc-4fb4-8fb0-943d4a201655",
+			"name": "Ingest URL",
+			"url": "http://localhost:8000/api/documents/url",
+			"time": 588,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"Status code is 200": true,
+				"URL ingestion started": true
+			},
+			"testPassFailCounts": {
+				"Status code is 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"URL ingestion started": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				588
+			],
+			"allTests": [
+				{
+					"Status code is 200": true,
+					"URL ingestion started": true
+				}
+			]
+		},
+		{
+			"id": "d1be1aea-6cf6-48a4-9020-57d01f83006d",
+			"name": "Get Task Status",
+			"url": "http://localhost:8000/api/documents/status/35251f3d-a238-4820-b4cb-23977733cadd",
+			"time": 3,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"Status code is 200": true,
+				"Task status returned": true
+			},
+			"testPassFailCounts": {
+				"Status code is 200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Task status returned": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				3
+			],
+			"allTests": [
+				{
+					"Status code is 200": true,
+					"Task status returned": true
+				}
+			]
+		},
+		{
+			"id": "2f45fe76-8426-4013-8d1d-cfa8f91cdc44",
+			"name": "Get Task Status - Not Found",
+			"url": "http://localhost:8000/api/documents/status/invalid-task-id",
+			"time": 5,
+			"responseCode": {
+				"code": 404,
+				"name": "Not Found"
+			},
+			"tests": {
+				"Status code is 404": true,
+				"Error message is correct": true
+			},
+			"testPassFailCounts": {
+				"Status code is 404": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Error message is correct": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				5
+			],
+			"allTests": [
+				{
+					"Status code is 404": true,
+					"Error message is correct": true
+				}
+			]
+		}
+	],
+	"count": 1,
+	"totalTime": 742,
+	"collection": {
+		"requests": [
+			{
+				"id": "0705adea-c6f1-420a-9f0c-0c2cfd604cc0",
+				"method": "GET"
+			},
+			{
+				"id": "6aa21219-dca5-47de-9a63-5a0cfd2d1df7",
+				"method": "GET"
+			},
+			{
+				"id": "c53561c5-4b89-4bf5-b4e1-c67498555207",
+				"method": "GET"
+			},
+			{
+				"id": "1dd612da-e817-4378-89af-f3b5e7fbfbde",
+				"method": "GET"
+			},
+			{
+				"id": "545b60b5-544f-4501-8cd6-81f86ea41d11",
+				"method": "POST"
+			},
+			{
+				"id": "3b8ee6fa-1bbd-4cab-b128-bdd7225e91fd",
+				"method": "POST"
+			},
+			{
+				"id": "3f86e284-b9fc-4fb4-8fb0-943d4a201655",
+				"method": "POST"
+			},
+			{
+				"id": "d1be1aea-6cf6-48a4-9020-57d01f83006d",
+				"method": "GET"
+			},
+			{
+				"id": "2f45fe76-8426-4013-8d1d-cfa8f91cdc44",
+				"method": "GET"
+			}
+		]
+	}
+}
