@@ -11,12 +11,12 @@
  * - Empty state handling
  *
  * @see .kiro/specs/rag-core-phase/requirements.md (Requirement 9)
- * @see .kiro/specs/rag-core-phase/tasks.md (Task 6.1)
  */
 
 import { useRef, useEffect } from "react";
 import { backgrounds, text, spacing, typography } from "../../design-system";
 import * as markdownStyles from "../../design-system/markdown";
+import { FocusCaret } from "./FocusCaret";
 
 // =============================================================================
 // TYPES
@@ -35,6 +35,12 @@ interface DocumentViewerProps {
   scrollToPosition?: number;
   /** Callback when content is clicked */
   onContentClick?: (position: number) => void;
+  /** Focus caret position */
+  caretPosition?: number;
+  /** Callback when caret moves */
+  onCaretMove?: (position: number) => void;
+  /** Whether focus mode is enabled */
+  focusModeEnabled?: boolean;
 }
 
 // =============================================================================
@@ -48,6 +54,9 @@ export function DocumentViewer({
   highlightedChunkId,
   scrollToPosition,
   onContentClick,
+  caretPosition,
+  onCaretMove,
+  focusModeEnabled = false,
 }: DocumentViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -72,6 +81,47 @@ export function DocumentViewer({
       onContentClick(approximatePosition);
     }
   };
+
+  // Keyboard navigation for focus caret
+  useEffect(() => {
+    if (!focusModeEnabled || !onCaretMove || !content) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!caretPosition) return;
+
+      let newPosition = caretPosition;
+
+      switch (e.key) {
+        case "ArrowUp":
+          e.preventDefault();
+          // Move to previous paragraph
+          newPosition = findPreviousParagraph(content, caretPosition);
+          break;
+        case "ArrowDown":
+          e.preventDefault();
+          // Move to next paragraph
+          newPosition = findNextParagraph(content, caretPosition);
+          break;
+        case "Home":
+          e.preventDefault();
+          newPosition = 0;
+          break;
+        case "End":
+          e.preventDefault();
+          newPosition = content.length - 1;
+          break;
+        default:
+          return;
+      }
+
+      if (newPosition !== caretPosition) {
+        onCaretMove(newPosition);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [focusModeEnabled, caretPosition, content, onCaretMove]);
 
   // Styles
   const containerStyle: React.CSSProperties = {
@@ -157,9 +207,35 @@ export function DocumentViewer({
         data-highlighted-chunk={highlightedChunkId}
       >
         <MarkdownContent content={content} />
+        {/* Render FocusCaret when enabled */}
+        {focusModeEnabled && (
+          <FocusCaret
+            position={caretPosition}
+            content={content}
+            enableKeyboard={false} // Keyboard handled by DocumentViewer
+          />
+        )}
       </div>
     </div>
   );
+}
+
+// =============================================================================
+// HELPER FUNCTIONS
+// =============================================================================
+
+function findPreviousParagraph(content: string, position: number): number {
+  const beforePosition = content.slice(0, position);
+  const lastParagraphBreak = beforePosition.lastIndexOf("\n\n");
+  return lastParagraphBreak === -1 ? 0 : lastParagraphBreak + 2;
+}
+
+function findNextParagraph(content: string, position: number): number {
+  const afterPosition = content.slice(position);
+  const nextParagraphBreak = afterPosition.indexOf("\n\n");
+  return nextParagraphBreak === -1
+    ? content.length - 1
+    : position + nextParagraphBreak + 2;
 }
 
 // =============================================================================

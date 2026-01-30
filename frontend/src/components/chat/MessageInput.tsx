@@ -19,6 +19,7 @@ import {
   spacing,
   borderRadius,
   padding,
+  semantic,
 } from "../../design-system";
 
 // =============================================================================
@@ -34,6 +35,8 @@ interface MessageInputProps {
   placeholder?: string;
   /** Maximum character limit */
   maxLength?: number;
+  /** Error message to display */
+  error?: string | null;
 }
 
 // =============================================================================
@@ -52,6 +55,7 @@ export function MessageInput({
   disabled = false,
   placeholder = DEFAULT_PLACEHOLDER,
   maxLength = DEFAULT_MAX_LENGTH,
+  error = null,
 }: MessageInputProps) {
   const [value, setValue] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -150,6 +154,24 @@ export function MessageInput({
 
   return (
     <div style={containerStyle} data-testid="message-input-container">
+      {/* Error message display */}
+      {error && (
+        <div
+          style={{
+            padding: `${spacing.sm}px ${spacing.md}px`,
+            backgroundColor: backgrounds.hover,
+            color: semantic.critical,
+            border: `1px solid ${semantic.critical}`,
+            borderRadius: `${borderRadius.md}px`,
+            fontSize: "14px",
+            marginBottom: `${spacing.sm}px`,
+          }}
+          data-testid="message-error"
+        >
+          {error}
+        </div>
+      )}
+
       <div style={inputContainerStyle}>
         {/* Textarea */}
         <textarea

@@ -80,7 +80,7 @@ The palette embodies the metaphor: **night-before-dawn** (deep blue backgrounds)
 
 ### The Metaphor: Night Breaking Into Day
 
-```
+
 Timeline (visual metaphor):
 Midnight    → #131D33 (deep blue-black)
 3 AM        → #1B2844 (night blue)
@@ -90,7 +90,7 @@ Midnight    → #131D33 (deep blue-black)
 Overlaid:   Warm cream text #E8E1D5 (light breaking through)
             Golden accent #D4A574 (knowledge illumination)
             Golden highlights (focus indicators)
-```
+
 
 **Why this works**:
 
@@ -194,9 +194,9 @@ Intentionally generous—respects cognitive load of learning context:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                      Header (minimal)                            │
+│                      Header (minimal)                           │
 ├─────────────────────────────────────────────────────────────────┤
-│                                                                  │
+│                                                                 │
 │  Document Viewer (Primary)      │ Chat Sidebar (Secondary)      │
 │  70% width (resizable border)   │ 30% width (resizable)         │
 │                                 │                               │
@@ -239,7 +239,7 @@ A subtle highlight on a **SINGLE LETTER** within a word (not the whole word), po
 
 ### Visual Design
 
-```
+
 Before: "This is some text"
 
 After (letter highlighted):
@@ -250,25 +250,25 @@ In context:
 "The quick brown fox jumps over the lazy dog"
         ↑ 
         anchor letter for RSVP focus (typically at 40% of word length)
-```
+
 
 **Anatomy** (for word "learning"):
 
-```
+
 l-e-a-r-n-i-n-g
     ↑
     Highlight "r" (the anchor letter)
     Subtle glow: rgba(212, 165, 116, 0.5)
     Blur: 2px
     No scaling, no color change to letter itself
-```
+
 
 
 ### Interaction Behavior
 
 #### **Manual Selection (User clicks word)**
 
-```
+
 Timeline:
 1. User clicks word "learning"
    - Anchor letter "r" gets highlighted
@@ -290,12 +290,12 @@ Timeline:
 4. On exit:
    - Fade out: 100% → 0 over 150ms
    - Glow shrinks: 2px blur → 0
-```
+
 
 
 #### **RSVP Mode (Future - Speed Reading Coach)**
 
-```
+
 Timeline (RSVP playback at 300 WPM):
 1. Playback starts
    - Each word displays for: 60,000 / 300 = 200ms
@@ -317,7 +317,7 @@ Timeline (RSVP playback at 300 WPM):
 4. Resume:
    - User clicks play
    - Continues from paused word at same pace
-```
+
 
 
 ### Technical Specification
@@ -443,7 +443,7 @@ Source: Chapter 2, 'The Learning Process'
 
 #### **1. Focus Indicator (Letter-Level)**
 
-```
+
 Timeline:
 1. On trigger (user clicks word or AI highlights):
    - Fade in: opacity 0 → 1 over 200ms
@@ -459,7 +459,7 @@ Timeline:
    - Fade out: 1 → 0 over 150ms
    - Glow shrinks: 4px → 0 over 150ms
    - Easing: cubic-bezier(0.4, 0, 0.2, 1)
-```
+
 
 **Technical specs**:
 
@@ -471,7 +471,7 @@ Timeline:
 
 #### **2. Hover State (Interactive Elements)**
 
-```
+
 Timeline:
 - Resting: opacity 100%, no shadow
 - Hover: opacity 100% + shadow
@@ -481,12 +481,12 @@ Timeline:
 Example (button):
 Button background: #1B2844 → #253550
 Box shadow: none → 0 2px 8px rgba(212, 165, 116, 0.1)
-```
+
 
 
 #### **3. AI Processing/Thinking State**
 
-```
+
 Visual: Subtle gradient shift through warm tones (metaphorical "dawn breaking")
 
 Timeline:
@@ -504,13 +504,13 @@ Timeline:
 3. Thinking ends:
    - Pulse stops, background returns to resting state
    - Fade: 150ms
-```
+
 
 **Why slow for AI**: Honest about latency—graceful animation during waiting makes it feel intentional, not broken.
 
 #### **4. Modal/Overlay Reveal**
 
-```
+
 Background darken:
 - Start: rgba(0,0,0,0) [transparent]
 - End: rgba(0,0,0,0.4) [subtle dark]
@@ -522,18 +522,18 @@ Modal enter:
 - Opacity: 0 → 1
 - Duration: 300ms
 - Easing: cubic-bezier(0.34, 1.56, 0.64, 1) [ease-out-back for subtle bounce]
-```
+
 
 
 #### **5. Transition Between Views**
 
-```
+
 Fade through → smooth, no jarring:
 - Duration: 200ms
 - Easing: linear for fade (no acceleration)
 - Sequence: Fade out current → Fade in new
 - No scale/translation (minimal distraction)
-```
+
 
 
 ***
@@ -552,7 +552,7 @@ Fade through → smooth, no jarring:
 ┌─────────────────────────────────┐
 │ AI Response                     │
 │                                 │
-│ "Here's what I found about     │
+│ "Here's what I found about      │
 │ this concept..."                │
 │                                 │
 │ Source: page 3 (linked)         │
@@ -701,20 +701,20 @@ Fade through → smooth, no jarring:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                                                                  │
-│                      Iubar                                       │
-│                      ─────                                       │
-│                                                                  │
+│                                                                 │
+│                      Iubar                                      │
+│                      ─────                                      │
+│                                                                 │
 │            What would you like to explore today?                │
-│                                                                  │
+│                                                                 │
 │         ┌──────────────────────────────────────┐                │
 │         │ Drop a document or paste a link...   │                │
 │         │ ─────────────────────────────────┬   │                │
-│         │ PDF  URL  Text  GitHub              │                │
+│         │ PDF  URL  Text  GitHub               │                │
 │         └──────────────────────────────────────┘                │
-│                                                                  │
+│                                                                 │
 │         "Ask me about the content, or just start exploring"     │
-│                                                                  │
+│                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -730,26 +730,26 @@ Fade through → smooth, no jarring:
 #### **Screen 2: Document Viewing + Chat**
 
 ```
-┌──────────────────────────────────────────────────────────────────┐
-│ Back   Document Title                        Settings   Search   │
+┌───────────────────────────────────────────────────────────────────┐
+│ Back   Document Title                        Settings   Search    │
 ├────────────────────────────────┬──────────────────────────────────┤
 │                                │                                  │
 │ # Introduction                 │ AI: "I've read this..."          │
 │                                │                                  │
 │ This is a fascinating topic    │ Suggested:                       │
 │ about the art of thinking. ✨  │ • "What's the main idea?"       │
-│                                │ • "Explain like I'm new"        │
+│                                │ • "Explain like I'm new"         │
 │ Let me start with a definition │                                  │
-│                                │ User: "Explain this part"       │
+│                                │ User: "Explain this part"        │
 │ Focus indicator = letter glow  │                                  │
-│ (subtle, single letter per     │ AI: "Based on the section      │
-│ word)                          │ you highlighted..."             │
+│ (subtle, single letter per     │ AI: "Based on the section        │
+│ word)                          │ you highlighted..."              │
 │                                │                                  │
 │                                │ Source: para 2                   │
 │                                │                                  │
-│                                │ ┌────────────────────────┐      │
-│                                │ │ Ask a follow-up...     │      │
-│                                │ └────────────────────────┘      │
+│                                │ ┌────────────────────────┐       │
+│                                │ │ Ask a follow-up...     │       │
+│                                │ └────────────────────────┘       │
 │                                │ Synthesis   Critique             │
 │                                │                                  │
 └────────────────────────────────┴──────────────────────────────────┘

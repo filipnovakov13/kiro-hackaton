@@ -18,6 +18,8 @@ import {
   borderRadius,
   padding,
 } from "../../design-system";
+import { StreamingMessage } from "./StreamingMessage";
+import { ThinkingIndicator } from "./ThinkingIndicator";
 
 // =============================================================================
 // TYPES
@@ -37,6 +39,10 @@ interface MessageListProps {
   isLoading?: boolean;
   /** Custom empty state message */
   emptyMessage?: string;
+  /** Streaming content from assistant */
+  streamingContent?: string;
+  /** Whether streaming is active */
+  isStreaming?: boolean;
 }
 
 // =============================================================================
@@ -47,6 +53,8 @@ export function MessageList({
   messages,
   isLoading = false,
   emptyMessage = "No messages yet. Start a conversation!",
+  streamingContent,
+  isStreaming = false,
 }: MessageListProps) {
   const listEndRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -158,18 +166,15 @@ export function MessageList({
         </div>
       ))}
 
-      {/* Loading indicator */}
-      {isLoading && (
-        <div
-          style={{
-            ...messageStyle("assistant"),
-            opacity: 0.7,
-          }}
-          data-testid="message-loading"
-        >
-          <div style={roleIndicatorStyle("assistant")}>Assistant</div>
-          <div>Thinking...</div>
-        </div>
+      {/* Show ThinkingIndicator when streaming but no content yet */}
+      {isStreaming && !streamingContent && <ThinkingIndicator />}
+
+      {/* Show StreamingMessage when content exists */}
+      {streamingContent && (
+        <StreamingMessage
+          content={streamingContent}
+          isStreaming={isStreaming}
+        />
       )}
 
       {/* Scroll anchor */}

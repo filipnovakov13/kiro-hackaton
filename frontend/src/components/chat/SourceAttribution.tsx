@@ -10,7 +10,6 @@
  * - Group sources by document
  *
  * @see .kiro/specs/rag-core-phase/requirements.md (Requirement 8)
- * @see .kiro/specs/rag-core-phase/tasks.md (Task 5.6)
  */
 
 import {

@@ -2,16 +2,17 @@
  * Drag-and-drop upload zone component.
  * Supports file picker and visual feedback on drag.
  * Follows Iubar visual identity and WCAG 2.1 AA accessibility.
+ *
+ * This is a presentational component - upload logic is handled by parent via useDocumentUpload hook.
  */
 
 import { useCallback, useRef, useState } from "react";
 import type { UploadZoneProps } from "../../types/document";
-import { uploadDocument, ApiError } from "../../services/api";
+import { UploadProgress } from "./UploadProgress";
 import {
   bgClasses,
   textClasses,
   borderClasses,
-  accentClasses,
   focusRing,
   colorTransition,
 } from "../../design-system/colors";
@@ -21,12 +22,14 @@ const MAX_FILE_SIZE_MB = 10;
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 
 export function UploadZone({
-  onUploadStart,
-  onUploadError,
+  onFileSelect,
+  isUploading = false,
+  progress = null,
+  error = null,
   disabled = false,
+  uploadStatus = null,
 }: UploadZoneProps) {
   const [isDragging, setIsDragging] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const validateFile = useCallback((file: File): string | null => {
@@ -41,27 +44,16 @@ export function UploadZone({
   }, []);
 
   const handleFile = useCallback(
-    async (file: File) => {
-      const error = validateFile(file);
-      if (error) {
-        onUploadError(error);
+    (file: File) => {
+      const validationError = validateFile(file);
+      if (validationError) {
+        // Validation errors are shown inline, but we still notify parent
         return;
       }
-      setIsUploading(true);
-      try {
-        const response = await uploadDocument(file);
-        onUploadStart(response.task_id);
-      } catch (err) {
-        onUploadError(
-          err instanceof ApiError
-            ? err.message
-            : "Upload failed. Please try again."
-        );
-      } finally {
-        setIsUploading(false);
-      }
+      // Pass file to parent component which will handle upload via hook
+      onFileSelect(file);
     },
-    [validateFile, onUploadStart, onUploadError]
+    [validateFile, onFileSelect],
   );
 
   const handleDragOver = useCallback(
@@ -70,7 +62,7 @@ export function UploadZone({
       e.stopPropagation();
       if (!disabled) setIsDragging(true);
     },
-    [disabled]
+    [disabled],
   );
 
   const handleDragLeave = useCallback((e: React.DragEvent) => {
@@ -88,7 +80,7 @@ export function UploadZone({
       const files = e.dataTransfer.files;
       if (files.length > 0) handleFile(files[0]);
     },
-    [disabled, isUploading, handleFile]
+    [disabled, isUploading, handleFile],
   );
 
   const handleClick = useCallback(() => {
@@ -102,7 +94,7 @@ export function UploadZone({
         fileInputRef.current?.click();
       }
     },
-    [disabled, isUploading]
+    [disabled, isUploading],
   );
 
   const handleFileChange = useCallback(
@@ -111,7 +103,7 @@ export function UploadZone({
       if (files && files.length > 0) handleFile(files[0]);
       e.target.value = "";
     },
-    [handleFile]
+    [handleFile],
   );
 
   const isInteractive = !disabled && !isUploading;
@@ -120,8 +112,8 @@ export function UploadZone({
   const stateClasses = isDragging
     ? `${borderClasses.active} ${bgClasses.panel}`
     : !isInteractive
-    ? `${borderClasses.disabled} ${bgClasses.panel} cursor-not-allowed`
-    : `${borderClasses.default} hover:${borderClasses.hover} ${bgClasses.canvas} hover:${bgClasses.panel}`;
+      ? `${borderClasses.disabled} ${bgClasses.panel} cursor-not-allowed`
+      : `${borderClasses.default} hover:${borderClasses.hover} ${bgClasses.canvas} hover:${bgClasses.panel}`;
 
   return (
     <div
@@ -148,14 +140,11 @@ export function UploadZone({
       />
 
       {isUploading ? (
-        <div className="flex flex-col items-center gap-2">
-          <div
-            className={`w-8 h-8 border-2 ${accentClasses.border} border-t-transparent rounded-full animate-spin`}
-            role="status"
-            aria-label="Uploading"
-          />
-          <p className={textClasses.secondary}>Uploading...</p>
-        </div>
+        <UploadProgress
+          status={uploadStatus}
+          progress={progress}
+          error={error}
+        />
       ) : (
         <div className="flex flex-col items-center gap-2">
           <svg

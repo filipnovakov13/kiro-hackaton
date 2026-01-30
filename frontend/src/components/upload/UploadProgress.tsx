@@ -1,83 +1,22 @@
 /**
  * Upload progress display component.
  * Shows processing status with visual feedback.
+ * Works with useDocumentUpload hook data.
  */
 
-import { useEffect, useRef } from "react";
-import type {
-  UploadProgressProps,
-  ProcessingStatus,
-} from "../../types/document";
-import { getTaskStatus, ApiError } from "../../services/api";
+import type { ProcessingStatus } from "../../types/document";
 
-const POLL_INTERVAL = 2000; // 2 seconds
-
-interface ProgressState {
-  status: ProcessingStatus;
-  progress: string;
+interface UploadProgressProps {
+  status: ProcessingStatus | null;
+  progress: string | null;
   error: string | null;
 }
 
 export function UploadProgress({
-  taskId,
-  onComplete,
-  onError,
+  status,
+  progress,
+  error,
 }: UploadProgressProps) {
-  const pollRef = useRef<number | null>(null);
-  const stateRef = useRef<ProgressState>({
-    status: "pending",
-    progress: "Starting...",
-    error: null,
-  });
-
-  useEffect(() => {
-    const poll = async () => {
-      try {
-        const status = await getTaskStatus(taskId);
-        stateRef.current = {
-          status: status.status,
-          progress: status.progress,
-          error: status.error,
-        };
-
-        if (status.status === "complete") {
-          if (pollRef.current) {
-            clearInterval(pollRef.current);
-            pollRef.current = null;
-          }
-          onComplete(status.document_id);
-        } else if (status.status === "error") {
-          if (pollRef.current) {
-            clearInterval(pollRef.current);
-            pollRef.current = null;
-          }
-          onError(status.error || "Processing failed");
-        }
-      } catch (err) {
-        if (pollRef.current) {
-          clearInterval(pollRef.current);
-          pollRef.current = null;
-        }
-        onError(
-          err instanceof ApiError ? err.message : "Failed to check status"
-        );
-      }
-    };
-
-    // Initial poll
-    poll();
-    // Continue polling
-    pollRef.current = window.setInterval(poll, POLL_INTERVAL);
-
-    return () => {
-      if (pollRef.current) {
-        clearInterval(pollRef.current);
-      }
-    };
-  }, [taskId, onComplete, onError]);
-
-  const { status, progress, error } = stateRef.current;
-
   const getStatusIcon = () => {
     switch (status) {
       case "complete":
@@ -130,16 +69,18 @@ export function UploadProgress({
     }
   };
 
+  const getStatusMessage = () => {
+    if (status === "complete") return "Document ready!";
+    if (status === "error") return "Processing failed";
+    return progress || "Processing...";
+  };
+
   return (
     <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
       {getStatusIcon()}
       <div className="flex-1">
         <p className={`font-medium ${getStatusColor()}`}>
-          {status === "complete"
-            ? "Document ready!"
-            : status === "error"
-            ? "Processing failed"
-            : progress}
+          {getStatusMessage()}
         </p>
         {error && <p className="text-sm text-red-500 mt-1">{error}</p>}
       </div>

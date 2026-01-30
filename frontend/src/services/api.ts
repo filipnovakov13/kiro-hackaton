@@ -10,6 +10,11 @@ import type {
   TaskStatusResponse,
   UploadResponse,
 } from "../types/document";
+import {
+  mapHTTPError,
+  mapUploadError,
+  mapNetworkError,
+} from "../utils/errorMapping";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
@@ -43,11 +48,11 @@ export async function handleResponse<T>(response: Response): Promise<T> {
         }`,
       };
     }
-    throw new ApiError(
-      error.message || `HTTP ${response.status}: ${response.statusText}`,
-      response.status,
-      error.details,
-    );
+
+    // Map error to user-friendly message
+    const userMessage = mapHTTPError(response.status, error.message);
+
+    throw new ApiError(userMessage, response.status, error.details);
   }
   return response.json();
 }
@@ -57,25 +62,55 @@ export async function handleResponse<T>(response: Response): Promise<T> {
 // ============================================================================
 
 export async function uploadDocument(file: File): Promise<UploadResponse> {
-  const formData = new FormData();
-  formData.append("file", file);
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
 
-  const response = await fetch(`${API_BASE_URL}/api/documents/upload`, {
-    method: "POST",
-    body: formData,
-  });
+    const response = await fetch(`${API_BASE_URL}/api/documents/upload`, {
+      method: "POST",
+      body: formData,
+    });
 
-  return handleResponse<UploadResponse>(response);
+    return handleResponse<UploadResponse>(response);
+  } catch (err) {
+    if (err instanceof ApiError) {
+      // Re-throw with upload-specific error mapping
+      throw new ApiError(
+        mapUploadError(err.message),
+        err.statusCode,
+        err.details,
+      );
+    }
+    if (err instanceof Error) {
+      throw new Error(mapNetworkError(err));
+    }
+    throw err;
+  }
 }
 
 export async function ingestUrl(url: string): Promise<UploadResponse> {
-  const response = await fetch(`${API_BASE_URL}/api/documents/url`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ url }),
-  });
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/documents/url`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url }),
+    });
 
-  return handleResponse<UploadResponse>(response);
+    return handleResponse<UploadResponse>(response);
+  } catch (err) {
+    if (err instanceof ApiError) {
+      // Re-throw with upload-specific error mapping
+      throw new ApiError(
+        mapUploadError(err.message),
+        err.statusCode,
+        err.details,
+      );
+    }
+    if (err instanceof Error) {
+      throw new Error(mapNetworkError(err));
+    }
+    throw err;
+  }
 }
 
 // ============================================================================

@@ -70,8 +70,11 @@ export interface ErrorResponse {
 // ============================================================================
 
 export interface UploadZoneProps {
-  onUploadStart: (taskId: string) => void;
-  onUploadError: (error: string) => void;
+  onFileSelect: (file: File) => void;
+  isUploading?: boolean;
+  progress?: string | null;
+  error?: string | null;
+  uploadStatus?: ProcessingStatus | null;
   disabled?: boolean;
 }
 

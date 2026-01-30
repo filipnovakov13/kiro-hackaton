@@ -33,6 +33,10 @@ interface ChatInterfaceProps {
   initialCollapsed?: boolean;
   /** Callback when document pane collapse state changes */
   onCollapseChange?: (collapsed: boolean) => void;
+  /** Whether focus mode is enabled */
+  focusModeEnabled?: boolean;
+  /** Callback when focus mode is toggled */
+  onToggleFocusMode?: () => void;
 }
 
 // =============================================================================
@@ -54,6 +58,8 @@ export function ChatInterface({
   chatContent,
   initialCollapsed = false,
   onCollapseChange,
+  focusModeEnabled = false,
+  onToggleFocusMode,
 }: ChatInterfaceProps) {
   // State
   const [documentWidth, setDocumentWidth] = useState<number>(() => {
@@ -141,6 +147,11 @@ export function ChatInterface({
     overflow: "auto",
     transition: isCollapsed ? "width 300ms ease-out" : "none",
     position: "relative",
+    // Golden border when focus mode enabled
+    ...(focusModeEnabled && {
+      border: `2px solid ${accents.highlight}`,
+      boxShadow: `inset 0 0 12px ${accents.highlight}20, 0 0 16px ${accents.highlight}30`,
+    }),
   };
 
   const resizerStyle: React.CSSProperties = {
@@ -303,6 +314,61 @@ export function ChatInterface({
             }}
           >
             ◀
+          </button>
+        )}
+
+        {/* Focus Mode Toggle Button */}
+        {!isCollapsed && onToggleFocusMode && (
+          <button
+            style={{
+              position: "absolute",
+              left: "48px",
+              top: "8px",
+              padding: "8px 12px",
+              backgroundColor: focusModeEnabled
+                ? accents.highlight
+                : backgrounds.hover,
+              border: focusModeEnabled
+                ? `2px solid ${accents.highlight}`
+                : "none",
+              borderRadius: "4px",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              color: focusModeEnabled ? backgrounds.canvas : text.primary,
+              fontSize: "14px",
+              fontWeight: focusModeEnabled ? 600 : 400,
+              transition: "all 150ms ease-out",
+              boxShadow: focusModeEnabled
+                ? `0 0 8px ${accents.highlight}40`
+                : "none",
+            }}
+            onClick={onToggleFocusMode}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onToggleFocusMode();
+              }
+            }}
+            tabIndex={0}
+            data-testid="focus-mode-toggle"
+            aria-label={
+              focusModeEnabled ? "Disable focus mode" : "Enable focus mode"
+            }
+            onMouseEnter={(e) => {
+              if (!focusModeEnabled) {
+                e.currentTarget.style.backgroundColor = backgrounds.active;
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!focusModeEnabled) {
+                e.currentTarget.style.backgroundColor = backgrounds.hover;
+              }
+            }}
+          >
+            <span>✨</span>
+            <span>Focus Mode</span>
           </button>
         )}
       </div>
