@@ -78,7 +78,7 @@ export function useDocumentUpload() {
       // Continue polling
       pollIntervalRef.current = window.setInterval(poll, POLL_INTERVAL);
     },
-    [stopPolling]
+    [stopPolling],
   );
 
   const uploadFile = useCallback(
@@ -87,7 +87,7 @@ export function useDocumentUpload() {
         isUploading: true,
         taskId: null,
         status: "pending",
-        progress: "Uploading...",
+        progress: null,
         error: null,
         documentId: null,
       });
@@ -104,7 +104,7 @@ export function useDocumentUpload() {
         }));
       }
     },
-    [startPolling]
+    [startPolling],
   );
 
   const submitUrl = useCallback(
@@ -113,24 +113,117 @@ export function useDocumentUpload() {
         isUploading: true,
         taskId: null,
         status: "pending",
-        progress: "Fetching URL...",
+        progress: null,
         error: null,
         documentId: null,
       });
 
       try {
         const response = await ingestUrl(url);
-        setState((prev) => ({ ...prev, taskId: response.task_id }));
+        setState((prev) => ({
+          ...prev,
+          taskId: response.task_id,
+        }));
         startPolling(response.task_id);
+      } catch (err) {
+        let errorMessage = "URL ingestion failed";
+
+        if (err instanceof ApiError) {
+          errorMessage = err.message;
+
+          // Provide more helpful messages for common errors
+          if (
+            errorMessage.includes("Access denied") ||
+            errorMessage.includes("login")
+          ) {
+            errorMessage = "URL requires authentication - try a public page";
+          } else if (
+            errorMessage.includes("404") ||
+            errorMessage.includes("not found")
+          ) {
+            errorMessage = "URL not found - check the address";
+          } else if (errorMessage.includes("timeout")) {
+            errorMessage = "URL took too long to respond - try again";
+          }
+        }
+
+        setState((prev) => ({
+          ...prev,
+          isUploading: false,
+          error: errorMessage,
+        }));
+      }
+    },
+    [startPolling],
+  );
+
+  const submitGitHub = useCallback(
+    async (repoUrl: string) => {
+      setState({
+        isUploading: true,
+        taskId: null,
+        status: "pending",
+        progress: null,
+        error: null,
+        documentId: null,
+      });
+
+      try {
+        // Fetch repository content via gitingest API
+        const response = await fetch("https://gitingest.com/api/ingest", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url: repoUrl }),
+        });
+
+        if (!response.ok) {
+          let errorMessage = "Failed to fetch repository";
+
+          if (response.status === 403) {
+            errorMessage = "Private repository - authentication required";
+          } else if (response.status === 429) {
+            errorMessage = "Rate limit exceeded - please try again later";
+          } else if (response.status === 413) {
+            errorMessage = "Repository too large";
+          } else if (response.status === 404) {
+            errorMessage = "Repository not found - check the URL";
+          } else if (response.status >= 500) {
+            errorMessage = "GitHub service unavailable - try again later";
+          }
+
+          throw new Error(errorMessage);
+        }
+
+        const data = await response.json();
+        const content = data.content || data.text || "";
+
+        if (!content) {
+          throw new Error("No content received from repository");
+        }
+
+        // Create a file from the repository content and upload it
+        const blob = new Blob([content], { type: "text/plain" });
+        const repoName = repoUrl.split("/").slice(-2).join("_");
+        const file = new File([blob], `${repoName}.txt`, {
+          type: "text/plain",
+        });
+
+        // Upload the file through normal upload flow
+        const uploadResponse = await uploadDocument(file);
+        setState((prev) => ({
+          ...prev,
+          taskId: uploadResponse.task_id,
+        }));
+        startPolling(uploadResponse.task_id);
       } catch (err) {
         setState((prev) => ({
           ...prev,
           isUploading: false,
-          error: err instanceof ApiError ? err.message : "URL ingestion failed",
+          error: err instanceof Error ? err.message : "GitHub ingestion failed",
         }));
       }
     },
-    [startPolling]
+    [startPolling],
   );
 
   const reset = useCallback(() => {
@@ -154,6 +247,7 @@ export function useDocumentUpload() {
     ...state,
     uploadFile,
     submitUrl,
+    submitGitHub,
     reset,
   };
 }

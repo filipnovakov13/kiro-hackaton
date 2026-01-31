@@ -4,6 +4,14 @@
 
 import { useCallback, useState } from "react";
 import type { UrlInputProps } from "../../types/document";
+import {
+  textClasses,
+  bgClasses,
+  borderClasses,
+  focusRing,
+  semantic,
+} from "../../design-system/colors";
+import { spacing } from "../../design-system/layout";
 
 export function UrlInput({ onSubmit, disabled = false }: UrlInputProps) {
   const [url, setUrl] = useState("");
@@ -36,7 +44,7 @@ export function UrlInput({ onSubmit, disabled = false }: UrlInputProps) {
       onSubmit(url);
       setUrl("");
     },
-    [url, validateUrl, onSubmit]
+    [url, validateUrl, onSubmit],
   );
 
   const handleChange = useCallback(
@@ -46,7 +54,7 @@ export function UrlInput({ onSubmit, disabled = false }: UrlInputProps) {
         setError(null);
       }
     },
-    [error]
+    [error],
   );
 
   return (
@@ -56,21 +64,44 @@ export function UrlInput({ onSubmit, disabled = false }: UrlInputProps) {
           type="text"
           value={url}
           onChange={handleChange}
-          placeholder="Or paste a URL..."
+          placeholder="https://example.com/document"
           disabled={disabled}
-          className={`flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-            error ? "border-red-500" : "border-gray-300"
-          } ${disabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
+          className={`flex-1 px-4 py-2 border rounded-lg ${focusRing} ${
+            error ? borderClasses.error : borderClasses.default
+          } ${disabled ? `${bgClasses.disabled} cursor-not-allowed` : bgClasses.canvas} ${textClasses.primary}`}
+          style={{ padding: `${spacing.sm}px ${spacing.md}px` }}
+          aria-label="Document URL"
+          aria-invalid={!!error}
+          aria-describedby={error ? "url-error" : undefined}
         />
         <button
           type="submit"
           disabled={disabled || !url.trim()}
-          className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+          className={`px-4 py-2 rounded-lg font-medium transition-colors ${focusRing} ${
+            disabled || !url.trim()
+              ? `${bgClasses.disabled} cursor-not-allowed ${textClasses.disabled}`
+              : `hover:opacity-90 ${textClasses.primary}`
+          }`}
+          style={{
+            backgroundColor:
+              disabled || !url.trim() ? undefined : semantic.info,
+            padding: `${spacing.sm}px ${spacing.md}px`,
+          }}
+          aria-label="Add URL"
         >
           Add URL
         </button>
       </div>
-      {error && <p className="text-sm text-red-500">{error}</p>}
+      {error && (
+        <p
+          id="url-error"
+          className="text-sm"
+          style={{ color: semantic.error }}
+          role="alert"
+        >
+          {error}
+        </p>
+      )}
     </form>
   );
 }

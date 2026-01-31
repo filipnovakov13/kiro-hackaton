@@ -10,7 +10,6 @@
  * - Markdown rendering for formatted content
  *
  * @see .kiro/specs/rag-core-phase/requirements.md (Requirement 6)
- * @see .kiro/specs/rag-core-phase/tasks.md (Task 5.4)
  */
 
 import {

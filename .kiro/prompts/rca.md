@@ -157,7 +157,7 @@ Save analysis as: `docs/rca/issue-$ARGUMENTS.md`
 ```
 [File path:line number]
 [Relevant code snippet showing the issue]
-```
+
 
 ### Related Issues
 

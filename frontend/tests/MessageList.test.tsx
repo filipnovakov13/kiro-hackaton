@@ -124,27 +124,44 @@ describe("MessageList", () => {
     });
   });
 
-  describe("Loading State", () => {
-    it("renders loading indicator when isLoading is true", () => {
-      render(<MessageList messages={mockMessages} isLoading={true} />);
-      expect(screen.getByTestId("message-loading")).toBeInTheDocument();
+  describe("Streaming State", () => {
+    it("renders ThinkingIndicator when isStreaming is true but no content", () => {
+      render(<MessageList messages={mockMessages} isStreaming={true} />);
+      expect(screen.getByTestId("thinking-indicator")).toBeInTheDocument();
     });
 
-    it("renders loading indicator with correct content", () => {
-      render(<MessageList messages={mockMessages} isLoading={true} />);
-      const loadingIndicator = screen.getByTestId("message-loading");
-      expect(loadingIndicator.textContent).toContain("Assistant");
-      expect(loadingIndicator.textContent).toContain("Thinking...");
+    it("renders StreamingMessage when streamingContent exists", () => {
+      render(
+        <MessageList
+          messages={mockMessages}
+          isStreaming={true}
+          streamingContent="This is streaming content..."
+        />,
+      );
+      expect(screen.getByTestId("streaming-message")).toBeInTheDocument();
+      expect(
+        screen.getByText("This is streaming content..."),
+      ).toBeInTheDocument();
     });
 
-    it("does not render loading indicator when isLoading is false", () => {
-      render(<MessageList messages={mockMessages} isLoading={false} />);
-      expect(screen.queryByTestId("message-loading")).not.toBeInTheDocument();
+    it("does not render ThinkingIndicator when not streaming", () => {
+      render(<MessageList messages={mockMessages} isStreaming={false} />);
+      expect(
+        screen.queryByTestId("thinking-indicator"),
+      ).not.toBeInTheDocument();
     });
 
-    it("renders loading indicator even with empty messages", () => {
-      render(<MessageList messages={[]} isLoading={true} />);
-      expect(screen.getByTestId("message-loading")).toBeInTheDocument();
+    it("does not render ThinkingIndicator when streamingContent exists", () => {
+      render(
+        <MessageList
+          messages={mockMessages}
+          isStreaming={true}
+          streamingContent="Content"
+        />,
+      );
+      expect(
+        screen.queryByTestId("thinking-indicator"),
+      ).not.toBeInTheDocument();
     });
   });
 

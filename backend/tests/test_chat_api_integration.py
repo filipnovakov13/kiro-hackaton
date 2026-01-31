@@ -1295,23 +1295,22 @@ class TestGetSessionStatsAPIIntegration:
 
         # Check required fields
         required_fields = [
-            "message_count",
+            "session_id",
+            "total_messages",
             "total_tokens",
-            "estimated_cost_usd",
-            "cache_hit_rate",
-            "avg_response_time_ms",
+            "cached_tokens",
+            "total_cost_usd",
+            "created_at",
+            "updated_at",
         ]
         for field in required_fields:
             assert field in data, f"Response should contain {field}"
 
         # Validate initial values for new session
-        assert data["message_count"] == 0, "New session should have 0 messages"
+        assert data["total_messages"] == 0, "New session should have 0 messages"
         assert data["total_tokens"] == 0, "New session should have 0 tokens"
-        assert data["estimated_cost_usd"] == 0.0, "New session should have 0 cost"
-        assert data["cache_hit_rate"] == 0.0, "New session should have 0 cache hit rate"
-        assert (
-            data["avg_response_time_ms"] == 0.0
-        ), "New session should have 0 avg response time"
+        assert data["cached_tokens"] == 0, "New session should have 0 cached tokens"
+        assert data["total_cost_usd"] == 0.0, "New session should have 0 cost"
 
     def test_get_stats_for_nonexistent_session(self, running_server):
         """Test getting stats for a nonexistent session returns 404."""
@@ -1341,30 +1340,23 @@ class TestGetSessionStatsAPIIntegration:
         data = response.json()
 
         # Validate types
-        assert isinstance(data["message_count"], int), "message_count should be integer"
+        assert isinstance(data["session_id"], str), "session_id should be string"
+        assert isinstance(
+            data["total_messages"], int
+        ), "total_messages should be integer"
         assert isinstance(data["total_tokens"], int), "total_tokens should be integer"
+        assert isinstance(data["cached_tokens"], int), "cached_tokens should be integer"
         assert isinstance(
-            data["estimated_cost_usd"], (int, float)
-        ), "estimated_cost_usd should be number"
-        assert isinstance(
-            data["cache_hit_rate"], (int, float)
-        ), "cache_hit_rate should be number"
-        assert isinstance(
-            data["avg_response_time_ms"], (int, float)
-        ), "avg_response_time_ms should be number"
+            data["total_cost_usd"], (int, float)
+        ), "total_cost_usd should be number"
+        assert isinstance(data["created_at"], str), "created_at should be string"
+        assert isinstance(data["updated_at"], str), "updated_at should be string"
 
         # Validate ranges
-        assert data["message_count"] >= 0, "message_count should be non-negative"
+        assert data["total_messages"] >= 0, "total_messages should be non-negative"
         assert data["total_tokens"] >= 0, "total_tokens should be non-negative"
-        assert (
-            data["estimated_cost_usd"] >= 0
-        ), "estimated_cost_usd should be non-negative"
-        assert (
-            0 <= data["cache_hit_rate"] <= 1
-        ), "cache_hit_rate should be between 0 and 1"
-        assert (
-            data["avg_response_time_ms"] >= 0
-        ), "avg_response_time_ms should be non-negative"
+        assert data["cached_tokens"] >= 0, "cached_tokens should be non-negative"
+        assert data["total_cost_usd"] >= 0, "total_cost_usd should be non-negative"
 
     def test_get_stats_with_invalid_id_format(self, running_server):
         """Test getting stats with invalid ID format."""

@@ -74,7 +74,7 @@ describe("ApiClient", () => {
       mockFetch.mockResolvedValueOnce(mockResponse);
 
       await expect(apiClient.get("/nonexistent")).rejects.toThrow(
-        "HTTP 404: Not Found"
+        "Resource not found. It may have been deleted.",
       );
     });
 
@@ -111,7 +111,7 @@ describe("ApiClient", () => {
 
       expect(mockFetch).toHaveBeenCalledWith(
         expect.stringContaining("/health"),
-        expect.any(Object)
+        expect.any(Object),
       );
     });
   });
@@ -163,7 +163,7 @@ describe("ApiClient", () => {
       mockFetch.mockResolvedValueOnce(mockResponse);
 
       await expect(apiClient.get("/error")).rejects.toThrow(
-        "HTTP 500: Internal Server Error"
+        "Something went wrong on our end. Please try again.",
       );
     });
 
@@ -179,7 +179,7 @@ describe("ApiClient", () => {
       mockFetch.mockResolvedValueOnce(mockResponse);
 
       await expect(apiClient.get("/protected")).rejects.toThrow(
-        "HTTP 401: Unauthorized"
+        "HTTP 401: Unauthorized",
       );
     });
   });

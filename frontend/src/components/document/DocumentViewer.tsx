@@ -3,20 +3,32 @@
  *
  * Renders Markdown documents with syntax highlighting
  * Features:
- * - Markdown rendering with proper styling
- * - Syntax highlighting for code blocks
+ * - Markdown rendering with react-markdown and remark-gfm
+ * - Syntax highlighting for code blocks with react-syntax-highlighter
  * - Independent scrolling from chat pane
  * - Chunk highlighting on source click
  * - Focus caret integration
  * - Empty state handling
+ * - Input sanitization for security
  *
  * @see .kiro/specs/rag-core-phase/requirements.md (Requirement 9)
- * @see .kiro/specs/rag-core-phase/tasks.md (Task 6.1)
  */
 
 import { useRef, useEffect } from "react";
-import { backgrounds, text, spacing, typography } from "../../design-system";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
+import {
+  backgrounds,
+  text,
+  spacing,
+  typography,
+  accents,
+} from "../../design-system";
 import * as markdownStyles from "../../design-system/markdown";
+import { FocusCaret } from "./FocusCaret";
+import { sanitizeMarkdown } from "../../utils/sanitization";
 
 // =============================================================================
 // TYPES
@@ -35,6 +47,12 @@ interface DocumentViewerProps {
   scrollToPosition?: number;
   /** Callback when content is clicked */
   onContentClick?: (position: number) => void;
+  /** Focus caret position */
+  caretPosition?: number;
+  /** Callback when caret moves */
+  onCaretMove?: (position: number) => void;
+  /** Whether focus mode is enabled */
+  focusModeEnabled?: boolean;
 }
 
 // =============================================================================
@@ -48,6 +66,9 @@ export function DocumentViewer({
   highlightedChunkId,
   scrollToPosition,
   onContentClick,
+  caretPosition,
+  onCaretMove,
+  focusModeEnabled = false,
 }: DocumentViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -73,13 +94,54 @@ export function DocumentViewer({
     }
   };
 
+  // Keyboard navigation for focus caret
+  useEffect(() => {
+    if (!focusModeEnabled || !onCaretMove || !content) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!caretPosition) return;
+
+      let newPosition = caretPosition;
+
+      switch (e.key) {
+        case "ArrowUp":
+          e.preventDefault();
+          // Move to previous paragraph
+          newPosition = findPreviousParagraph(content, caretPosition);
+          break;
+        case "ArrowDown":
+          e.preventDefault();
+          // Move to next paragraph
+          newPosition = findNextParagraph(content, caretPosition);
+          break;
+        case "Home":
+          e.preventDefault();
+          newPosition = 0;
+          break;
+        case "End":
+          e.preventDefault();
+          newPosition = content.length - 1;
+          break;
+        default:
+          return;
+      }
+
+      if (newPosition !== caretPosition) {
+        onCaretMove(newPosition);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [focusModeEnabled, caretPosition, content, onCaretMove]);
+
   // Styles
   const containerStyle: React.CSSProperties = {
     height: "100%",
     overflowY: "auto",
     overflowX: "hidden",
     backgroundColor: backgrounds.canvas,
-    padding: `${spacing.xl}px ${spacing["3xl"]}px`,
+    padding: `${spacing["3xl"]}px`,
   };
 
   const titleStyle: React.CSSProperties = {
@@ -157,9 +219,35 @@ export function DocumentViewer({
         data-highlighted-chunk={highlightedChunkId}
       >
         <MarkdownContent content={content} />
+        {/* Render FocusCaret when enabled */}
+        {focusModeEnabled && (
+          <FocusCaret
+            position={caretPosition}
+            content={content}
+            enableKeyboard={false} // Keyboard handled by DocumentViewer
+          />
+        )}
       </div>
     </div>
   );
+}
+
+// =============================================================================
+// HELPER FUNCTIONS
+// =============================================================================
+
+function findPreviousParagraph(content: string, position: number): number {
+  const beforePosition = content.slice(0, position);
+  const lastParagraphBreak = beforePosition.lastIndexOf("\n\n");
+  return lastParagraphBreak === -1 ? 0 : lastParagraphBreak + 2;
+}
+
+function findNextParagraph(content: string, position: number): number {
+  const afterPosition = content.slice(position);
+  const nextParagraphBreak = afterPosition.indexOf("\n\n");
+  return nextParagraphBreak === -1
+    ? content.length - 1
+    : position + nextParagraphBreak + 2;
 }
 
 // =============================================================================
@@ -171,112 +259,85 @@ interface MarkdownContentProps {
 }
 
 function MarkdownContent({ content }: MarkdownContentProps) {
-  // Simple markdown rendering (in production, use a library like react-markdown)
-  // For now, just render as formatted text with basic parsing
-
-  const lines = content.split("\n");
-  const elements: JSX.Element[] = [];
-
-  let inCodeBlock = false;
-  let codeBlockContent: string[] = [];
-  let codeBlockLanguage = "";
-
-  lines.forEach((line, index) => {
-    // Code block detection
-    if (line.startsWith("```")) {
-      if (!inCodeBlock) {
-        // Start code block
-        inCodeBlock = true;
-        codeBlockLanguage = line.slice(3).trim();
-        codeBlockContent = [];
-      } else {
-        // End code block
-        inCodeBlock = false;
-        elements.push(
-          <CodeBlock
-            key={`code-${index}`}
-            content={codeBlockContent.join("\n")}
-            language={codeBlockLanguage}
-          />,
-        );
-        codeBlockContent = [];
-        codeBlockLanguage = "";
-      }
-      return;
-    }
-
-    if (inCodeBlock) {
-      codeBlockContent.push(line);
-      return;
-    }
-
-    // Heading detection
-    if (line.startsWith("# ")) {
-      elements.push(
-        <h1 key={index} style={markdownStyles.h1}>
-          {line.slice(2)}
-        </h1>,
-      );
-    } else if (line.startsWith("## ")) {
-      elements.push(
-        <h2 key={index} style={markdownStyles.h2}>
-          {line.slice(3)}
-        </h2>,
-      );
-    } else if (line.startsWith("### ")) {
-      elements.push(
-        <h3 key={index} style={markdownStyles.h3}>
-          {line.slice(4)}
-        </h3>,
-      );
-    } else if (line.trim() === "") {
-      // Empty line - paragraph break
-      elements.push(<div key={index} style={{ height: `${spacing.md}px` }} />);
-    } else {
-      // Regular paragraph
-      elements.push(
-        <p key={index} style={markdownStyles.paragraph}>
-          {line}
-        </p>,
-      );
-    }
-  });
-
-  return <>{elements}</>;
-}
-
-// =============================================================================
-// CODE BLOCK COMPONENT
-// =============================================================================
-
-interface CodeBlockProps {
-  content: string;
-  language?: string;
-}
-
-function CodeBlock({ content, language }: CodeBlockProps) {
-  const codeBlockStyle: React.CSSProperties = {
-    ...markdownStyles.codeBlock,
-    position: "relative",
-  };
-
-  const languageLabelStyle: React.CSSProperties = {
-    position: "absolute",
-    top: `${spacing.xs}px`,
-    right: `${spacing.sm}px`,
-    fontSize: "12px",
-    color: text.secondary,
-    opacity: 0.7,
-  };
+  // Sanitize content before rendering to prevent XSS
+  const sanitizedContent = sanitizeMarkdown(content);
 
   return (
-    <pre style={codeBlockStyle} data-testid="code-block">
-      {language && (
-        <span style={languageLabelStyle} data-testid="code-language">
-          {language}
-        </span>
-      )}
-      <code>{content}</code>
-    </pre>
+    <ReactMarkdown
+      remarkPlugins={[remarkGfm]}
+      components={{
+        code({ node, inline, className, children, ...props }) {
+          const match = /language-(\w+)/.exec(className || "");
+          return !inline && match ? (
+            <SyntaxHighlighter
+              style={vscDarkPlus}
+              language={match[1]}
+              PreTag="div"
+              customStyle={{
+                borderLeft: `3px solid ${accents.highlight}`,
+                borderRadius: "4px",
+                margin: `${spacing.md}px 0`,
+                ...markdownStyles.codeBlock,
+              }}
+              {...props}
+            >
+              {String(children).replace(/\n$/, "")}
+            </SyntaxHighlighter>
+          ) : (
+            <code
+              className={className}
+              style={markdownStyles.inlineCode}
+              {...props}
+            >
+              {children}
+            </code>
+          );
+        },
+        h1({ children }) {
+          return <h1 style={markdownStyles.h1}>{children}</h1>;
+        },
+        h2({ children }) {
+          return <h2 style={markdownStyles.h2}>{children}</h2>;
+        },
+        h3({ children }) {
+          return <h3 style={markdownStyles.h3}>{children}</h3>;
+        },
+        p({ children }) {
+          return <p style={markdownStyles.paragraph}>{children}</p>;
+        },
+        ul({ children }) {
+          return <ul style={markdownStyles.list}>{children}</ul>;
+        },
+        ol({ children }) {
+          return <ol style={markdownStyles.list}>{children}</ol>;
+        },
+        li({ children }) {
+          return <li style={markdownStyles.listItem}>{children}</li>;
+        },
+        blockquote({ children }) {
+          return (
+            <blockquote style={markdownStyles.blockquote}>
+              {children}
+            </blockquote>
+          );
+        },
+        a({ href, children }) {
+          return (
+            <a
+              href={href}
+              style={markdownStyles.link}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {children}
+            </a>
+          );
+        },
+      }}
+    >
+      {sanitizedContent}
+    </ReactMarkdown>
   );
 }
+
+// Code block component is now handled by react-syntax-highlighter above

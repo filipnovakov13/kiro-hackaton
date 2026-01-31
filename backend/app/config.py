@@ -49,11 +49,44 @@ class Settings(BaseSettings):
     # Logging Configuration
     log_level: str = "INFO"
 
+    # DeepSeek Configuration
+    deepseek_api_url: str = Field(default="https://api.deepseek.com/v1")
+    deepseek_model: str = Field(default="deepseek-chat")
+    deepseek_timeout_seconds: int = Field(default=60)
+
+    # Context Configuration
+    max_context_tokens: int = Field(default=120000)  # Leave 8K for response
+    similarity_threshold: float = Field(default=0.7)
+    focus_boost_amount: float = Field(default=0.2)
+    top_k_chunks: int = Field(default=10)
+
+    # Caching Configuration
+    response_cache_max_size: int = Field(default=1000)
+    response_cache_ttl_seconds: int = Field(default=3600)
+
+    # Rate Limiting
+    rate_limit_queries_per_hour: int = Field(default=100)
+    rate_limit_max_concurrent_streams: int = Field(default=5)
+
+    # Spending Limits
+    default_spending_limit_usd: float = Field(default=10.0)
+
+    # Session Management
+    session_cleanup_interval_hours: int = Field(default=24)
+    session_max_age_days: int = Field(default=30)
+
+    # Message Validation
+    max_message_length: int = Field(default=6000)
+
+    # Circuit Breaker
+    circuit_breaker_failure_threshold: int = Field(default=5)
+    circuit_breaker_success_threshold: int = Field(default=2)
+    circuit_breaker_timeout_seconds: int = Field(default=60)
+
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
         populate_by_name = True
-        extra = "allow"  # Quick fix: allow extra fields from .env
 
     @property
     def cors_origins_list(self) -> List[str]:

@@ -19,6 +19,7 @@ import {
   spacing,
   borderRadius,
   padding,
+  semantic,
 } from "../../design-system";
 
 // =============================================================================
@@ -34,6 +35,8 @@ interface MessageInputProps {
   placeholder?: string;
   /** Maximum character limit */
   maxLength?: number;
+  /** Error message to display */
+  error?: string | null;
 }
 
 // =============================================================================
@@ -52,6 +55,7 @@ export function MessageInput({
   disabled = false,
   placeholder = DEFAULT_PLACEHOLDER,
   maxLength = DEFAULT_MAX_LENGTH,
+  error = null,
 }: MessageInputProps) {
   const [value, setValue] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -93,9 +97,16 @@ export function MessageInput({
     textarea.style.height = `${Math.min(textarea.scrollHeight, 200)}px`;
   };
 
-  // Calculate remaining characters
-  const remaining = maxLength - value.length;
-  const isNearLimit = remaining < 100;
+  // Calculate remaining characters and color coding
+  const charCount = value.length;
+  const getCharCountColor = () => {
+    if (charCount > 6000) return "#E74C3C"; // Red when over limit
+    if (charCount > 5900) return "#E67E22"; // Orange when >5900
+    return text.secondary; // Gray otherwise
+  };
+
+  // Determine if input has error state
+  const hasError = !!error || charCount > maxLength;
 
   // Styles
   const containerStyle: React.CSSProperties = {
@@ -113,9 +124,9 @@ export function MessageInput({
 
   const textareaStyle: React.CSSProperties = {
     flex: 1,
-    backgroundColor: backgrounds.panel,
-    border: `1px solid ${backgrounds.hover}`,
-    color: text.primary,
+    backgroundColor: disabled ? backgrounds.hover : backgrounds.panel,
+    border: `1px solid ${hasError ? "#E74C3C" : backgrounds.hover}`,
+    color: disabled ? text.disabled : text.primary,
     padding: padding.input,
     borderRadius: `${borderRadius.md}px`,
     fontSize: "16px",
@@ -126,6 +137,7 @@ export function MessageInput({
     maxHeight: "200px",
     transition: "all 150ms ease-out",
     outline: "none",
+    cursor: disabled ? "not-allowed" : "text",
   };
 
   const buttonStyle: React.CSSProperties = {
@@ -140,16 +152,47 @@ export function MessageInput({
     transition: "all 150ms ease-out",
     opacity: disabled ? 0.5 : 1,
     whiteSpace: "nowrap",
+    display: "flex",
+    alignItems: "center",
+    gap: `${spacing.sm}px`,
+  };
+
+  const spinnerStyle: React.CSSProperties = {
+    width: "16px",
+    height: "16px",
+    border: "2px solid transparent",
+    borderTopColor: backgrounds.canvas,
+    borderRadius: "50%",
+    animation: "spin 1s linear infinite",
   };
 
   const charCountStyle: React.CSSProperties = {
     fontSize: "12px",
-    color: isNearLimit ? "#C9A876" : text.secondary, // caution color if near limit
+    color: getCharCountColor(),
     textAlign: "right",
+    fontWeight: charCount > 5900 ? 600 : 400,
   };
 
   return (
     <div style={containerStyle} data-testid="message-input-container">
+      {/* Error message display */}
+      {error && (
+        <div
+          style={{
+            padding: `${spacing.sm}px ${spacing.md}px`,
+            backgroundColor: backgrounds.hover,
+            color: semantic.critical,
+            border: `1px solid ${semantic.critical}`,
+            borderRadius: `${borderRadius.md}px`,
+            fontSize: "14px",
+            marginBottom: `${spacing.sm}px`,
+          }}
+          data-testid="message-error"
+        >
+          {error}
+        </div>
+      )}
+
       <div style={inputContainerStyle}>
         {/* Textarea */}
         <textarea
@@ -166,13 +209,15 @@ export function MessageInput({
           data-testid="message-input"
           aria-label="Message input"
           onFocus={(e) => {
-            if (!disabled) {
+            if (!disabled && !hasError) {
               e.currentTarget.style.borderColor = accents.highlight;
               e.currentTarget.style.boxShadow = `0 0 0 2px ${accents.highlight}33`; // 20% opacity
             }
           }}
           onBlur={(e) => {
-            e.currentTarget.style.borderColor = backgrounds.hover;
+            e.currentTarget.style.borderColor = hasError
+              ? "#E74C3C"
+              : backgrounds.hover;
             e.currentTarget.style.boxShadow = "none";
           }}
         />
@@ -205,15 +250,25 @@ export function MessageInput({
             }
           }}
         >
-          Send
+          {disabled && (
+            <div style={spinnerStyle} data-testid="sending-spinner" />
+          )}
+          <span>Send</span>
         </button>
       </div>
 
       {/* Character count */}
       <div style={charCountStyle} data-testid="char-count">
-        {remaining.toLocaleString()} characters remaining
-        {isNearLimit && " ⚠️"}
+        {charCount} / {maxLength}
       </div>
+
+      {/* Keyframe animation */}
+      <style>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 }

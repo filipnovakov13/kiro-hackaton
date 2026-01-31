@@ -24,15 +24,15 @@ class EmbeddingError(Exception):
 class EmbeddingService:
     """Service for generating embeddings via Voyage AI.
 
-    Uses voyage-3.5-lite model (512 dimensions, $0.02/M tokens).
+    Uses voyage-4-lite model (1024 dimensions, 200M free tokens).
     Handles batching, rate limiting, retry logic, and caching.
 
     Uses a dedicated ThreadPoolExecutor to prevent starving other
     async operations under heavy embedding load.
     """
 
-    MODEL = "voyage-3.5-lite"
-    DIMENSIONS = 512
+    MODEL = "voyage-4-lite"
+    DIMENSIONS = 1024
     MAX_BATCH_SIZE = 128  # Voyage API limit
     MAX_RETRIES = 3
     RATE_LIMIT_WAIT = 60  # seconds
@@ -108,7 +108,7 @@ class EmbeddingService:
             texts: List of text chunks to embed.
 
         Returns:
-            List of 512-dimensional embedding vectors.
+            List of 1024-dimensional embedding vectors.
 
         Raises:
             EmbeddingError: If embedding fails after retries.
@@ -130,7 +130,7 @@ class EmbeddingService:
             text: Query text to embed.
 
         Returns:
-            512-dimensional embedding vector.
+            1024-dimensional embedding vector.
 
         Raises:
             EmbeddingError: If embedding fails after retries.

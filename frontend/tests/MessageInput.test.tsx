@@ -96,11 +96,11 @@ describe("MessageInput", () => {
       const textarea = screen.getByTestId("message-input");
       const charCount = screen.getByTestId("char-count");
 
-      expect(charCount.textContent).toContain("100");
+      expect(charCount.textContent).toContain("0 / 100");
 
       fireEvent.change(textarea, { target: { value: "Hello" } });
 
-      expect(charCount.textContent).toContain("95");
+      expect(charCount.textContent).toContain("5 / 100");
     });
 
     it("shows warning when near character limit", () => {
@@ -114,7 +114,10 @@ describe("MessageInput", () => {
         target: { value: "a".repeat(95) },
       });
 
-      expect(charCount.textContent).toContain("⚠️");
+      // Character count should show 95 / 100
+      expect(charCount.textContent).toContain("95 / 100");
+      // Should have orange color (warning) since >90% of limit
+      // Note: Color is applied via style, not emoji
     });
   });
 

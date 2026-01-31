@@ -18,5 +18,10 @@ export default defineConfig({
       reporter: ["text", "json", "html"],
     },
     testTimeout: 30000, // 30 seconds for property tests
+    server: {
+      deps: {
+        inline: ["react-syntax-highlighter", "refractor"],
+      },
+    },
   },
 });

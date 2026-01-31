@@ -40,12 +40,14 @@ export function useChatSession(): UseChatSessionReturn {
 
     try {
       const newSession = await chatAPI.createSession(documentId);
+      // Update both session and sessions list atomically to prevent race conditions
       setSession(newSession);
+      setSessions((prev) => [newSession, ...prev]);
+      setLoading(false);
     } catch (err: any) {
       setError(err.message || "Failed to create session");
-      throw err;
-    } finally {
       setLoading(false);
+      throw err;
     }
   }, []);
 

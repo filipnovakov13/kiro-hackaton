@@ -254,11 +254,13 @@ class SessionDetailResponse(BaseModel):
 class SessionStatsResponse(BaseModel):
     """Session statistics."""
 
-    message_count: int
+    session_id: str
+    total_messages: int
     total_tokens: int
-    estimated_cost_usd: float
-    cache_hit_rate: float
-    avg_response_time_ms: float
+    cached_tokens: int
+    total_cost_usd: float
+    created_at: str
+    updated_at: str
 
 
 class SendMessageRequest(BaseModel):

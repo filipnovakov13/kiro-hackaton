@@ -60,6 +60,10 @@ export const semantic = {
   caution: "#C9A876",
   /** Errors - warm mauve, gentle not harsh (#B89B94) */
   critical: "#B89B94",
+  /** Info, primary actions - soft blue (#6B9BD1) */
+  info: "#6B9BD1",
+  /** Error (alias for critical) */
+  error: "#B89B94",
 } as const;
 
 // =============================================================================
