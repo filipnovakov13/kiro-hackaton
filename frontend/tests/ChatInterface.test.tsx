@@ -9,6 +9,24 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { ChatInterface } from "../src/components/chat/ChatInterface";
+import type { ChatSession } from "../src/types/chat";
+
+const mockSessions: ChatSession[] = [
+  {
+    id: "session-1",
+    document_id: "doc-1",
+    created_at: "2024-01-01T00:00:00Z",
+    updated_at: "2024-01-01T00:00:00Z",
+    message_count: 0,
+  },
+  {
+    id: "session-2",
+    document_id: "doc-2",
+    created_at: "2024-01-02T00:00:00Z",
+    updated_at: "2024-01-02T00:00:00Z",
+    message_count: 0,
+  },
+];
 
 describe("ChatInterface", () => {
   beforeEach(() => {
@@ -231,5 +249,162 @@ describe("ChatInterface", () => {
       const resizer = screen.getByTestId("pane-resizer");
       expect(resizer).toHaveStyle({ width: "4px" });
     });
+  });
+});
+
+describe("Session Controls Integration", () => {
+  it("renders SessionControls when handlers are provided", () => {
+    const onNewSession = vi.fn();
+    const onDeleteSession = vi.fn();
+
+    render(
+      <ChatInterface
+        sessions={mockSessions}
+        currentSessionId="session-1"
+        onNewSession={onNewSession}
+        onDeleteSession={onDeleteSession}
+      />,
+    );
+
+    expect(screen.getByTestId("session-controls")).toBeInTheDocument();
+    expect(screen.getByTestId("new-session-button")).toBeInTheDocument();
+    expect(screen.getByTestId("delete-session-button")).toBeInTheDocument();
+  });
+
+  it("does not render SessionControls when handlers are not provided", () => {
+    render(<ChatInterface />);
+
+    expect(screen.queryByTestId("session-controls")).not.toBeInTheDocument();
+  });
+
+  it("renders SessionSwitcher when handler is provided", () => {
+    const onSessionSwitch = vi.fn();
+
+    render(
+      <ChatInterface
+        sessions={mockSessions}
+        currentSessionId="session-1"
+        onSessionSwitch={onSessionSwitch}
+      />,
+    );
+
+    expect(screen.getByTestId("session-switcher")).toBeInTheDocument();
+    expect(screen.getByTestId("session-switcher-button")).toBeInTheDocument();
+  });
+
+  it("does not render SessionSwitcher when handler is not provided", () => {
+    render(<ChatInterface />);
+
+    expect(screen.queryByTestId("session-switcher")).not.toBeInTheDocument();
+  });
+
+  it("calls onNewSession when New Session button is clicked", () => {
+    const onNewSession = vi.fn();
+    const onDeleteSession = vi.fn();
+
+    render(
+      <ChatInterface
+        sessions={mockSessions}
+        currentSessionId="session-1"
+        onNewSession={onNewSession}
+        onDeleteSession={onDeleteSession}
+      />,
+    );
+
+    const newSessionButton = screen.getByTestId("new-session-button");
+    fireEvent.click(newSessionButton);
+
+    expect(onNewSession).toHaveBeenCalledTimes(1);
+  });
+
+  it("calls onDeleteSession when Delete Session is confirmed", () => {
+    const onNewSession = vi.fn();
+    const onDeleteSession = vi.fn();
+
+    render(
+      <ChatInterface
+        sessions={mockSessions}
+        currentSessionId="session-1"
+        onNewSession={onNewSession}
+        onDeleteSession={onDeleteSession}
+      />,
+    );
+
+    // Click delete button
+    const deleteButton = screen.getByTestId("delete-session-button");
+    fireEvent.click(deleteButton);
+
+    // Confirm deletion
+    const confirmButton = screen.getByTestId("confirm-delete-button");
+    fireEvent.click(confirmButton);
+
+    expect(onDeleteSession).toHaveBeenCalledWith("session-1");
+  });
+
+  it("calls onSessionSwitch when session is selected", async () => {
+    const onSessionSwitch = vi.fn();
+
+    render(
+      <ChatInterface
+        sessions={mockSessions}
+        currentSessionId="session-1"
+        onSessionSwitch={onSessionSwitch}
+      />,
+    );
+
+    // Open dropdown
+    const switcherButton = screen.getByTestId("session-switcher-button");
+    fireEvent.click(switcherButton);
+
+    // Wait for dropdown and session items to load
+    await screen.findByTestId("session-switcher-dropdown");
+    const sessionItem = await screen.findByTestId("session-item-session-2");
+
+    // Select different session
+    fireEvent.click(sessionItem);
+
+    expect(onSessionSwitch).toHaveBeenCalledWith("session-2");
+  });
+
+  it("renders chat header with all controls", () => {
+    const onNewSession = vi.fn();
+    const onDeleteSession = vi.fn();
+    const onSessionSwitch = vi.fn();
+    const onToggleFocusMode = vi.fn();
+
+    render(
+      <ChatInterface
+        sessions={mockSessions}
+        currentSessionId="session-1"
+        onNewSession={onNewSession}
+        onDeleteSession={onDeleteSession}
+        onSessionSwitch={onSessionSwitch}
+        onToggleFocusMode={onToggleFocusMode}
+      />,
+    );
+
+    expect(screen.getByTestId("chat-header")).toBeInTheDocument();
+    expect(screen.getByTestId("collapse-button")).toBeInTheDocument();
+    expect(screen.getByTestId("focus-mode-toggle")).toBeInTheDocument();
+    expect(screen.getByTestId("session-controls")).toBeInTheDocument();
+    expect(screen.getByTestId("session-switcher")).toBeInTheDocument();
+  });
+
+  it("does not render collapse button when document pane is collapsed", () => {
+    const onNewSession = vi.fn();
+    const onDeleteSession = vi.fn();
+
+    render(
+      <ChatInterface
+        initialCollapsed={true}
+        sessions={mockSessions}
+        currentSessionId="session-1"
+        onNewSession={onNewSession}
+        onDeleteSession={onDeleteSession}
+      />,
+    );
+
+    expect(screen.queryByTestId("collapse-button")).not.toBeInTheDocument();
+    expect(screen.getByTestId("session-controls")).toBeInTheDocument();
   });
 });

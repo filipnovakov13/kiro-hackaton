@@ -20,7 +20,13 @@ from app.core.database import get_db
 from app.core.logging_config import StructuredLogger
 from app.models.chat import ChatSession
 from app.models.document import Document
-from app.models.schemas import ErrorResponse, SessionStatsResponse, SendMessageRequest
+from app.models.schemas import (
+    ChatMessageSchema,
+    ErrorResponse,
+    MessageListResponse,
+    SessionStatsResponse,
+    SendMessageRequest,
+)
 from app.services.session_manager import SessionManager
 from app.services.input_validator import InputValidator, ValidationError
 from app.services.rate_limiter import RateLimiter
@@ -90,12 +96,19 @@ class CreateSessionRequest(BaseModel):
         return v
 
 
+class CreateSessionResponse(BaseModel):
+    """Response for session creation."""
+
+    session: "SessionResponse"
+
+
 class SessionResponse(BaseModel):
     """Response for session creation/retrieval."""
 
-    session_id: str
+    id: str
     document_id: Optional[str]
     created_at: str
+    updated_at: str
     message_count: int
 
 
@@ -121,7 +134,7 @@ class MessageResponse(BaseModel):
 class SessionDetailResponse(BaseModel):
     """Response for session details with message history."""
 
-    session_id: str
+    id: str
     document_id: Optional[str]
     created_at: str
     updated_at: str
@@ -135,7 +148,7 @@ class SessionDetailResponse(BaseModel):
 
 @router.post(
     "/sessions",
-    response_model=SessionResponse,
+    response_model=CreateSessionResponse,
     summary="Create Chat Session",
     description="Create a new chat session, optionally associated with a document",
     responses={
@@ -144,10 +157,13 @@ class SessionDetailResponse(BaseModel):
             "content": {
                 "application/json": {
                     "example": {
-                        "session_id": "550e8400-e29b-41d4-a716-446655440000",
-                        "document_id": "660e8400-e29b-41d4-a716-446655440000",
-                        "created_at": "2026-01-25T10:00:00Z",
-                        "message_count": 0,
+                        "session": {
+                            "id": "550e8400-e29b-41d4-a716-446655440000",
+                            "document_id": "660e8400-e29b-41d4-a716-446655440000",
+                            "created_at": "2026-01-25T10:00:00Z",
+                            "updated_at": "2026-01-25T10:00:00Z",
+                            "message_count": 0,
+                        }
                     }
                 }
             },
@@ -159,7 +175,7 @@ class SessionDetailResponse(BaseModel):
 async def create_session(
     request: CreateSessionRequest,
     db: AsyncSession = Depends(get_db),
-) -> SessionResponse:
+) -> CreateSessionResponse:
     """Create a new chat session.
 
     Args:
@@ -167,7 +183,7 @@ async def create_session(
         db: Database session
 
     Returns:
-        SessionResponse with session details
+        CreateSessionResponse with session details
 
     Raises:
         HTTPException 400: If document_id format is invalid
@@ -198,7 +214,16 @@ async def create_session(
         session_id=session_id, document_id=request.document_id
     )
 
-    return SessionResponse(**session_data)
+    # Map session_id to id for frontend compatibility
+    session_response = SessionResponse(
+        id=session_data["session_id"],
+        document_id=session_data["document_id"],
+        created_at=session_data["created_at"],
+        updated_at=session_data["updated_at"],
+        message_count=session_data["message_count"],
+    )
+
+    return CreateSessionResponse(session=session_response)
 
 
 @router.get(
@@ -214,13 +239,16 @@ async def create_session(
                     "example": {
                         "sessions": [
                             {
-                                "session_id": "550e8400-e29b-41d4-a716-446655440000",
+                                "id": "550e8400-e29b-41d4-a716-446655440000",
                                 "document_id": "660e8400-e29b-41d4-a716-446655440000",
                                 "created_at": "2026-01-25T10:00:00Z",
                                 "updated_at": "2026-01-25T10:05:00Z",
                                 "message_count": 5,
                             }
-                        ]
+                        ],
+                        "total": 1,
+                        "limit": None,
+                        "offset": 0,
                     }
                 }
             },
@@ -245,8 +273,17 @@ async def list_sessions(
     session_manager = SessionManager(db)
     sessions = await session_manager.list_sessions(limit=limit, offset=offset)
 
-    # Convert to response models
-    session_responses = [SessionResponse(**session) for session in sessions]
+    # Convert to response models with id field
+    session_responses = [
+        SessionResponse(
+            id=session["session_id"],
+            document_id=session["document_id"],
+            created_at=session["created_at"],
+            updated_at=session["updated_at"],
+            message_count=session["message_count"],
+        )
+        for session in sessions
+    ]
 
     return SessionListResponse(
         sessions=session_responses,
@@ -337,7 +374,7 @@ async def get_session(
         )
 
     return SessionDetailResponse(
-        session_id=session["session_id"],
+        id=session["session_id"],
         document_id=session["document_id"],
         created_at=session["created_at"],
         updated_at=session["updated_at"],
@@ -395,18 +432,20 @@ async def delete_session(
     "/sessions/{session_id}/stats",
     response_model=SessionStatsResponse,
     summary="Get Session Statistics",
-    description="Retrieve session statistics including message count, tokens, cost, and cache hit rate",
+    description="Retrieve session statistics including message count, tokens, cached tokens, and cost",
     responses={
         200: {
             "description": "Session statistics retrieved successfully",
             "content": {
                 "application/json": {
                     "example": {
-                        "message_count": 10,
+                        "session_id": "550e8400-e29b-41d4-a716-446655440000",
+                        "total_messages": 10,
                         "total_tokens": 5000,
-                        "estimated_cost_usd": 0.05,
-                        "cache_hit_rate": 0.3,
-                        "avg_response_time_ms": 1200,
+                        "cached_tokens": 1500,
+                        "total_cost_usd": 0.05,
+                        "created_at": "2026-01-25T10:00:00Z",
+                        "updated_at": "2026-01-25T10:30:00Z",
                     }
                 }
             },
@@ -418,7 +457,7 @@ async def get_session_stats(
     session_id: str,
     db: AsyncSession = Depends(get_db),
 ) -> SessionStatsResponse:
-    """Get session statistics including message count, tokens, cost, and cache hit rate.
+    """Get session statistics including message count, tokens, cached tokens, and cost.
 
     Args:
         session_id: Session UUID
@@ -437,11 +476,13 @@ async def get_session_stats(
         stats = await session_manager.get_session_stats(session_id)
 
         return SessionStatsResponse(
-            message_count=stats.message_count,
+            session_id=stats.session_id,
+            total_messages=stats.total_messages,
             total_tokens=stats.total_tokens,
-            estimated_cost_usd=stats.estimated_cost_usd,
-            cache_hit_rate=stats.cache_hit_rate,
-            avg_response_time_ms=stats.avg_response_time_ms,
+            cached_tokens=stats.cached_tokens,
+            total_cost_usd=stats.total_cost_usd,
+            created_at=stats.created_at,
+            updated_at=stats.updated_at,
         )
     except ValueError as e:
         # Session not found
@@ -461,7 +502,7 @@ async def get_session_stats(
 
 @router.get(
     "/sessions/{session_id}/messages",
-    response_model=list[MessageResponse],
+    response_model=MessageListResponse,
     summary="Get Session Messages",
     description="Retrieve messages for a session with pagination (ordered chronologically)",
     responses={
@@ -469,14 +510,19 @@ async def get_session_stats(
             "description": "Messages retrieved successfully",
             "content": {
                 "application/json": {
-                    "example": [
-                        {
-                            "id": "770e8400-e29b-41d4-a716-446655440000",
-                            "role": "user",
-                            "content": "What is AI?",
-                            "created_at": "2026-01-25T10:01:00Z",
-                        }
-                    ]
+                    "example": {
+                        "messages": [
+                            {
+                                "id": "770e8400-e29b-41d4-a716-446655440000",
+                                "role": "user",
+                                "content": "What is AI?",
+                                "created_at": "2026-01-25T10:01:00Z",
+                            }
+                        ],
+                        "total": 1,
+                        "limit": 50,
+                        "offset": 0,
+                    }
                 }
             },
         },
@@ -488,7 +534,7 @@ async def get_messages(
     limit: Optional[int] = 50,
     offset: int = 0,
     db: AsyncSession = Depends(get_db),
-) -> list[MessageResponse]:
+):
     """Get messages for a session with pagination.
 
     Args:
@@ -525,21 +571,26 @@ async def get_messages(
     message_responses = []
     for msg in messages:
         # Extract sources from metadata if present
-        sources = None
+        source_chunks = None
         if msg.get("metadata") and "sources" in msg["metadata"]:
-            sources = msg["metadata"]["sources"]
+            source_chunks = msg["metadata"]["sources"]
 
         message_responses.append(
-            MessageResponse(
+            ChatMessageSchema(
                 id=msg["message_id"],
                 role=msg["role"],
                 content=msg["content"],
                 created_at=msg["created_at"],
-                sources=sources,
+                source_chunks=source_chunks,
             )
         )
 
-    return message_responses
+    return MessageListResponse(
+        messages=message_responses,
+        total=len(message_responses),
+        limit=limit or 50,
+        offset=offset,
+    )
 
 
 @router.post(
@@ -590,30 +641,39 @@ async def send_message(
         db: Database session
 
     Returns:
-        StreamingResponse with SSE events
-
-    Raises:
-        HTTPException 404: If session not found
-        HTTPException 422: If message format is invalid
-        HTTPException 429: If rate limit exceeded
+        StreamingResponse with SSE events (always, even for errors)
     """
-    # Validate session exists
-    session_manager = SessionManager(db)
-    session = await session_manager.get_session(session_id)
-    if not session:
-        raise HTTPException(
-            status_code=404,
-            detail={"error": "Not found", "message": "Session not found"},
-        )
 
-    # Check rate limit
-    if not await rate_limiter.check_query_limit(session_id):
-        raise HTTPException(
-            status_code=429,
-            detail={
-                "error": "Rate limit exceeded",
-                "message": "Too many queries. Please wait before trying again.",
-            },
+    async def error_stream(error_message: str):
+        """Generate error event in SSE format."""
+        yield format_sse_event("error", {"error": error_message})
+
+    try:
+        # Validate session exists
+        session_manager = SessionManager(db)
+        session = await session_manager.get_session(session_id)
+        if not session:
+            return StreamingResponse(
+                error_stream("Session not found"),
+                media_type="text/event-stream",
+                headers={"Cache-Control": "no-cache", "Connection": "keep-alive"},
+            )
+
+        # Check rate limit
+        if not await rate_limiter.check_query_limit(session_id):
+            return StreamingResponse(
+                error_stream("Too many queries. Please wait before trying again."),
+                media_type="text/event-stream",
+                headers={"Cache-Control": "no-cache", "Connection": "keep-alive"},
+            )
+    except Exception as e:
+        logger.error(
+            "Error in send_message validation", error=str(e), session_id=session_id
+        )
+        return StreamingResponse(
+            error_stream("An error occurred. Please try again."),
+            media_type="text/event-stream",
+            headers={"Cache-Control": "no-cache", "Connection": "keep-alive"},
         )
 
     # Save user message IMMEDIATELY after validation (before any RAG operations that might fail)
@@ -628,40 +688,6 @@ async def send_message(
         },
     )
 
-    # Initialize RAG service dependencies
-    embedding_service = EmbeddingService(api_key=settings.voyage_api_key)
-    vector_store = ChromaVectorStore(persist_path=settings.chroma_path)
-    deepseek_client = DeepSeekClient(api_key=settings.deepseek_api_key)
-    response_cache = ResponseCache(max_size=100)
-    document_summary_service = DocumentSummaryService(
-        deepseek_client=deepseek_client,
-        embedding_service=embedding_service,
-        db_session=db,
-    )
-
-    # Initialize RAG service
-    rag_service = RAGService(
-        embedding_service=embedding_service,
-        vector_store=vector_store,
-        deepseek_client=deepseek_client,
-        response_cache=response_cache,
-        document_summary_service=document_summary_service,
-    )
-
-    # Retrieve context
-    retrieval_result = await rag_service.retrieve_context(
-        query=request.message,
-        document_id=session["document_id"],
-        focus_context=request.focus_context.dict() if request.focus_context else None,
-        n_results=5,
-    )
-
-    # Get message history
-    messages = await session_manager.get_session_messages(session_id, limit=10)
-    message_history = [
-        {"role": msg["role"], "content": msg["content"]} for msg in messages
-    ]
-
     async def event_generator():
         """Generate SSE events with comprehensive error handling."""
         response_text = ""
@@ -670,7 +696,43 @@ async def send_message(
         interrupted = False
 
         try:
-            # Wrap generation in async generator with timeout
+            # Initialize RAG service dependencies inside generator to catch errors
+            embedding_service = EmbeddingService(api_key=settings.voyage_api_key)
+            vector_store = ChromaVectorStore(persist_path=settings.chroma_path)
+            deepseek_client = DeepSeekClient(api_key=settings.deepseek_api_key)
+            response_cache = ResponseCache(max_size=100)
+            document_summary_service = DocumentSummaryService(
+                deepseek_client=deepseek_client,
+                embedding_service=embedding_service,
+                db_session=db,
+            )
+
+            # Initialize RAG service
+            rag_service = RAGService(
+                embedding_service=embedding_service,
+                vector_store=vector_store,
+                deepseek_client=deepseek_client,
+                response_cache=response_cache,
+                document_summary_service=document_summary_service,
+            )
+
+            # Retrieve context
+            retrieval_result = await rag_service.retrieve_context(
+                query=request.message,
+                document_id=session["document_id"],
+                focus_context=(
+                    request.focus_context.dict() if request.focus_context else None
+                ),
+                n_results=5,
+            )
+
+            # Get message history
+            messages = await session_manager.get_session_messages(session_id, limit=10)
+            message_history = [
+                {"role": msg["role"], "content": msg["content"]} for msg in messages
+            ]
+
+            # Generate events
             async def generate_with_timeout():
                 nonlocal response_text, sources, done_metadata
 
@@ -701,10 +763,8 @@ async def send_message(
 
                     yield format_sse_event(event_type, event_data)
 
-            # Apply 60s timeout
-            async for sse_event in asyncio.wait_for(
-                generate_with_timeout(), timeout=60.0
-            ):
+            # Stream events
+            async for sse_event in generate_with_timeout():
                 yield sse_event
 
         except asyncio.CancelledError:

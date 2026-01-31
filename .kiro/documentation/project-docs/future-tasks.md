@@ -1757,3 +1757,1059 @@ PostgreSQL    Qdrant Cluster    S3 Storage
 ---
 
 *Updated: January 14, 2026*
+
+
+---
+
+## Visual Identity & UX Polish Tasks (Deferred from Phase 2)
+
+**Priority**: P1 - Implement after Phase 2 core requirements complete  
+**Estimated Time**: 8-12 hours total  
+**Context**: Features identified in design adherence analysis but deferred to maintain Phase 2 focus
+
+### Task: RSVP Mode Implementation
+
+**Effort**: 4-6 hours | **Impact**: Advanced reading feature for power users
+
+**Background**: Visual-identity.md specifies RSVP (Rapid Serial Visual Presentation) mode for speed reading. Letter-level focus indicator (40% anchor position) is designed to support this feature.
+
+**Scope**:
+
+1. **Playback Controls**
+   - Play/Pause button
+   - Speed adjustment (WPM slider: 200-800 WPM)
+   - Progress indicator
+   - Keyboard shortcuts (Space = play/pause, ←/→ = speed adjust)
+
+2. **Auto-Advance Logic**
+   ```typescript
+   // Advance focus caret word-by-word at specified WPM
+   const advanceCaret = (wpm: number) => {
+     const delayMs = 60000 / wpm;  // Convert WPM to milliseconds per word
+     setInterval(() => {
+       moveCaretToNextWord();
+     }, delayMs);
+   };
+   ```
+
+3. **Visual Feedback**
+   - Current word highlighted with golden glow (already implemented)
+   - Anchor letter at 40% position (already implemented)
+   - Fade-in/fade-out transitions between words
+   - Pause indicator when stopped
+
+4. **User Controls**
+   - WPM display: "Reading at 350 WPM"
+   - Progress: "Word 245 of 1,203"
+   - Bookmark current position
+   - Resume from last position
+
+**Files to modify**:
+- Create: `frontend/src/components/document/RSVPControls.tsx`
+- Update: `frontend/src/hooks/useFocusCaret.ts` (add auto-advance mode)
+- Update: `frontend/src/components/document/DocumentViewer.tsx` (integrate controls)
+
+**References**:
+- [RSVP Reading Research](https://en.wikipedia.org/wiki/Rapid_serial_visual_presentation)
+- [Spritz Reading Technology](https://spritzinc.com/)
+- [Optimal Reading Position (ORP)](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4047569/)
+
+---
+
+### Task: Focus Caret Visual Review
+
+**Effort**: 1-2 hours | **Impact**: Ensure letter-level glow is prominent and discoverable
+
+**Background**: Design adherence analysis noted that focus caret should be more prominent, like a "spark" or "light ball" as described in PRD.
+
+**Scope**:
+
+1. **Visual Enhancement**
+   - Increase glow intensity: `rgba(212, 165, 116, 0.7)` (from 0.5)
+   - Add pulsing animation: Subtle 1.5s cycle
+   - Increase blur radius: 4px (from 2px)
+   - Add outer glow ring for prominence
+
+2. **Discoverability**
+   - Show tutorial on first document load
+   - Animated demo: "Click any word to focus"
+   - Keyboard shortcut hint: "Use ↑↓ to navigate"
+   - Fade out after 5 seconds or first interaction
+
+3. **Accessibility**
+   - Ensure glow is visible in all lighting conditions
+   - Test with color blindness simulators
+   - Verify contrast ratio meets WCAG AA
+
+**Files to modify**:
+- Update: `frontend/src/components/document/FocusCaret.tsx` (enhance glow)
+- Update: `frontend/src/design-system/animations.ts` (add pulse animation)
+- Create: `frontend/src/components/document/FocusCaretTutorial.tsx` (first-time tutorial)
+
+---
+
+### Task: Suggested Questions After Document Upload
+
+**Effort**: 2-3 hours | **Impact**: Improved discoverability and user engagement
+
+**Background**: Visual-identity.md and PRD specify showing suggested questions after document processing to help users start conversations.
+
+**Scope**:
+
+1. **Backend: Question Generation**
+   ```python
+   # In document_processor.py
+   async def generate_suggested_questions(document_summary: str) -> List[str]:
+       """Generate 3-5 suggested questions based on document content"""
+       prompt = f"""Based on this document summary, suggest 3-5 questions a user might ask:
+       
+       {document_summary}
+       
+       Questions should be:
+       - Specific to the document content
+       - Open-ended (not yes/no)
+       - Varied in complexity
+       
+       Format: One question per line."""
+       
+       response = await deepseek_client.generate(prompt)
+       return response.strip().split('\n')[:5]
+   ```
+
+2. **Frontend: Display Component**
+   ```typescript
+   // SuggestedQuestions.tsx
+   interface SuggestedQuestionsProps {
+     questions: string[];
+     onSelect: (question: string) => void;
+   }
+   
+   export function SuggestedQuestions({ questions, onSelect }: SuggestedQuestionsProps) {
+     return (
+       <div className="suggested-questions">
+         <h3>Suggested questions:</h3>
+         {questions.map((q, i) => (
+           <button key={i} onClick={() => onSelect(q)}>
+             {q}
+           </button>
+         ))}
+       </div>
+     );
+   }
+   ```
+
+3. **Integration**
+   - Show after document processing completes
+   - Position: Above chat input, below welcome message
+   - Clicking question auto-fills input and sends
+   - Dismiss button: "Ask my own question"
+
+**Files to modify**:
+- Update: `backend/app/services/document_processor.py` (add question generation)
+- Create: `frontend/src/components/chat/SuggestedQuestions.tsx`
+- Update: `frontend/src/components/chat/ChatInterface.tsx` (integrate component)
+- Update: `backend/app/models/schemas.py` (add `suggested_questions` field)
+
+---
+
+### Task: Inline Action Buttons on Hover
+
+**Effort**: 2-3 hours | **Impact**: Enhanced interactivity and discoverability
+
+**Background**: Visual-identity.md mentions inline action buttons but doesn't specify details. This task requires UX design before implementation.
+
+**Scope**:
+
+1. **UX Design Phase** (1 hour)
+   - Define which actions to include
+   - Determine hover target (word, sentence, paragraph)
+   - Design button appearance and positioning
+   - Consider mobile/touch interaction
+
+2. **Potential Actions**
+   - "Ask AI about this" (selected text → chat)
+   - "Define" (dictionary lookup)
+   - "Highlight" (persistent highlight)
+   - "Bookmark" (save position)
+   - "Copy" (copy to clipboard)
+
+3. **Implementation** (1-2 hours)
+   ```typescript
+   // InlineActions.tsx
+   interface InlineActionsProps {
+     selectedText: string;
+     position: { x: number; y: number };
+     onAction: (action: string, text: string) => void;
+   }
+   
+   export function InlineActions({ selectedText, position, onAction }: InlineActionsProps) {
+     return (
+       <div 
+         className="inline-actions"
+         style={{ top: position.y, left: position.x }}
+       >
+         <button onClick={() => onAction('ask', selectedText)}>
+           Ask AI
+         </button>
+         <button onClick={() => onAction('define', selectedText)}>
+           Define
+         </button>
+         <button onClick={() => onAction('highlight', selectedText)}>
+           Highlight
+         </button>
+       </div>
+     );
+   }
+   ```
+
+4. **Interaction Pattern**
+   - Desktop: Hover over text → buttons appear
+   - Mobile: Long-press text → context menu appears
+   - Keyboard: Select text + Ctrl+K → actions menu
+
+**Files to create**:
+- `frontend/src/components/document/InlineActions.tsx`
+- `frontend/src/hooks/useTextSelection.ts`
+
+**Files to modify**:
+- Update: `frontend/src/components/document/DocumentViewer.tsx` (integrate actions)
+
+**Note**: Requires UX design approval before implementation.
+
+---
+
+### Task: PRD Deferred Features
+
+**Effort**: Varies by feature | **Impact**: Post-MVP enhancements
+
+**Background**: Features from PRD.md that are not critical for MVP but valuable for production.
+
+#### 1. Dashboard with Knowledge Base Management (8-12 hours)
+
+**Scope**:
+- Document library view (grid/list)
+- Search and filter documents
+- Bulk operations (delete, export)
+- Storage usage display
+- Recent documents section
+
+**Files to create**:
+- `frontend/src/pages/Dashboard.tsx`
+- `frontend/src/components/dashboard/DocumentGrid.tsx`
+- `frontend/src/components/dashboard/DocumentCard.tsx`
+
+#### 2. Collections/Folders Organization (4-6 hours)
+
+**Scope**:
+- Create/rename/delete collections
+- Drag-and-drop documents into collections
+- Collection-specific chat sessions
+- Nested collections (optional)
+
+**Database changes**:
+```sql
+CREATE TABLE collections (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  parent_id TEXT REFERENCES collections(id),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE document_collections (
+  document_id TEXT REFERENCES documents(id),
+  collection_id TEXT REFERENCES collections(id),
+  PRIMARY KEY (document_id, collection_id)
+);
+```
+
+#### 3. Learning Progress Tracking (6-8 hours)
+
+**Scope**:
+- Track documents read (% completion)
+- Track concepts learned (extracted from chat)
+- Spaced repetition reminders
+- Progress visualization (charts)
+
+**Database changes**:
+```sql
+CREATE TABLE reading_progress (
+  document_id TEXT REFERENCES documents(id),
+  user_id TEXT,
+  last_position INTEGER,
+  completion_percentage REAL,
+  last_read_at TIMESTAMP
+);
+
+CREATE TABLE concepts_learned (
+  id TEXT PRIMARY KEY,
+  concept TEXT NOT NULL,
+  document_id TEXT REFERENCES documents(id),
+  confidence_level REAL,
+  learned_at TIMESTAMP
+);
+```
+
+#### 4. User Authentication System (12-16 hours)
+
+**Scope**:
+- Email/password registration and login
+- OAuth providers (Google, GitHub)
+- JWT token management
+- Password reset flow
+- User profile management
+
+**Packages**: `python-jose`, `passlib`, `python-multipart`
+
+#### 5. Export Functionality (4-6 hours)
+
+**Scope**:
+- Export chat history as PDF
+- Export chat history as Markdown
+- Export notes/highlights
+- Export document with annotations
+
+**Packages**: `reportlab` (PDF generation), `markdown2`
+
+#### 6. Mobile/Tablet Responsive Design (8-12 hours)
+
+**Scope**: See "Responsive Design Enhancement" task above for full details.
+
+#### 7. Multi-Document Comparison View (8-10 hours)
+
+**Scope**:
+- Side-by-side document viewer (2-3 documents)
+- Synchronized scrolling (optional)
+- Cross-document chat (RAG across multiple docs)
+- Highlight differences/similarities
+
+#### 8. AI-Generated Personalized Learning Paths (16-20 hours)
+
+**Scope**:
+- Analyze user's reading history and chat interactions
+- Identify knowledge gaps and learning patterns
+- Generate personalized learning sequences
+- Recommend next documents/topics to explore
+- Adaptive difficulty progression
+- Spaced repetition scheduling for concepts
+
+**Implementation**:
+
+1. **Learning Profile Analysis**
+   ```python
+   # backend/app/services/learning_path_service.py
+   class LearningPathService:
+       async def analyze_user_profile(self, user_id: str) -> LearningProfile:
+           """Analyze user's learning history and patterns"""
+           # Get reading history
+           documents_read = await get_user_documents(user_id)
+           chat_history = await get_user_chat_history(user_id)
+           
+           # Extract concepts learned
+           concepts = await extract_concepts_from_chats(chat_history)
+           
+           # Identify knowledge gaps
+           gaps = await identify_knowledge_gaps(concepts, documents_read)
+           
+           # Determine learning style (visual, analytical, exploratory)
+           style = await infer_learning_style(chat_history)
+           
+           return LearningProfile(
+               concepts_mastered=concepts,
+               knowledge_gaps=gaps,
+               learning_style=style,
+               preferred_difficulty=self._calculate_difficulty_level(chat_history)
+           )
+   ```
+
+2. **Path Generation with LLM**
+   ```python
+   async def generate_learning_path(
+       self, 
+       profile: LearningProfile, 
+       goal: str
+   ) -> LearningPath:
+       """Generate personalized learning path using DeepSeek"""
+       prompt = f"""Based on this learner profile, create a personalized learning path:
+       
+       Current Knowledge:
+       {profile.concepts_mastered}
+       
+       Knowledge Gaps:
+       {profile.knowledge_gaps}
+       
+       Learning Style: {profile.learning_style}
+       Goal: {goal}
+       
+       Generate a 5-10 step learning path with:
+       1. Topic/concept to learn
+       2. Recommended document type (tutorial, reference, case study)
+       3. Estimated time
+       4. Prerequisites
+       5. Success criteria
+       
+       Format as JSON."""
+       
+       response = await deepseek_client.generate(prompt)
+       return LearningPath.parse_raw(response)
+   ```
+
+3. **Adaptive Recommendations**
+   ```python
+   async def get_next_recommendation(
+       self, 
+       user_id: str, 
+       current_path: LearningPath
+   ) -> Recommendation:
+       """Get next step based on progress"""
+       # Check completion of current step
+       progress = await get_step_progress(user_id, current_path.current_step)
+       
+       if progress.completed:
+           # Move to next step
+           next_step = current_path.get_next_step()
+       elif progress.struggling:
+           # Recommend prerequisite or easier material
+           next_step = await find_prerequisite(current_path.current_step)
+       else:
+           # Continue current step with different resource
+           next_step = await find_alternative_resource(current_path.current_step)
+       
+       return Recommendation(
+           step=next_step,
+           reason=self._explain_recommendation(progress),
+           estimated_time=next_step.duration
+       )
+   ```
+
+4. **Spaced Repetition Integration**
+   ```python
+   async def schedule_review(
+       self, 
+       user_id: str, 
+       concept: str, 
+       mastery_level: float
+   ):
+       """Schedule concept review using spaced repetition algorithm"""
+       # SM-2 algorithm for spaced repetition
+       interval = self._calculate_review_interval(mastery_level)
+       next_review = datetime.now() + timedelta(days=interval)
+       
+       await create_review_reminder(
+           user_id=user_id,
+           concept=concept,
+           scheduled_for=next_review,
+           review_type="concept_reinforcement"
+       )
+   ```
+
+5. **Frontend: Learning Path Dashboard**
+   ```typescript
+   // frontend/src/components/learning/LearningPathDashboard.tsx
+   interface LearningPathDashboardProps {
+     userId: string;
+   }
+   
+   export function LearningPathDashboard({ userId }: LearningPathDashboardProps) {
+     const { path, progress } = useLearningPath(userId);
+     
+     return (
+       <div className="learning-path-dashboard">
+         <h2>Your Learning Journey</h2>
+         
+         {/* Progress visualization */}
+         <ProgressTimeline steps={path.steps} current={progress.currentStep} />
+         
+         {/* Current step */}
+         <CurrentStepCard step={path.currentStep} progress={progress} />
+         
+         {/* Next recommendation */}
+         <NextRecommendation 
+           recommendation={path.nextRecommendation}
+           onAccept={handleAcceptRecommendation}
+           onSkip={handleSkipRecommendation}
+         />
+         
+         {/* Upcoming reviews */}
+         <UpcomingReviews reviews={progress.scheduledReviews} />
+         
+         {/* Knowledge graph */}
+         <KnowledgeGraph concepts={progress.conceptsMastered} />
+       </div>
+     );
+   }
+   ```
+
+6. **Database Schema**
+   ```sql
+   CREATE TABLE learning_paths (
+     id TEXT PRIMARY KEY,
+     user_id TEXT NOT NULL,
+     goal TEXT NOT NULL,
+     current_step INTEGER DEFAULT 0,
+     status TEXT DEFAULT 'active',
+     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+   );
+   
+   CREATE TABLE learning_steps (
+     id TEXT PRIMARY KEY,
+     path_id TEXT REFERENCES learning_paths(id),
+     step_number INTEGER NOT NULL,
+     topic TEXT NOT NULL,
+     description TEXT,
+     document_type TEXT,
+     estimated_minutes INTEGER,
+     prerequisites TEXT,  -- JSON array
+     success_criteria TEXT,
+     completed BOOLEAN DEFAULT FALSE,
+     completed_at TIMESTAMP
+   );
+   
+   CREATE TABLE concept_reviews (
+     id TEXT PRIMARY KEY,
+     user_id TEXT NOT NULL,
+     concept TEXT NOT NULL,
+     mastery_level REAL DEFAULT 0.0,
+     last_reviewed TIMESTAMP,
+     next_review TIMESTAMP,
+     review_count INTEGER DEFAULT 0
+   );
+   ```
+
+**Features**:
+- Goal-based path generation ("Learn machine learning", "Master Python")
+- Adaptive difficulty based on performance
+- Prerequisite detection and recommendation
+- Alternative resource suggestions when struggling
+- Spaced repetition for concept retention
+- Visual progress tracking
+- Knowledge graph visualization
+- Review reminders and notifications
+
+**Packages**: 
+- `scikit-learn` (learning pattern analysis)
+- `networkx` (knowledge graph)
+- `apscheduler` (review scheduling)
+
+---
+
+### Implementation Priority
+
+**Phase 2 Completion** (Current):
+1. Complete Requirement 15 (Visual Identity Adherence Fixes)
+2. Complete Requirements 7-14 (Optimization & Polish)
+
+**Post-Phase 2** (Next):
+1. RSVP Mode Implementation (4-6h) - High user value
+2. Focus Caret Visual Review (1-2h) - Quick win
+3. Suggested Questions (2-3h) - Improves discoverability
+4. Inline Action Buttons (2-3h) - After UX design
+
+**Post-MVP** (Future):
+1. Dashboard & Collections (12-18h) - Essential for multi-document users
+2. User Authentication (12-16h) - Required for production
+3. Mobile Responsive (8-12h) - Expand user base
+4. Export Functionality (4-6h) - User-requested feature
+5. Learning Progress Tracking (6-8h) - Differentiator
+6. Multi-Document Comparison (8-10h) - Power user feature
+7. AI-Generated Personalized Learning Paths (16-20h) - Core value proposition, adaptive learning
+
+---
+
+*Last Updated: January 30, 2026*
+
+
+---
+
+## Backend Service Optimizations (Deferred from Phase 2)
+
+**Priority**: P2 - Implement after MVP complete  
+**Estimated Time**: 20-24 hours total  
+**Trigger**: Phase 2 complete, production deployment planned
+
+### Context
+
+Based on comprehensive research of Voyage AI and DeepSeek documentation (see `.kiro/documentation/project-docs/research/iubar_deepseek_voyage_optimization.md`), several advanced optimizations were identified but deferred to avoid scope creep during MVP development.
+
+---
+
+### Task: DeepSeek Reasoner Model Integration
+
+**Priority**: Medium  
+**Estimated Time**: 8-12 hours  
+**Use Cases**: Learning plan generation, multi-document synthesis, knowledge graphs
+
+#### Scope
+
+Integrate DeepSeek Reasoner model for complex reasoning tasks that benefit from step-by-step thinking.
+
+**When to Use Reasoner vs Chat**:
+- **deepseek-chat**: RAG responses, conversational queries, document Q&A (95% of use cases)
+- **deepseek-reasoner**: Learning plans, multi-document synthesis, complex analysis, knowledge graph generation
+
+**Implementation**:
+
+1. **Add Model Selection Logic**:
+```python
+# backend/app/services/deepseek_client.py
+class DeepSeekClient:
+    MODELS = {
+        "chat": "deepseek-chat",
+        "reasoner": "deepseek-reasoner"
+    }
+    
+    async def stream_chat(
+        self,
+        messages: List[Dict[str, str]],
+        model_type: str = "chat",  # "chat" or "reasoner"
+        max_retries: int = 3
+    ) -> AsyncGenerator[dict, None]:
+        model = self.MODELS.get(model_type, self.MODELS["chat"])
+        # ... use selected model ...
+```
+
+2. **Query Classification**:
+```python
+# backend/app/services/rag_service.py
+def _classify_query_for_model(self, query: str) -> str:
+    """Classify query to determine if reasoner model is needed"""
+    reasoner_patterns = [
+        "create a learning plan",
+        "synthesize information from",
+        "compare and contrast",
+        "analyze the relationship",
+        "build a knowledge graph",
+        "explain step by step"
+    ]
+    
+    query_lower = query.lower()
+    if any(pattern in query_lower for pattern in reasoner_patterns):
+        return "reasoner"
+    return "chat"
+```
+
+3. **Cost Tracking**:
+```python
+# Reasoner pricing: $0.55/M input, $0.55/M output (vs $0.28/$0.42 for chat)
+def _calculate_cost(self, prompt_tokens, completion_tokens, cached_tokens, model_type):
+    if model_type == "reasoner":
+        input_cost = (prompt_tokens - cached_tokens) * 0.55 / 1_000_000
+        cached_cost = cached_tokens * 0.055 / 1_000_000  # Assume 10x cache discount
+        output_cost = completion_tokens * 0.55 / 1_000_000
+    else:  # chat
+        input_cost = (prompt_tokens - cached_tokens) * 0.28 / 1_000_000
+        cached_cost = cached_tokens * 0.028 / 1_000_000
+        output_cost = completion_tokens * 0.42 / 1_000_000
+    
+    return input_cost + cached_cost + output_cost
+```
+
+**Files to Modify**:
+- Update: `backend/app/services/deepseek_client.py`
+- Update: `backend/app/services/rag_service.py`
+- Update: `backend/app/config.py` (add reasoner model config)
+- Create: `backend/tests/test_reasoner_model.py`
+
+**Testing**:
+- Unit tests for model selection logic
+- Integration tests with real reasoner API calls
+- Cost calculation validation
+- Performance comparison (reasoner vs chat)
+
+---
+
+### Task: DeepSeek Tool Calling / Function Calling
+
+**Priority**: Medium  
+**Estimated Time**: 16-20 hours  
+**Use Cases**: Multi-step document discovery, dynamic filtering, structured actions
+
+#### Scope
+
+Implement DeepSeek function calling for advanced multi-step workflows where the model decides which documents to search and how to filter results.
+
+**Benefits**:
+- Model-driven document discovery (user asks "compare X and Y", model searches both)
+- Dynamic metadata filtering (date ranges, authors, document types)
+- Structured actions (create summaries, save notes, export data)
+
+**Implementation**:
+
+1. **Define Tool Schema**:
+```python
+# backend/app/services/rag_service.py
+def get_tools_schema(self) -> List[Dict]:
+    return [
+        {
+            "type": "function",
+            "function": {
+                "name": "search_documents",
+                "description": "Search across all available documents",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "query": {"type": "string", "description": "Search query"},
+                        "max_results": {"type": "integer", "default": 5}
+                    },
+                    "required": ["query"]
+                }
+            }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "search_specific_document",
+                "description": "Search within a specific document",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "document_id": {"type": "string"},
+                        "query": {"type": "string"}
+                    },
+                    "required": ["document_id", "query"]
+                }
+            }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "list_documents",
+                "description": "List all available documents",
+                "parameters": {"type": "object", "properties": {}}
+            }
+        }
+    ]
+```
+
+2. **Tool Execution Handler**:
+```python
+async def _execute_tool(self, tool_name: str, args: Dict, session_id: str) -> Dict:
+    if tool_name == "search_documents":
+        chunks = await self.retrieve_context(
+            query=args["query"],
+            n_results=args.get("max_results", 5)
+        )
+        return {
+            "results": [
+                {"document": chunk.metadata.get("document_title"), "content": chunk.content[:500]}
+                for chunk in chunks.chunks
+            ]
+        }
+    
+    elif tool_name == "search_specific_document":
+        chunks = await self.retrieve_context(
+            query=args["query"],
+            document_id=args["document_id"],
+            n_results=5
+        )
+        return {"results": [chunk.content[:500] for chunk in chunks.chunks]}
+    
+    elif tool_name == "list_documents":
+        documents = await self._get_user_documents(session_id)
+        return {"documents": [{"id": doc["id"], "title": doc["title"]} for doc in documents]}
+    
+    else:
+        return {"error": f"Unknown tool: {tool_name}"}
+```
+
+3. **Streaming with Tool Calls**:
+```python
+async def generate_response_with_tools(
+    self,
+    query: str,
+    session_id: str,
+    enable_tools: bool = True,
+    max_tool_iterations: int = 3
+) -> AsyncGenerator[dict, None]:
+    messages = [{"role": "user", "content": query}]
+    tools = self.get_tools_schema() if enable_tools else None
+    
+    tool_iterations = 0
+    
+    while tool_iterations < max_tool_iterations:
+        response = await self.client.chat.completions.create(
+            model="deepseek-chat",
+            messages=messages,
+            tools=tools,
+            tool_choice="auto",
+            stream=False
+        )
+        
+        message = response.choices[0].message
+        
+        if not message.tool_calls:
+            # No tool calls, stream final response
+            if message.content:
+                yield {"type": "token", "content": message.content}
+            yield {"type": "done", "metadata": {}}
+            return
+        
+        # Process tool calls
+        messages.append(message)
+        
+        for tool_call in message.tool_calls:
+            function_name = tool_call.function.name
+            function_args = json.loads(tool_call.function.arguments)
+            
+            result = await self._execute_tool(function_name, function_args, session_id)
+            
+            messages.append({
+                "role": "tool",
+                "tool_call_id": tool_call.id,
+                "content": json.dumps(result)
+            })
+        
+        tool_iterations += 1
+    
+    yield {"type": "error", "message": "Max tool iterations reached"}
+```
+
+**When NOT to Use**:
+- Simple single-turn queries (adds 200-500ms latency)
+- Time-sensitive operations
+- Bandwidth-constrained environments
+
+**Files to Modify**:
+- Update: `backend/app/services/rag_service.py`
+- Update: `backend/app/api/chat.py` (add tool calling endpoint)
+- Create: `backend/tests/test_tool_calling.py`
+
+**Testing**:
+- Unit tests for tool schema validation
+- Integration tests with real tool calls
+- Multi-step workflow tests
+- Error handling (max iterations, invalid tools)
+
+---
+
+### Task: Adaptive Chunk Selection
+
+**Priority**: Low  
+**Estimated Time**: 4-6 hours  
+**Use Cases**: Dynamic retrieval based on query complexity
+
+#### Scope
+
+Implement dynamic chunk selection where the number of chunks retrieved adapts to query complexity.
+
+**Implementation**:
+
+```python
+# backend/app/services/rag_service.py
+def _assess_complexity(self, query: str) -> str:
+    """Assess query complexity"""
+    query_length = len(query.split())
+    
+    if query_length < 5:
+        return "simple"
+    elif query_length < 15:
+        return "moderate"
+    else:
+        return "complex"
+
+async def retrieve_context_adaptive(
+    self,
+    query: str,
+    document_id: Optional[str] = None,
+    query_complexity: str = "auto",
+    ...
+) -> RetrievalResult:
+    if query_complexity == "auto":
+        query_complexity = self._assess_complexity(query)
+    
+    # Adjust retrieval parameters
+    if query_complexity == "simple":
+        n_chunks = 3
+        n_documents = 1
+        threshold = 0.75
+    elif query_complexity == "moderate":
+        n_chunks = 5
+        n_documents = 2
+        threshold = 0.70
+    else:  # complex
+        n_chunks = 7
+        n_documents = 3
+        threshold = 0.65
+    
+    # Retrieve with adaptive parameters
+    # ... existing logic ...
+```
+
+**Files to Modify**:
+- Update: `backend/app/services/rag_service.py`
+- Create: `backend/tests/test_adaptive_retrieval.py`
+
+---
+
+### Task: Comprehensive Metrics Dashboard
+
+**Priority**: High (for production)  
+**Estimated Time**: 20-24 hours  
+**Use Cases**: Real-time monitoring, alerting, cost tracking
+
+#### Scope
+
+Implement comprehensive metrics tracking and dashboard for production monitoring.
+
+**Metrics to Track**:
+
+1. **Embedding Metrics**:
+   - Total requests, cache hits/misses, hit rate
+   - P95/P99 latency
+   - Error rate
+   - Token usage trends
+
+2. **DeepSeek Metrics**:
+   - Total requests, prompt/completion tokens
+   - Cache hit rate (cached tokens)
+   - P95/P99 latency
+   - Estimated cost
+   - Error rate
+
+3. **RAG Pipeline Metrics**:
+   - Total queries
+   - Retrieval latency, generation latency, end-to-end latency
+   - Average chunks retrieved
+   - Query complexity distribution
+
+**Implementation**:
+
+```python
+# backend/app/services/metrics.py
+class RAGMetrics:
+    def __init__(self):
+        self.embedding_metrics = EmbeddingMetrics()
+        self.deepseek_metrics = DeepSeekMetrics()
+        self.rag_metrics = RAGPipelineMetrics()
+    
+    def get_dashboard_summary(self) -> dict:
+        return {
+            "embeddings": self.embedding_metrics.get_summary(),
+            "generation": self.deepseek_metrics.get_summary(),
+            "rag": self.rag_metrics.get_summary(),
+            "timestamp": datetime.now().isoformat()
+        }
+
+class EmbeddingMetrics:
+    def __init__(self):
+        self.total_requests = 0
+        self.cache_hits = 0
+        self.latencies: List[float] = []
+        self.errors = 0
+    
+    def get_summary(self) -> dict:
+        import numpy as np
+        return {
+            "total_requests": self.total_requests,
+            "cache_hit_rate": self.cache_hits / max(self.total_requests, 1),
+            "avg_latency_ms": np.mean(self.latencies) if self.latencies else 0,
+            "p95_latency_ms": np.percentile(self.latencies, 95) if self.latencies else 0,
+            "error_rate": self.errors / max(self.total_requests, 1)
+        }
+```
+
+**Real-Time Alerts**:
+- Cache hit rate < 50% (multi-turn) or < 20% (single query)
+- Error rate > 1%
+- P95 latency > 5 seconds
+- Circuit breaker open state
+
+**Dashboard UI**:
+- Real-time metrics display
+- Historical trends (last 24h, 7d, 30d)
+- Cost tracking and projections
+- Alert configuration
+
+**Files to Create**:
+- Create: `backend/app/services/metrics.py`
+- Create: `backend/app/api/metrics.py` (metrics endpoint)
+- Create: `frontend/src/pages/MetricsDashboard.tsx`
+- Create: `backend/tests/test_metrics.py`
+
+---
+
+### Task: Redis Embedding Cache
+
+**Priority**: Low (only for horizontal scaling)  
+**Estimated Time**: 4-6 hours  
+**Use Cases**: Multi-instance deployments, distributed caching
+
+#### Scope
+
+Implement Redis-based embedding cache for multi-instance deployments where in-memory cache doesn't scale.
+
+**Implementation**:
+
+```python
+# backend/app/services/embedding_service.py
+import redis.asyncio as redis
+import json
+
+class RedisCachedEmbeddingService(EmbeddingService):
+    def __init__(
+        self,
+        api_key: str,
+        redis_client: redis.Redis,
+        ttl_seconds: int = 86400
+    ):
+        super().__init__(api_key, enable_cache=False)
+        self._redis = redis_client
+        self._ttl = ttl_seconds
+    
+    async def _get_from_cache(self, cache_key: str) -> Optional[List[float]]:
+        cached = await self._redis.get(f"emb:{cache_key}")
+        if cached:
+            return json.loads(cached)
+        return None
+    
+    async def _set_in_cache(self, cache_key: str, embedding: List[float]):
+        await self._redis.setex(
+            f"emb:{cache_key}",
+            self._ttl,
+            json.dumps(embedding)
+        )
+```
+
+**Configuration**:
+```python
+# backend/app/config.py
+class Settings(BaseSettings):
+    redis_url: Optional[str] = Field(default=None, alias="REDIS_URL")
+    redis_cache_ttl: int = 86400  # 24 hours
+```
+
+**Files to Modify**:
+- Update: `backend/app/services/embedding_service.py`
+- Update: `backend/app/config.py`
+- Update: `backend/requirements.txt` (add redis)
+- Create: `backend/tests/test_redis_cache.py`
+
+**When to Implement**:
+- Deploying multiple backend instances
+- Need shared cache across instances
+- Horizontal scaling required
+
+---
+
+## Summary
+
+These deferred optimizations provide significant value but are not critical for MVP:
+
+| Task | Priority | Effort | Impact |
+|------|----------|--------|--------|
+| DeepSeek Reasoner | Medium | 8-12h | Advanced reasoning capabilities |
+| Tool Calling | Medium | 16-20h | Multi-step workflows |
+| Adaptive Chunks | Low | 4-6h | Minor quality improvement |
+| Metrics Dashboard | High* | 20-24h | Production monitoring |
+| Redis Cache | Low | 4-6h | Horizontal scaling |
+
+*High priority for production, but not needed for MVP/demo
+
+**Total Estimated Time**: 52-68 hours
+
+**Recommended Implementation Order**:
+1. Metrics Dashboard (production readiness)
+2. DeepSeek Reasoner (feature differentiation)
+3. Tool Calling (advanced use cases)
+4. Redis Cache (if scaling needed)
+5. Adaptive Chunks (nice-to-have)

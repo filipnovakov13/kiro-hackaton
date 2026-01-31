@@ -47,9 +47,38 @@ source ../.venv/bin/activate
 # Install dependencies
 pip install -r requirements.txt
 
-# Copy environment template (optional)
+# Copy environment template
 cp .env.template .env
-# Edit .env if needed for custom configuration
+
+# IMPORTANT: Configure API keys in .env
+# See "API Key Configuration" section below for details
+```
+
+### API Key Configuration
+
+Iubar requires API keys for AI services. Add these to `backend/.env`:
+
+**Voyage AI (Embeddings)**
+1. Get API key: https://www.voyageai.com/
+2. Add to `.env`: `VOYAGE_API_KEY=your_key_here`
+3. Model: voyage-4-lite (1024 dimensions, 200M free tokens)
+
+**DeepSeek (LLM)**
+1. Get API key: https://platform.deepseek.com/
+2. Add to `.env`: `DEEPSEEK_API_KEY=your_key_here`
+3. Model: deepseek-chat (128K context, prompt caching)
+
+**Verify Configuration**
+```bash
+# Check API status
+curl http://localhost:8000/api/status
+
+# Expected response:
+# {
+#   "voyage_api": "configured",
+#   "deepseek_api": "configured",
+#   "database": "connected"
+# }
 ```
 
 ### 3. Frontend Setup

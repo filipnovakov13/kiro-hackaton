@@ -1,13 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ChatInterface } from "./components/chat/ChatInterface";
 import { DocumentViewer } from "./components/document/DocumentViewer";
 import { MessageList } from "./components/chat/MessageList";
 import { MessageInput } from "./components/chat/MessageInput";
-import { StreamingMessage } from "./components/chat/StreamingMessage";
 import { UploadZone } from "./components/upload/UploadZone";
+import { WelcomeMessage } from "./components/upload/WelcomeMessage";
 import { LoadingSkeleton } from "./design-system/LoadingSkeleton";
 import { ErrorPage } from "./design-system/ErrorPage";
-import { Toast } from "./design-system/Toast";
+import { useToast } from "./design-system/ToastContext";
 import { useChatSession } from "./hooks/useChatSession";
 import { useStreamingMessage } from "./hooks/useStreamingMessage";
 import { useFocusCaret } from "./hooks/useFocusCaret";
@@ -23,6 +23,9 @@ function generateUUID(): string {
 }
 
 function App() {
+  // Toast notifications
+  const { showToast } = useToast();
+
   // Session management
   const {
     session: currentSession,
@@ -48,13 +51,13 @@ function App() {
   // Document upload handling
   const {
     isUploading,
-    taskId,
     status: uploadStatus,
     progress: uploadProgress,
     error: uploadError,
     documentId: uploadedDocumentId,
     uploadFile,
     submitUrl,
+    submitGitHub,
     reset: resetUpload,
   } = useDocumentUpload();
 
@@ -65,59 +68,112 @@ function App() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [focusModeEnabled, setFocusModeEnabled] = useState(false);
   const [messageError, setMessageError] = useState<string | null>(null);
-  const [toast, setToast] = useState<{
-    message: string;
-    type: "success" | "error" | "info";
-  } | null>(null);
+
+  // Track processed uploads to prevent duplicate handling
+  const processedUploadRef = useRef<string | null>(null);
 
   // Focus caret management
   const {
     position: caretPosition,
-    context: caretContext,
     focusContext,
     placeCaret: moveCaret,
-    moveCaretLeft,
-    moveCaretRight,
-    clearCaret,
   } = useFocusCaret(currentDocument?.markdown_content || "");
 
   // Load sessions on mount
   useEffect(() => {
+    console.log("[App] Loading initial sessions...");
     const loadInitialSessions = async () => {
       try {
         await loadSessions();
+        console.log("[App] Initial sessions loaded");
       } catch (error) {
         console.error("Failed to load sessions:", error);
       }
     };
     loadInitialSessions();
-  }, [loadSessions]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run once on mount
 
-  // Auto-load most recent session
+  // Save session ID to localStorage when it changes
   useEffect(() => {
-    if (sessions.length > 0 && !currentSession && sessions[0]?.id) {
-      const loadMostRecent = async () => {
+    if (currentSession?.id) {
+      localStorage.setItem("iubar_current_session_id", currentSession.id);
+    }
+  }, [currentSession?.id]);
+
+  // Restore session ID from localStorage on mount
+  useEffect(() => {
+    console.log(
+      "[App] Restore session effect triggered, sessions:",
+      sessions.length,
+    );
+    const savedSessionId = localStorage.getItem("iubar_current_session_id");
+    if (
+      savedSessionId &&
+      savedSessionId !== currentSession?.id &&
+      sessions.find((s) => s.id === savedSessionId)
+    ) {
+      console.log("[App] Restoring saved session:", savedSessionId);
+      const loadSavedSession = async () => {
         try {
-          await loadSession(sessions[0].id);
+          await loadSession(savedSessionId);
         } catch (error) {
-          console.error("Failed to load most recent session:", error);
-          // Clear error so user can still upload documents
+          console.error("Failed to load saved session:", error);
           clearError();
         }
       };
-      loadMostRecent();
+      loadSavedSession();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessions]); // Only run when sessions list changes
+
+  // Auto-load most recent session (fallback if no saved session)
+  useEffect(() => {
+    console.log(
+      "[App] Auto-load effect triggered, sessions:",
+      sessions.length,
+      "currentSession:",
+      !!currentSession,
+    );
+    if (sessions.length > 0 && !currentSession) {
+      const savedSessionId = localStorage.getItem("iubar_current_session_id");
+      // Only auto-load if no saved session exists or saved session not found
+      if (!savedSessionId || !sessions.find((s) => s.id === savedSessionId)) {
+        console.log("[App] Auto-loading most recent session");
+        // Sort sessions by updated_at DESC to get most recent
+        const sortedSessions = [...sessions].sort(
+          (a, b) =>
+            new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime(),
+        );
+
+        if (sortedSessions[0]?.id) {
+          const loadMostRecent = async () => {
+            try {
+              await loadSession(sortedSessions[0].id);
+            } catch (error) {
+              console.error("Failed to load most recent session:", error);
+              // Clear error so user can still upload documents
+              clearError();
+            }
+          };
+          loadMostRecent();
+        }
+      }
     } else if (sessions.length === 0 && sessionError) {
       // Clear any errors when there are no sessions (first-time user)
       clearError();
     }
-  }, [sessions, currentSession, loadSession, sessionError, clearError]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessions, currentSession, sessionError]); // Only run when these change
 
   // Load document and messages when session changes
   useEffect(() => {
+    console.log("[App] Session changed:", currentSession);
     if (!currentSession) return;
 
     const loadSessionData = async () => {
       try {
+        console.log("[App] Loading session data for:", currentSession.id);
         // Load document content
         if (currentSession.document_id) {
           const document = await getDocument(currentSession.document_id);
@@ -135,69 +191,74 @@ function App() {
     loadSessionData();
   }, [currentSession]);
 
-  // Handle document upload
-  const handleDocumentUpload = async (file: File) => {
-    try {
-      await uploadFile(file);
-    } catch (error) {
-      console.error("Upload failed:", error);
-    }
-  };
-
-  // Handle upload success - create session and load document
+  // Handle upload success - create session and transition immediately
   useEffect(() => {
-    if (uploadStatus === "complete" && uploadedDocumentId) {
+    console.log(
+      "[App] Upload effect - status:",
+      uploadStatus,
+      "docId:",
+      uploadedDocumentId,
+      "processed:",
+      processedUploadRef.current,
+    );
+    if (
+      uploadStatus === "complete" &&
+      uploadedDocumentId &&
+      processedUploadRef.current !== uploadedDocumentId
+    ) {
       const handleUploadSuccess = async () => {
         try {
-          // Create session with uploaded document
+          console.log(
+            "[App] Processing upload success for:",
+            uploadedDocumentId,
+          );
+          // Mark this upload as processed
+          processedUploadRef.current = uploadedDocumentId;
+
+          // Create session with uploaded document - this sets currentSession
+          console.log("[App] Creating session...");
           await createSession(uploadedDocumentId);
-
-          // Fetch document content
-          const document = await getDocument(uploadedDocumentId);
-          setCurrentDocument(document);
-
-          // Reset upload state for next upload
-          resetUpload();
+          console.log("[App] Session created");
 
           // Show success notification
-          setToast({
-            message: "Document uploaded successfully!",
-            type: "success",
-          });
+          showToast("Document uploaded successfully!", "success");
+
+          // Reset upload state for next upload
+          console.log("[App] Resetting upload state");
+          resetUpload();
+          console.log("[App] Upload handling complete");
+
+          // Note: Document will be loaded by the session change effect
+          // No need to wait for it here - transition happens immediately
         } catch (error) {
           console.error("Failed to handle upload success:", error);
-          setToast({
-            message: "Failed to process uploaded document",
-            type: "error",
-          });
+          showToast("Failed to process uploaded document", "error");
+          // Reset processed ref on error so user can retry
+          processedUploadRef.current = null;
+          resetUpload();
         }
       };
 
       handleUploadSuccess();
     }
-  }, [uploadStatus, uploadedDocumentId, createSession, resetUpload]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [uploadStatus, uploadedDocumentId]); // Only run when upload completes
 
   // Display upload errors
   useEffect(() => {
     if (uploadError) {
       console.error("Upload error:", uploadError);
-      setToast({
-        message: uploadError,
-        type: "error",
-      });
+      showToast(uploadError, "error");
     }
-  }, [uploadError]);
+  }, [uploadError, showToast]);
 
   // Display streaming errors
   useEffect(() => {
     if (streamingError) {
       console.error("Streaming error:", streamingError);
-      setToast({
-        message: streamingError,
-        type: "error",
-      });
+      showToast(streamingError, "error");
     }
-  }, [streamingError]);
+  }, [streamingError, showToast]);
 
   // Handle streaming completion - convert to permanent message
   useEffect(() => {
@@ -256,10 +317,7 @@ function App() {
       );
     } catch (error) {
       console.error("Failed to send message:", error);
-      setToast({
-        message: "Failed to send message. Please try again.",
-        type: "error",
-      });
+      showToast("Failed to send message. Please try again.", "error");
     }
   };
 
@@ -299,6 +357,10 @@ function App() {
 
     try {
       await deleteSession();
+      // Clear localStorage if deleting current session
+      if (sessionId === currentSession?.id) {
+        localStorage.removeItem("iubar_current_session_id");
+      }
       await loadSessions();
     } catch (error) {
       console.error("Failed to delete session:", error);
@@ -342,6 +404,14 @@ function App() {
 
   return (
     <>
+      {console.log(
+        "[App] Render - sessionsLoading:",
+        sessionsLoading,
+        "sessionError:",
+        !!sessionError,
+        "currentSession:",
+        !!currentSession,
+      )}
       {/* Loading state */}
       {sessionsLoading && <LoadingSkeleton />}
 
@@ -350,19 +420,24 @@ function App() {
         <ErrorPage error={sessionError} onRetry={loadSessions} />
       )}
 
-      {/* No session - show upload zone for first-time users */}
+      {/* No session - show welcome screen and upload zone for first-time users */}
       {!sessionsLoading && !sessionError && !currentSession && (
         <div
           style={{
             display: "flex",
+            flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
             height: "100vh",
             backgroundColor: "#131D33",
+            padding: "48px",
           }}
         >
+          <WelcomeMessage />
           <UploadZone
             onFileSelect={uploadFile}
+            onUrlSubmit={submitUrl}
+            onGitHubSubmit={submitGitHub}
             isUploading={isUploading}
             progress={uploadProgress}
             error={uploadError}
@@ -378,16 +453,11 @@ function App() {
           chatContent={chatContent}
           focusModeEnabled={focusModeEnabled}
           onToggleFocusMode={handleToggleFocusMode}
-        />
-      )}
-
-      {/* Toast notifications */}
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          duration={5000}
-          onDismiss={() => setToast(null)}
+          sessions={sessions}
+          currentSessionId={currentSession.id}
+          onNewSession={handleNewSession}
+          onDeleteSession={handleDeleteSession}
+          onSessionSwitch={handleSessionSwitch}
         />
       )}
     </>

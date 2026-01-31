@@ -23,11 +23,13 @@ logger = StructuredLogger(__name__)
 class SessionStats:
     """Session statistics."""
 
-    message_count: int
+    session_id: str
+    total_messages: int
     total_tokens: int
-    estimated_cost_usd: float
-    cache_hit_rate: float
-    avg_response_time_ms: float
+    cached_tokens: int
+    total_cost_usd: float
+    created_at: str
+    updated_at: str
 
 
 class SessionManager:
@@ -113,6 +115,7 @@ class SessionManager:
             "session_id": session_id,
             "document_id": document_id,
             "created_at": now,
+            "updated_at": now,
             "message_count": 0,
         }
 
@@ -377,7 +380,7 @@ class SessionManager:
         logger.info("Deleted session", session_id=session_id)
 
     async def get_session_stats(self, session_id: str) -> SessionStats:
-        """Get session statistics.
+        """Get session statistics by aggregating message metadata.
 
         Args:
             session_id: Session UUID
@@ -392,14 +395,37 @@ class SessionManager:
         if not session:
             raise ValueError(f"Session {session_id} not found")
 
-        metadata = session.get("metadata", {})
+        # Get all messages to calculate stats from metadata
+        messages = await self.get_session_messages(session_id, limit=1000)
+
+        total_tokens = 0
+        cached_tokens = 0
+        total_cost = 0.0
+
+        for msg in messages:
+            metadata = msg.get("metadata", {})
+
+            # Aggregate token counts from assistant messages
+            if msg["role"] == "assistant":
+                token_count = metadata.get("token_count", 0)
+                total_tokens += token_count
+
+                # Add cost
+                cost = metadata.get("cost_usd", 0.0)
+                total_cost += cost
+
+            # Track cached tokens from metadata (if DeepSeek provides this)
+            cached = metadata.get("cached_tokens", 0)
+            cached_tokens += cached
 
         return SessionStats(
-            message_count=session["message_count"],
-            total_tokens=metadata.get("total_tokens", 0),
-            estimated_cost_usd=metadata.get("estimated_cost_usd", 0.0),
-            cache_hit_rate=metadata.get("cache_hit_rate", 0.0),
-            avg_response_time_ms=metadata.get("avg_response_time_ms", 0.0),
+            session_id=session["session_id"],
+            total_messages=session["message_count"],
+            total_tokens=total_tokens,
+            cached_tokens=cached_tokens,
+            total_cost_usd=total_cost,
+            created_at=session["created_at"],
+            updated_at=session["updated_at"],
         )
 
     async def check_spending_limit(

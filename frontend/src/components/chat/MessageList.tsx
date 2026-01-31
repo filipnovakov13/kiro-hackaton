@@ -20,6 +20,7 @@ import {
 } from "../../design-system";
 import { StreamingMessage } from "./StreamingMessage";
 import { ThinkingIndicator } from "./ThinkingIndicator";
+import { SourceAttribution, type SourceChunk } from "./SourceAttribution";
 
 // =============================================================================
 // TYPES
@@ -30,6 +31,9 @@ export interface Message {
   role: "user" | "assistant";
   content: string;
   timestamp?: Date;
+  metadata?: {
+    sources?: SourceChunk[];
+  };
 }
 
 interface MessageListProps {
@@ -43,6 +47,8 @@ interface MessageListProps {
   streamingContent?: string;
   /** Whether streaming is active */
   isStreaming?: boolean;
+  /** Callback when source is clicked */
+  onSourceClick?: (source: SourceChunk) => void;
 }
 
 // =============================================================================
@@ -55,6 +61,7 @@ export function MessageList({
   emptyMessage = "No messages yet. Start a conversation!",
   streamingContent,
   isStreaming = false,
+  onSourceClick,
 }: MessageListProps) {
   const listEndRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -153,6 +160,16 @@ export function MessageList({
 
           {/* Message content */}
           <div>{message.content}</div>
+
+          {/* Source attribution for assistant messages */}
+          {message.role === "assistant" &&
+            message.metadata?.sources &&
+            message.metadata.sources.length > 0 && (
+              <SourceAttribution
+                sources={message.metadata.sources}
+                onSourceClick={onSourceClick}
+              />
+            )}
 
           {/* Timestamp (if provided) */}
           {message.timestamp && (

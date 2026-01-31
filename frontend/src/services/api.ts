@@ -1,8 +1,10 @@
 /**
  * API client for backend communication.
  * Handles document upload, status polling, and CRUD operations.
+ * Includes response validation for security and type safety.
  */
 
+import { z } from "zod";
 import type {
   DocumentDetail,
   DocumentSummary,
@@ -15,9 +17,28 @@ import {
   mapUploadError,
   mapNetworkError,
 } from "../utils/errorMapping";
+import {
+  validateResponse,
+  DocumentSchema,
+  UploadResponseSchema,
+  SessionSchema,
+  ChatMessageSchema,
+  SessionStatsSchema,
+} from "../utils/validation";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+
+// Warn if using HTTP in production
+if (
+  import.meta.env.PROD &&
+  API_BASE_URL &&
+  !API_BASE_URL.startsWith("https://")
+) {
+  console.warn(
+    "WARNING: Using HTTP in production. Switch to HTTPS for security.",
+  );
+}
 
 // ============================================================================
 // Error Handling
@@ -34,7 +55,11 @@ export class ApiError extends Error {
   }
 }
 
-export async function handleResponse<T>(response: Response): Promise<T> {
+export async function handleResponse<T>(
+  response: Response,
+  schema?: z.ZodSchema<T>,
+  context?: string,
+): Promise<T> {
   if (!response.ok) {
     let error: ErrorResponse;
     try {
@@ -54,7 +79,15 @@ export async function handleResponse<T>(response: Response): Promise<T> {
 
     throw new ApiError(userMessage, response.status, error.details);
   }
-  return response.json();
+
+  const data = await response.json();
+
+  // Validate response if schema provided
+  if (schema && context) {
+    return validateResponse(data, schema, context);
+  }
+
+  return data;
 }
 
 // ============================================================================
@@ -71,7 +104,11 @@ export async function uploadDocument(file: File): Promise<UploadResponse> {
       body: formData,
     });
 
-    return handleResponse<UploadResponse>(response);
+    return handleResponse<UploadResponse>(
+      response,
+      UploadResponseSchema,
+      "upload",
+    );
   } catch (err) {
     if (err instanceof ApiError) {
       // Re-throw with upload-specific error mapping

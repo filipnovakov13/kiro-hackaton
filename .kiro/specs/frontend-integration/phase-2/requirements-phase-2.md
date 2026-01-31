@@ -97,8 +97,8 @@ Phase 2 focuses on:
    - **LSP Warnings Found**: Multiple unused declarations in App.tsx
    - Remove unused import: `StreamingMessage`
    - Remove unused variables: `taskId`, `submitUrl`, `caretContext`, `moveCaretLeft`, `moveCaretRight`, `clearCaret`
-   - Remove unused handlers: `handleDocumentUpload`, `handleNewSession`, `handleSessionSwitch`, `handleDeleteSession` (or connect to UI)
-   - Remove unused parameter: `sessionId` in `handleDeleteSession`
+   - Remove unused handler: `handleDocumentUpload`
+   - Note: `handleNewSession`, `handleSessionSwitch`, `handleDeleteSession` are connected to UI in criteria #3-5
 
 ### Requirement 8: API Key Configuration and External Service Optimization
 
@@ -141,11 +141,10 @@ Phase 2 focuses on:
    - Use streaming for all responses (better UX)
    - Monitor cache hit rate via response metadata
    - Log cost per request (input tokens, cached tokens, output tokens)
-8. THE App.tsx SHALL display cost tracking information:
-   - Show session statistics via `GET /api/chat/sessions/{id}/stats`
-   - Display: "Tokens used: X | Estimated cost: $Y"
+8. THE ChatInterface SHALL display cost tracking information (see Requirement 15.7 for detailed specification):
+   - Fetch session stats via `GET /api/chat/sessions/{id}/stats`
+   - Display in chat header: "Tokens: X | Cost: $Y | Cache: Z%"
    - Update after each message
-   - Show cache hit rate: "Cache hits: X%"
 
 ### Requirement 9: Loading States and Visual Feedback
 
@@ -153,20 +152,24 @@ Phase 2 focuses on:
 
 #### Acceptance Criteria
 
-1. THE App.tsx SHALL display loading skeletons (not spinners) for:
+1. THE App.tsx SHALL display loading skeletons (not spinners) for all loading states:
    - Session list loading: Skeleton cards matching session list item design
    - Document loading: Skeleton matching DocumentViewer layout (headings, paragraphs)
    - Message history loading: Skeleton matching MessageList item design
+   - Code-split components: Skeleton while lazy-loading DocumentViewer, ChatInterface, UploadZone
 2. ALL loading skeletons SHALL follow visual-identity.md design direction:
    - Use background color: #1A2332 (bgPanel)
    - Use shimmer animation: subtle gradient sweep
    - Match actual component dimensions
    - Transition smoothly to real content (fade in)
-3. THE App.tsx SHALL display ThinkingIndicator while waiting for first streaming token:
-   - Pulsing glow effect with golden accent (#D4A574)
-   - Three animated dots with staggered delays
+3. THE ThinkingIndicator SHALL provide contextual feedback while waiting for streaming:
+   - Support contextual messages via prop: `<ThinkingIndicator message="..." />`
+   - Message variations: "Thinking...", "Gathering thoughts...", "Analyzing document...", "Searching context..."
+   - Rotate messages for long waits (>5 seconds)
+   - Animation: Three pulsing dots with golden glow (#D4A574)
+   - Timing: 1.5s cycle with staggered delays (0s, 0.2s, 0.4s)
    - Position: Below last message in MessageList
-   - Remove when first token arrives
+   - Remove when first streaming token arrives
 4. THE UploadProgress component SHALL show progress stages:
    - "Uploading..." with progress bar (0-100%)
    - "Processing..." with animated spinner
@@ -177,20 +180,111 @@ Phase 2 focuses on:
    - Disabled state: Gray background, cursor not-allowed
    - Sending state: Spinner in send button
    - Error state: Red border with error message below
-6. THE DocumentViewer SHALL show scroll progress indicator:
-   - Thin progress bar at top showing scroll position
-   - Color: Golden accent (#D4A574)
-   - Only visible while scrolling (fade out after 1 second)
-7. THE App.tsx SHALL show toast notifications for:
+6. THE App.tsx SHALL show toast notifications for:
    - Document upload success: "Document ready!"
    - Session created: "New conversation started"
    - Session deleted: "Conversation deleted"
    - Error occurred: Error message from backend
-8. ALL toast notifications SHALL:
+7. ALL toast notifications SHALL:
    - Auto-dismiss after 3 seconds
    - Be dismissible by clicking X button
    - Stack vertically if multiple appear
    - Follow visual-identity.md design (dark background, white text)
+
+
+### Requirement 9.5: DocumentViewer Comprehensive Enhancement
+
+**User Story:** As a user, I want a polished, performant document viewer with precise focus capabilities, so that I can efficiently navigate and interact with my documents.
+
+**Context:** This requirement consolidates all DocumentViewer enhancements from Requirements 9.6, 12.5, 13.4, 15.2.1, 15.4, 15.6, and 15.8.3 to ensure coordinated implementation with clear dependencies.
+
+#### Implementation Dependencies
+
+1. **Phase 1: Foundation** (Must be completed first)
+   - Fix horizontal margin (64px on container, not content padding)
+   - Integrate react-markdown for full markdown support
+   - Install dependencies: `react-markdown`, `remark-gfm`, `react-syntax-highlighter`
+
+2. **Phase 2: Letter-Level Rendering** (Depends on Phase 1)
+   - Render text with letter-level `<span>` elements for precise caret targeting
+   - Research optimal approach: Consider using CSS `::first-letter` pseudo-elements, `contenteditable` with `Selection` API, or custom span wrapping
+   - Maintain word boundaries for readability
+   - Optimize for performance (virtualization if needed for large documents)
+
+3. **Phase 3: Features & Polish** (Depends on Phases 1-2)
+   - Implement all remaining features in parallel
+
+#### Acceptance Criteria
+
+##### 9.5.1 Layout & Spacing
+1. THE DocumentViewer container SHALL use 64px margin (not padding on content)
+2. THE DocumentViewer SHALL eliminate hardcoded pixel values, using spacing tokens from layout.ts
+
+##### 9.5.2 Markdown & Content Rendering
+1. THE DocumentViewer SHALL integrate react-markdown with full markdown support:
+   - Support: headings, paragraphs, lists, links, blockquotes, tables, emphasis, strong
+   - Use markdown.ts style definitions for consistent styling
+   - Replace simplified line-by-line parsing
+2. THE DocumentViewer SHALL implement syntax highlighting for code blocks:
+   - Use `react-syntax-highlighter` with dark theme
+   - Detect language from code fence (```python, ```javascript, etc.)
+   - Apply golden border-left accent as specified
+   - Fallback to plain text if language unknown
+
+##### 9.5.3 Letter-Level Focus Targeting
+1. THE DocumentViewer SHALL render text with letter-level precision for focus caret:
+   - **Research Task**: Investigate optimal implementation approach:
+     - Option A: Wrap each letter in `<span>` elements
+     - Option B: Use CSS `::first-letter` with dynamic styling
+     - Option C: Use `contenteditable` with browser `Selection` API
+     - Option D: Hybrid approach with virtualization
+   - **Criteria**: Choose approach that balances performance, accessibility, and maintainability
+   - Maintain word boundaries for readability
+   - Optimize rendering for large documents (consider virtualization)
+   - Enable precise letter-level highlighting at 40% anchor position within words
+2. THE FocusCaret component SHALL implement letter-level highlighting:
+   - Identify word at caret position
+   - Calculate anchor letter: `Math.floor(word.length * 0.4)`
+   - Apply golden glow to specific letter element
+   - Glow specs: `rgba(212, 165, 116, 0.5)`, 2px blur, 1px spread
+   - Use existing `calculateAnchorPosition()` helper function
+3. RSVP mode features SHALL be deferred to future-tasks.md:
+   - Playback controls, WPM adjustment, auto-advance
+
+##### 9.5.4 Performance & Virtualization
+1. THE DocumentViewer SHALL implement virtualized scrolling for large documents:
+   - Use react-window or react-virtualized
+   - Render only visible content + buffer
+   - Maintain smooth 60fps scrolling
+   - Coordinate with letter-level rendering for optimal performance
+
+##### 9.5.5 Visual Feedback
+1. THE DocumentViewer SHALL show scroll progress indicator:
+   - Thin progress bar at top showing scroll position
+   - Color: Golden accent (#D4A574)
+   - Only visible while scrolling (fade out after 1 second)
+2. THE DocumentViewer SHALL add focus mode controls hint:
+   - Show when focus mode enabled: "Controls: ↑↓ Move caret | Click to place"
+   - Position: Top of document viewer, subtle text
+   - Fade out after 5 seconds or first interaction
+
+##### 9.5.6 Navigation & Interaction
+1. THE DocumentViewer SHALL support keyboard navigation:
+   - Arrow keys: Move focus caret
+   - Home/End: Jump to start/end
+   - Page Up/Down: Scroll by page
+   - Ctrl+F: Search in document (if implemented)
+2. THE DocumentViewer SHALL implement smooth scroll-to-position:
+   - Smooth scroll with offset for header
+   - Highlight target chunk with fade-out animation (5 seconds)
+   - No complex scroll synchronization needed for MVP
+
+##### 9.5.7 Accessibility
+1. THE DocumentViewer SHALL ensure letter-level rendering maintains accessibility:
+   - Screen readers should read text naturally (not letter-by-letter)
+   - Use appropriate ARIA attributes if needed
+   - Maintain semantic HTML structure
+   - Test with screen readers (NVDA, JAWS, VoiceOver)
 
 
 ### Requirement 10: Comprehensive End-to-End Testing
@@ -339,14 +433,13 @@ Phase 2 focuses on:
    - Document upload handler
    - Caret move handler
    - Session switch handler
-3. THE App.tsx SHALL use React.useMemo for expensive computations:
-   - Filtered/sorted session list
+3. THE App.tsx SHALL implement session sorting and memoization:
+   - Sort sessions by `updated_at` DESC before auto-loading (fixes bug from Requirement 7.1.1)
+   - Use React.useMemo for filtered/sorted session list to prevent unnecessary re-computation
+   - Ensure most recent session loads correctly
+4. THE App.tsx SHALL use React.useMemo for other expensive computations:
    - Markdown parsing (if not handled by library)
    - Focus context extraction
-4. THE DocumentViewer SHALL implement virtualized scrolling for large documents:
-   - Use react-window or react-virtualized
-   - Render only visible content + buffer
-   - Maintain smooth 60fps scrolling
 5. THE MessageList SHALL implement virtualized scrolling for long conversations:
    - Render only visible messages + buffer
    - Auto-scroll to bottom on new message
@@ -363,7 +456,7 @@ Phase 2 focuses on:
    - Lazy load DocumentViewer component
    - Lazy load ChatInterface component
    - Lazy load UploadZone component
-   - Show loading skeleton while loading
+   - Show loading skeleton while loading (see Requirement 9 for skeleton specifications)
 9. THE App.tsx SHALL optimize bundle size:
    - Use tree-shaking for unused code
    - Minimize dependencies
@@ -398,26 +491,21 @@ Phase 2 focuses on:
    - Shift+Enter: New line
    - Escape: Clear input
    - Ctrl+/: Show keyboard shortcuts help
-4. THE DocumentViewer SHALL support keyboard navigation:
-   - Arrow keys: Move focus caret
-   - Home/End: Jump to start/end
-   - Page Up/Down: Scroll by page
-   - Ctrl+F: Search in document (if implemented)
-5. THE App.tsx SHALL ensure color contrast meets WCAG 2.1 AA:
+4. THE App.tsx SHALL ensure color contrast meets WCAG 2.1 AA:
    - Text on background: minimum 4.5:1 ratio
    - Large text: minimum 3:1 ratio
    - Interactive elements: minimum 3:1 ratio
    - Verify all colors from visual-identity.md meet standards
-6. THE App.tsx SHALL provide text alternatives:
+5. THE App.tsx SHALL provide text alternatives:
    - Images have alt text
    - Icons have aria-label
    - Loading spinners have sr-only text
-7. THE App.tsx SHALL support screen readers:
+6. THE App.tsx SHALL support screen readers:
    - Semantic HTML elements (nav, main, article, aside)
    - Proper heading hierarchy (h1 → h2 → h3)
    - Form labels associated with inputs
    - Error messages announced via aria-live
-8. THE App.tsx SHALL support reduced motion preference:
+7. THE App.tsx SHALL support reduced motion preference:
    - Respect prefers-reduced-motion media query
    - Disable animations when preference is set
    - Maintain functionality without animations
@@ -457,18 +545,162 @@ Phase 2 focuses on:
    - Validate token on backend
 
 
+### Requirement 15: Visual Identity Adherence Fixes
+
+**User Story:** As a user, I want the application to fully match the visual identity specifications, so that the experience is polished and cohesive.
+
+**Context:** Design adherence analysis identified gaps between implementation and visual-identity.md specifications. Overall grade: B+ (87%). This requirement addresses critical gaps to reach A-grade adherence.
+
+#### Acceptance Criteria
+
+##### 15.1 Typography System
+
+1. THE index.html SHALL load specified font families:
+   - Inter Variable (400, 500, 600, 700 weights) for headings and UI
+   - iA Writer Quattro AND Merriweather (400 weight) for body text
+   - JetBrains Mono (400 weight) for code blocks
+   - Use Google Fonts or self-hosted fonts
+   - Add preconnect for performance
+2. THE typography.ts SHALL update fontFamily definitions to use loaded fonts:
+   - Remove system font fallbacks as primary
+   - Keep system fonts as final fallback only
+3. ALL components SHALL use design system typography tokens instead of hardcoded font sizes
+
+##### 15.2 Spacing & Layout
+
+1. ALL components SHALL eliminate hardcoded pixel values:
+   - Replace with spacing tokens from layout.ts
+   - Audit: App.tsx, ChatInterface.tsx, MessageList.tsx, UploadZone.tsx, DocumentViewer
+   - Use spacing.xs through spacing["3xl"] consistently
+   - Note: DocumentViewer margin fix is in Requirement 9.5.1
+
+##### 15.3 Motion & Micro-Interactions
+
+1. ALL components SHALL use specific property transitions instead of generic "all":
+   - Example: `transition: "background-color 150ms ease-out"` not `transition: "all 150ms ease-out"`
+   - Improves performance and intentionality
+2. THE StreamingMessage SHALL implement word-by-word stagger animation:
+   - 50ms delay between words
+   - Fade-in animation per word
+   - Coordinate with backend token batching for smooth effect
+3. THE modal components (if added) SHALL use defined modal reveal animation:
+   - Entry: 300ms with easeOutQuart
+   - Exit: 200ms with easeOutExpo
+   - Background fade: 150ms
+
+##### 15.4 Chat Message Enhancements
+
+1. THE MessageList SHALL render source attribution links:
+   - Data exists in `message.metadata.sources`
+   - Display as clickable links below message content
+   - Use SourceAttribution component (already exists)
+   - Link format: "Source: [Chunk 3, Page 5]"
+   - Click handler: Scroll DocumentViewer to chunk and highlight
+2. THE MessageList SHALL use design system tokens instead of inline styles:
+   - Replace hardcoded colors with `backgrounds.panel`, `text.primary`
+   - Replace hardcoded padding with `padding.card`
+   - Replace hardcoded border-radius with `borderRadius.lg`
+3. Suggested questions feature SHALL be deferred to future-tasks.md:
+   - Not critical for MVP
+   - Requires backend support for question generation
+
+**Note:** Focus Indicator (Letter-Level Highlighting) and Document Viewer Enhancements have been consolidated into Requirement 9.5.
+
+##### 15.5 Upload Area Polish
+
+1. THE UploadZone SHALL fix padding:
+   - Current: 32px (p-8 in Tailwind)
+   - Required: 48px (p-12 in Tailwind)
+   - Matches visual-identity.md specification
+2. THE UploadZone SHALL integrate URL input into main upload flow:
+   - UrlInput component exists but not integrated
+   - Add tab/toggle: "File" | "URL" | "GitHub"
+   - Show appropriate input based on selection
+3. THE UploadZone SHALL add GitHub repository ingestion:
+   - Use gitingest service (https://gitingest.com) for repo → text conversion
+   - Input: GitHub repo URL
+   - Process: Fetch via gitingest API, treat as text document
+   - Estimated implementation time: 2-3 hours
+   - Error handling: Invalid URL, private repo, rate limits
+4. THE UploadZone SHALL add CTA buttons with golden background:
+   - "Choose File" button with `backgrounds.active` and `accents.highlight` on hover
+   - "Paste URL" button with same styling
+   - Keyboard accessible (Enter/Space to activate)
+
+##### 15.6 User Flow Enhancements
+
+1. THE App.tsx SHALL implement welcome message on first load:
+   - Show when no document uploaded and no session exists
+   - Text: "What would you like to explore today?"
+   - Position: Above UploadZone
+   - Typography: H2 style, centered
+   - Matches visual-identity.md Screen 1 (lines 696-718)
+2. THE App.tsx SHALL adapt initial page to visual-identity.md design:
+   - Center UploadZone vertically and horizontally
+   - Add subtitle: "Ask me about the content, or just start exploring"
+   - Show upload options: PDF | URL | Text | GitHub (as tabs/buttons)
+   - Remove split-pane layout until document uploaded
+3. Inline action buttons on hover SHALL be deferred to future-tasks.md:
+   - Not specified clearly in visual-identity.md
+   - Requires UX design for button placement and actions
+
+**Note:** DocumentViewer focus mode controls hint is in Requirement 9.5.5.
+
+##### 15.7 PRD Alignment
+
+1. THE ChatInterface SHALL add cost tracking display:
+   - Fetch session stats: `GET /api/chat/sessions/{id}/stats`
+   - Display in chat header: "Tokens: X | Cost: $Y | Cache: Z%"
+   - Update after each message
+   - Use small, subtle typography (secondary text color)
+   - Position: Top-right of chat panel
+2. THE following PRD features SHALL be deferred to future-tasks.md:
+   - Dashboard with knowledge base management
+   - Collections/folders organization
+   - Learning progress tracking
+   - User authentication
+   - Export functionality
+   - Mobile/tablet responsive design
+   - Multi-document comparison
+   - Collaborative features
+
+##### 15.8 Future Tasks Documentation
+
+1. THE future-tasks.md SHALL be updated with deferred features:
+   - RSVP mode implementation (playback controls, WPM, auto-advance)
+   - Focus caret visual review (ensure letter-level glow is prominent)
+   - Suggested questions after document upload
+   - Inline action buttons on hover
+   - Dashboard and knowledge base management
+   - Collections/folders organization
+   - Learning progress tracking
+   - User authentication system
+   - Export functionality (PDF, Markdown, notes)
+   - Mobile/tablet responsive design
+   - Multi-document comparison view
+
+
 ## Summary
 
-This Phase 2 requirements document defines 8 optimization and polish requirements for the Iubar frontend integration. Phase 2 adds:
+This Phase 2 requirements document defines 10 optimization and polish requirements for the Iubar frontend integration. Phase 2 adds:
 
 - **Requirement 7.1**: Implementation gaps from Phase 1 (session sorting bug, localStorage persistence, session management UI, backend config fields, error handling edge case, unused code cleanup)
-- **Requirement 8**: API key configuration and external service optimization
-- **Requirement 9**: Comprehensive loading states and visual feedback
+- **Requirement 8**: API key configuration and external service optimization (with cost tracking display)
+- **Requirement 9**: Comprehensive loading states and visual feedback (consolidated all loading skeleton requirements)
+- **Requirement 9.5**: DocumentViewer comprehensive enhancement (consolidated from Requirements 9.6, 12.5, 13.4, 15.2.1, 15.4, 15.6, 15.8.3 with clear implementation phases and research task for letter-level rendering optimization)
 - **Requirement 10**: Exhaustive E2E testing with 100% coverage
 - **Requirement 11**: Final validation against original product requirements
-- **Requirement 12**: Performance optimization with React.memo, virtualization, and code splitting
+- **Requirement 12**: Performance optimization with React.memo, session sorting/memoization, virtualization, and code splitting
 - **Requirement 13**: Full accessibility compliance (WCAG 2.1 AA)
 - **Requirement 14**: Security considerations including CSP, input sanitization, and rate limiting
+- **Requirement 15**: Visual identity adherence fixes (typography, spacing, motion, chat enhancements, upload area, user flows, PRD alignment)
+
+**Key Consolidations:**
+- Merged duplicate cost tracking specifications (8 & 15.10)
+- Consolidated all loading skeleton requirements into Requirement 9
+- Merged session sorting bug fix with performance optimization (7.1.1 & 12.3)
+- Created comprehensive DocumentViewer requirement (9.5) consolidating 7 scattered requirements with clear dependencies
+- Removed duplicate ThinkingIndicator specifications (9.3 supersedes 15.8)
 
 Combined with Phase 1, this completes the production-ready frontend integration.
 

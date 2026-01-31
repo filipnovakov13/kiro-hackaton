@@ -47,7 +47,7 @@ class VectorStoreInterface(ABC):
 
         Args:
             ids: Unique identifiers for each vector (chunk IDs).
-            embeddings: 512-dimensional float vectors from Voyage AI.
+            embeddings: 1024-dimensional float vectors from Voyage AI.
             metadatas: Metadata dicts with document_id, chunk_index.
             documents: Original text content for each chunk.
 
@@ -66,7 +66,7 @@ class VectorStoreInterface(ABC):
         """Query for similar vectors.
 
         Args:
-            embedding: 512-dimensional query vector.
+            embedding: 1024-dimensional query vector.
             n_results: Maximum number of results to return.
             where: Optional metadata filter (e.g., {"document_id": "uuid"}).
 
@@ -111,7 +111,7 @@ class ChromaVectorStore(VectorStoreInterface):
 
     Uses persistent storage with cosine similarity.
     Does NOT use ChromaDB's embedding function - we provide pre-computed
-    512-dimensional Voyage AI embeddings.
+    1024-dimensional Voyage AI embeddings.
 
     IMPORTANT: persist_path should be an absolute path derived from
     configuration to avoid issues in containerized deployments.

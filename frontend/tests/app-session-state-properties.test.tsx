@@ -94,10 +94,17 @@ describe("App - Session State Consistency (Property-Based)", () => {
             expect(result.current.sessions.length).toBe(sessions.length);
           });
 
-          // Auto-load most recent session
+          // Auto-load most recent session (replicating App.tsx behavior)
           if (result.current.sessions.length > 0 && !result.current.session) {
+            // Sort sessions by updated_at DESC (same as App.tsx)
+            const sortedSessions = [...result.current.sessions].sort(
+              (a, b) =>
+                new Date(b.updated_at).getTime() -
+                new Date(a.updated_at).getTime(),
+            );
+
             await waitFor(async () => {
-              await result.current.loadSession(result.current.sessions[0].id);
+              await result.current.loadSession(sortedSessions[0].id);
             });
           }
 

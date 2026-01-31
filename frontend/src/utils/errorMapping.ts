@@ -17,7 +17,7 @@ export function mapHTTPError(status: number, message?: string): string {
   }
 }
 
-export function mapUploadError(error: string): string {
+export function mapUploadError(error: unknown): string {
   // Handle non-string inputs safely
   if (typeof error !== "string") {
     return "Failed to upload document. Please try again.";
@@ -35,8 +35,8 @@ export function mapUploadError(error: string): string {
       "This file format is invalid. Please upload a valid document.",
   };
 
-  // Check for exact matches
-  if (errorMappings[error]) {
+  // Check for exact matches (avoid prototype pollution)
+  if (Object.hasOwn(errorMappings, error)) {
     return errorMappings[error];
   }
 

@@ -18,7 +18,12 @@ import {
   chatInterface,
   accents,
   text,
+  spacing,
 } from "../../design-system";
+import { SessionControls } from "./SessionControls";
+import { SessionSwitcher } from "./SessionSwitcher";
+import { CostTracker } from "./CostTracker";
+import type { ChatSession } from "../../types/chat";
 
 // =============================================================================
 // TYPES
@@ -37,6 +42,16 @@ interface ChatInterfaceProps {
   focusModeEnabled?: boolean;
   /** Callback when focus mode is toggled */
   onToggleFocusMode?: () => void;
+  /** All available sessions */
+  sessions?: ChatSession[];
+  /** Current session ID */
+  currentSessionId?: string | null;
+  /** Callback when new session is created */
+  onNewSession?: () => void;
+  /** Callback when session is deleted */
+  onDeleteSession?: (sessionId: string) => void;
+  /** Callback when session is switched */
+  onSessionSwitch?: (sessionId: string) => void;
 }
 
 // =============================================================================
@@ -60,6 +75,11 @@ export function ChatInterface({
   onCollapseChange,
   focusModeEnabled = false,
   onToggleFocusMode,
+  sessions = [],
+  currentSessionId = null,
+  onNewSession,
+  onDeleteSession,
+  onSessionSwitch,
 }: ChatInterfaceProps) {
   // State
   const [documentWidth, setDocumentWidth] = useState<number>(() => {
@@ -173,8 +193,9 @@ export function ChatInterface({
     height: "100%",
     backgroundColor: backgrounds.panel,
     overflow: "auto",
-    padding: `${chatInterface.padding}px`,
     transition: isCollapsed ? "width 300ms ease-out" : "none",
+    display: "flex",
+    flexDirection: "column",
   };
 
   const expandButtonStyle: React.CSSProperties = {
@@ -258,119 +279,162 @@ export function ChatInterface({
 
       {/* Chat Pane */}
       <div style={chatPaneStyle} data-testid="chat-pane">
-        {chatContent || (
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              height: "100%",
-              color: text.secondary,
-              fontSize: "16px",
-              textAlign: "center",
-            }}
-          >
-            <p>Select a document to start chatting,</p>
-            <p>or ask a general question</p>
-          </div>
-        )}
-
-        {/* Collapse Button (when expanded) */}
-        {!isCollapsed && (
-          <button
-            style={{
-              position: "absolute",
-              left: "8px",
-              top: "8px",
-              width: "32px",
-              height: "32px",
-              backgroundColor: backgrounds.hover,
-              border: "none",
-              borderRadius: "4px",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: accents.highlight,
-              fontSize: "18px",
-              transition: "all 150ms ease-out",
-            }}
-            onClick={handleCollapseToggle}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                handleCollapseToggle();
-              }
-            }}
-            tabIndex={0}
-            data-testid="collapse-button"
-            aria-label="Collapse document pane"
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = backgrounds.active;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = backgrounds.hover;
-            }}
-          >
-            ◀
-          </button>
-        )}
-
-        {/* Focus Mode Toggle Button */}
-        {!isCollapsed && onToggleFocusMode && (
-          <button
-            style={{
-              position: "absolute",
-              left: "48px",
-              top: "8px",
-              padding: "8px 12px",
-              backgroundColor: focusModeEnabled
-                ? accents.highlight
-                : backgrounds.hover,
-              border: focusModeEnabled
-                ? `2px solid ${accents.highlight}`
-                : "none",
-              borderRadius: "4px",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              gap: "6px",
-              color: focusModeEnabled ? backgrounds.canvas : text.primary,
-              fontSize: "14px",
-              fontWeight: focusModeEnabled ? 600 : 400,
-              transition: "all 150ms ease-out",
-              boxShadow: focusModeEnabled
-                ? `0 0 8px ${accents.highlight}40`
-                : "none",
-            }}
-            onClick={onToggleFocusMode}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                onToggleFocusMode();
-              }
-            }}
-            tabIndex={0}
-            data-testid="focus-mode-toggle"
-            aria-label={
-              focusModeEnabled ? "Disable focus mode" : "Enable focus mode"
-            }
-            onMouseEnter={(e) => {
-              if (!focusModeEnabled) {
+        {/* Header with Session Controls */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: `${spacing.md}px`,
+            padding: `${spacing.md}px ${chatInterface.padding}px`,
+            borderBottom: `1px solid ${backgrounds.hover}`,
+            flexShrink: 0,
+          }}
+          data-testid="chat-header"
+        >
+          {/* Collapse Button (when expanded) */}
+          {!isCollapsed && (
+            <button
+              style={{
+                width: "32px",
+                height: "32px",
+                backgroundColor: backgrounds.hover,
+                border: "none",
+                borderRadius: "4px",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: accents.highlight,
+                fontSize: "18px",
+                transition: "all 150ms ease-out",
+                flexShrink: 0,
+              }}
+              onClick={handleCollapseToggle}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  handleCollapseToggle();
+                }
+              }}
+              tabIndex={0}
+              data-testid="collapse-button"
+              aria-label="Collapse document pane"
+              onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = backgrounds.active;
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!focusModeEnabled) {
+              }}
+              onMouseLeave={(e) => {
                 e.currentTarget.style.backgroundColor = backgrounds.hover;
+              }}
+            >
+              ◀
+            </button>
+          )}
+
+          {/* Focus Mode Toggle Button */}
+          {!isCollapsed && onToggleFocusMode && (
+            <button
+              style={{
+                padding: "8px 12px",
+                backgroundColor: focusModeEnabled
+                  ? accents.highlight
+                  : backgrounds.hover,
+                border: focusModeEnabled
+                  ? `2px solid ${accents.highlight}`
+                  : "none",
+                borderRadius: "4px",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                color: focusModeEnabled ? backgrounds.canvas : text.primary,
+                fontSize: "14px",
+                fontWeight: focusModeEnabled ? 600 : 400,
+                transition: "all 150ms ease-out",
+                boxShadow: focusModeEnabled
+                  ? `0 0 8px ${accents.highlight}40`
+                  : "none",
+                flexShrink: 0,
+              }}
+              onClick={onToggleFocusMode}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  onToggleFocusMode();
+                }
+              }}
+              tabIndex={0}
+              data-testid="focus-mode-toggle"
+              aria-label={
+                focusModeEnabled ? "Disable focus mode" : "Enable focus mode"
               }
-            }}
-          >
-            <span>✨</span>
-            <span>Focus Mode</span>
-          </button>
-        )}
+              onMouseEnter={(e) => {
+                if (!focusModeEnabled) {
+                  e.currentTarget.style.backgroundColor = backgrounds.active;
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!focusModeEnabled) {
+                  e.currentTarget.style.backgroundColor = backgrounds.hover;
+                }
+              }}
+            >
+              <span>✨</span>
+              <span>Focus Mode</span>
+            </button>
+          )}
+
+          {/* Session Controls */}
+          {onNewSession && onDeleteSession && (
+            <SessionControls
+              currentSessionId={currentSessionId}
+              onNewSession={onNewSession}
+              onDeleteSession={onDeleteSession}
+            />
+          )}
+
+          {/* Session Switcher */}
+          {onSessionSwitch && (
+            <SessionSwitcher
+              sessions={sessions}
+              currentSessionId={currentSessionId}
+              onSwitch={onSessionSwitch}
+            />
+          )}
+
+          {/* Cost Tracker */}
+          {currentSessionId && (
+            <div style={{ marginLeft: "auto" }}>
+              <CostTracker sessionId={currentSessionId} />
+            </div>
+          )}
+        </div>
+
+        {/* Chat Content */}
+        <div
+          style={{
+            flex: 1,
+            overflow: "auto",
+            padding: `${chatInterface.padding}px`,
+          }}
+        >
+          {chatContent || (
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                height: "100%",
+                color: text.secondary,
+                fontSize: "16px",
+                textAlign: "center",
+              }}
+            >
+              <p>Select a document to start chatting,</p>
+              <p>or ask a general question</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
